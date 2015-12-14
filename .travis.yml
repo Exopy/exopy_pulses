@@ -1,0 +1,23 @@
+sudo: false
+
+language: python
+python:
+    - 2.7
+
+before_install:
+  - SRC_DIR=$(pwd)
+  - REDIRECT_TO=/dev/null # change to /dev/stdout to unsilence travis
+
+install:
+  - pip install -q future
+  - pip install -q pytest pytest-cov pytest-capturelog pytest-xdist
+  - pip install -q python-coveralls
+
+script:
+# Need miniconda for qt4
+  - cd ${SRC_DIR}
+  - python setup.py install > ${REDIRECT_TO}
+  - py.test tests -m "not no_travis" -v --cov pyclibrary --cov-report term-missing
+
+after_success:
+  - coveralls;
