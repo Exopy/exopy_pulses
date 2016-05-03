@@ -1,0 +1,39 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+ò: utf-"""
+"""
+from enaml.layout.api import hbox, vbox
+from enaml.widgets.api import (Label, ObjectCombo, Form)
+from enaml.core.api import Conditional, Include
+from enaml.stdlib.fields import FloatField
+
+from ecpy.utils.widgets.qt_line_completer import QtLineCompleter
+
+
+enamldef TaborContextView(Form): view:
+    """ View for a pulse item.
+
+    """
+    attr context
+    attr core
+
+    hug_height = 'strong'
+
+    Label:
+        text = 'Time unit'
+    ObjectCombo:
+        items = list(context.get_member('time_unit').items)
+        selected := context.time_unit
+
+    Label:
+        text = 'Sampling freq (Hz)'
+    FloatField:
+        value := context.sampling_frequency
+
+CONTEXTS_VIEWS = {'TABORContext': TaborContextView}

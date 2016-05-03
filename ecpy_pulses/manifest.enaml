@@ -1,0 +1,83 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+"""Plugin handling the generation and compilation and of sequences of pulses, 
+and defining some default pulse shapes.
+
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+from ast import literal_eval
+
+from future.builtins import str
+from enaml.workbench.api import PluginManifest, Extension, ExtensionPoint
+from enaml.workbench.core.api import Command
+from enaml.workbench.ui.api import ActionItem, MenuItem, ItemGroup
+
+from ecpy.app.api import AppStartup
+
+
+from ..app.preferences.api import Preferences
+from ..app.states.api import State
+from ..app.dependencies.api import BuildDependency, RuntimeDependencyAnalyser
+from ..utils.plugin_tools import make_handler
+
+PLUGIN_ID = 'ecpy.pulses'
+
+# =============================================================================
+# --- Extension Point ---------------------------------------------------------------
+# =============================================================================
+
+enamldef EcpyPulsesManifest(PluginManifest):
+    """The manifest declaring the extension points to the Ecpy.
+
+    """
+    id = 'ecpy.pulses'
+
+    Extension:
+        point = 'ecpy.app.startup'
+        AppStartup:
+            id = 'ecpy.pulses'
+            run => (workbench, cmd_args):
+                print('The package Ecpy Pulses package is installed. ')
+
+
+# =============================================================================
+# --- Factories ---------------------------------------------------------------
+# =============================================================================
+
+def manager_plugin_factory():
+    """ Factory funcion for the task manager plugin.
+
+    """
+    from .plugin import TaskManagerPlugin
+    return TaskManagerPlugin()
+
+
+# =============================================================================
+# --- Descriptions ------------------------------------------------------------
+# =============================================================================
+
+
+
+
+
+# =============================================================================
+# --- Manifest ----------------------------------------------------------------
+# =============================================================================
+
+
+    # =========================================================================
+    # --- Extension points ----------------------------------------------------
+    # =========================================================================
+
+    # =========================================================================
+    # --- Extensions ----------------------------------------------------------
+    # =========================================================================
