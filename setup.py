@@ -7,15 +7,15 @@ import os.path
 import sys
 
 sys.path.insert(0, os.path.abspath('.'))
-from ecpy_ext_demo.version import __version__
+from ecpy_pulses.version import __version__
 
 PROJECT_NAME = 'ecpy_pulses'
 
 setup(
     name=PROJECT_NAME,
-    description='Ecpy pulses package',
+    description='Ecpy pulses plugin package',
     version=__version__,
-    long_description=open('README').read(),
+    long_description=open('README.md').read(),
     author='see AUTHORS',
     author_email='',
     url='',  # URL of the git repository
