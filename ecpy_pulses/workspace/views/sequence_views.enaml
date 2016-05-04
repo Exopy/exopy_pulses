@@ -18,8 +18,8 @@ from enaml.core.api import Looper, Conditional, Include
 from enaml.workbench.core.core_plugin import CorePlugin
 
 from ecpy.utils.widgets.dict_editor import DictEditor
-from ecpy.utils.widgets.qt_line_completer import QtLineCompleter
-from ...utilsentry_eval import EVALUATER_TOOLTIP
+from ecpy.utils.widgets.qt_completers import QtLineCompleter
+from ...utils.entry_eval import EVALUATER_TOOLTIP
 from ...pulses.pulse import Pulse
 
 # Reimplemented here to accomodate the use of a menu to either insert Pulse

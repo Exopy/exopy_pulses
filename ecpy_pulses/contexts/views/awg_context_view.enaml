@@ -13,7 +13,7 @@ from enaml.widgets.api import (Label, ObjectCombo, Form)
 from enaml.core.api import Conditional, Include
 from enaml.stdlib.fields import FloatField
 
-from hqc_meas.utils.widgets.qt_line_completer import QtLineCompleter
+from hqc_meas.utils.widgets.qt_completers import QtLineCompleter
 
 
 enamldef AWGContextView(Form): view:

@@ -15,7 +15,7 @@ from enaml.widgets.api import (PushButton, Container, Label, Field,
                                ObjectCombo, Splitter, SplitItem)
 from enaml.core.api import Conditional, Include
 
-from ecpy.utils.widgets.qt_line_completer import QtLineCompleter
+from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ecpy.utils.widgets.dict_editor import DictEditor
 
 from ...sequences_views import VarEditor, instantiate_context_view

@@ -9,10 +9,10 @@
 from atom.api import (Instance, Unicode, Enum, Typed, Property, set_default)
 import numpy as np
 
-from ecpy.utils.atom_util import member_from_str
+from ecpy.utils.atom_util import member_from_pref
 from .shapes.base_shapes import AbstractShape
 from .shapes.modulation import Modulation
-from item import Item
+from .item import Item
 
 
 class Pulse(Item):
@@ -110,9 +110,9 @@ class Pulse(Item):
                     continue
 
                 if name not in ('modulation', 'shape'):
-                    # member_from_str handle containers
+                    # member_from_pref handle containers
                     value = config[name]
-                    validated = member_from_str(member, value)
+                    validated = member_from_pref(member, value)
 
                     setattr(pulse, name, validated)
 

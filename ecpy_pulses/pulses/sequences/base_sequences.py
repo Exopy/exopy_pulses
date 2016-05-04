@@ -12,11 +12,11 @@ from itertools import chain
 from inspect import cleandoc
 from copy import deepcopy
 
-from ecpy.utils.atom_util import member_from_str
-from ..contexts.base_context import base_context   # TODO implement
-from ..utils.entry_eval import eval_entry
-from .item import Item
-from .pulse import Pulse
+from ecpy.utils.atom_util import member_from_pref
+from ...contexts.base_context import BaseContext
+from ...utils.entry_eval import eval_entry
+from ..item import Item
+from ..pulse import Pulse
 
 
 class BaseSequence(Item):
@@ -145,9 +145,9 @@ class BaseSequence(Item):
                 if name not in config:
                     continue
 
-                # member_from_str handle containers
+                # member_from_pref handle containers
                 value = config[name]
-                validated = member_from_str(member, value)
+                validated = member_from_pref(member, value)
 
                 setattr(sequence, name, validated)
 
