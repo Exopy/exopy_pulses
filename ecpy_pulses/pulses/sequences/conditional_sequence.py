@@ -8,7 +8,7 @@
 # -----------------------------------------------------------------------------
 from atom.api import Unicode, set_default
 
-from ..base_sequences import Sequence
+from ..sequences.base_sequences import Sequence
 from ...utils.entry_eval import eval_entry
 
 

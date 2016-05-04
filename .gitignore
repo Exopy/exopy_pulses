@@ -42,3 +42,6 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 docs/build
+
+# Os Specific
+.DS_STORE

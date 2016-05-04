@@ -12,7 +12,7 @@ from copy import deepcopy
 from ast import literal_eval
 
 from ...utils.entry_eval import eval_entry
-from ..base_sequences import BaseSequence, Sequence
+from ..sequences.base_sequences import BaseSequence, Sequence
 
 
 def context():
