@@ -37,5 +37,5 @@ setup(
     install_requires=['ecpy'],
     entry_points={
         'ecpy_package_extension':
-        'ecpy_ext_demo = %s:list_manifests' % PROJECT_NAME}
+        'ecpy_pulses = %s:list_manifests' % PROJECT_NAME}
 )

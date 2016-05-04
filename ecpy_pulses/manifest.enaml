@@ -15,38 +15,32 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 from ast import literal_eval
-
 from future.builtins import str
+from configobj import ConfigObj
+from copy import deepcopy
+
 from enaml.workbench.api import PluginManifest, Extension, ExtensionPoint
 from enaml.workbench.core.api import Command
 from enaml.workbench.ui.api import ActionItem, MenuItem, ItemGroup
 
 from ecpy.app.api import AppStartup
+from ecpy.app.preferences.api import Preferences
+from ecpy.app.states.api import State
+from ecpy.app.dependencies.api import BuildDependency, RuntimeDependencyAnalyser
+from ecpy.utils.plugin_tools import make_handler
+
+#INEXISTNT
+from hqc_meas.utils.widgets.errors_display import errors_display    
+from hqc_meas.measurement.checks.checks_display import ChecksDisplay
+from hqc_meas.utils.configobj_ops import flatten_config
+
+from .widgets.building import BuilderView, ContextBuilderView
+from .widgets.sequences_io import load_sequence_prefs
+from .pulses.sequences.base_sequences import RootSequence
 
 
-from ..app.preferences.api import Preferences
-from ..app.states.api import State
-from ..app.dependencies.api import BuildDependency, RuntimeDependencyAnalyser
-from ..utils.plugin_tools import make_handler
 
 PLUGIN_ID = 'ecpy.pulses'
-
-# =============================================================================
-# --- Extension Point ---------------------------------------------------------------
-# =============================================================================
-
-enamldef EcpyPulsesManifest(PluginManifest):
-    """The manifest declaring the extension points to the Ecpy.
-
-    """
-    id = 'ecpy.pulses'
-
-    Extension:
-        point = 'ecpy.app.startup'
-        AppStartup:
-            id = 'ecpy.pulses'
-            run => (workbench, cmd_args):
-                print('The package Ecpy Pulses package is installed. ')
 
 
 # =============================================================================
@@ -57,27 +51,356 @@ def manager_plugin_factory():
     """ Factory funcion for the task manager plugin.
 
     """
-    from .plugin import TaskManagerPlugin
-    return TaskManagerPlugin()
+    from .plugin import PulseManagerPlugin
+    return PulseManagerPlugin()
 
+def workspace_factory(workbench):
+    from .workspace.workspace import SequenceEditionSpace
+    return SequenceEditionSpace()
+
+# =============================================================================
+# --- Command Handlers --------------------------------------------------------
+# =============================================================================
+
+# TODO implement a true manager
+#def show_manager(event):
+#    """ Handler for the 'hqc_meas.instr_manager.show_manager' command
+#
+#    """
+#    manager = event.workbench.get_plugin('hqc_meas')
+#    from .manager_view import TaskManagerView
+#    TaskManagerView(manager=manager).show()
+
+def show_starting_errors(event):
+    """ Handler for the 'hqc_meas.pulses.show_errors' command.
+
+    """
+    manager = event.workbench.get_plugin('hqc_meas.pulses')
+    ui = event.workbench.get_plugin('enaml.workbench.ui')
+    rep = manager.report()
+    if rep:
+        ChecksDisplay(ui.window, title='Pulses manager start up errors',
+                      errors=manager.report()).exec_()
+    else:
+        ErrorsDisplay(ui.window, title='Pulses manager start up errors',
+                      errors=manager.report()).exec_()
+
+def sequences_request(event):
+    """ Handler for the 'hqc_meas.pulses.sequences_request' command.
+
+    """
+    manager = event.workbench.get_plugin('hqc_meas.pulses')
+    return manager.sequences_request(**event.parameters)
+
+
+def contexts_request(event):
+    """ Handler for the 'hqc_meas.pulses.contexts_request' command.
+
+    """
+    manager = event.workbench.get_plugin('hqc_meas.pulses')
+    return manager.contexts_request(**event.parameters)
+
+
+def shapes_request(event):
+    """ Handler for the 'hqc_meas.pulses.shapes_request' command.
+
+    """
+    manager = event.workbench.get_plugin('hqc_meas.pulses')
+    return manager.shapes_request(**event.parameters)
+
+
+def build_sequence(event):
+    """ Handler for the 'hqc_meas.pulses.build_sequence' command.
+
+    Parameters
+    ----------
+    mode : {'ui', 'file'}
+        Should the command open a dialog to select a sequence (ui), or should
+        it build a RootSequence from the given ressource.
+
+    root : RootSequence, optional
+        RootSequence in which to insert the new sequence once built (ui mode
+        only).
+
+    path : unicode, optional
+        Path to the file holding the sequence config. The stored sequence
+        should be a RootSequence not a TemplateSequence. Used in file mode.
+
+    prefs : dict, optional
+        Sequence config describing the sequence to rebuilf. The stored sequence
+        should be a RootSequence not a TemplateSequence. Used in file mode.
+
+    Returns
+    -------
+    sequence : Sequence
+
+    """
+    manager = event.workbench.get_plugin('hqc_meas.pulses')
+    mode = event.parameters.get('mode')
+    if mode == 'ui':
+        parent_ui = event.parameters.get('parent_ui')
+        root = event.parameters['root']
+        dial = BuilderView(parent_ui, manager=manager, root=root)
+        dial.exec_()
+        if dial.result:
+            seq = dial.model.sequence_config.build_sequence()
+            if seq:
+                return seq
+            else:
+                ErrorsDisplay(errors=dial.model.sequence_config.errors,
+                              errors_type='Config errors').exec_()
+
+    elif mode == 'file':
+        if 'path' in event.parameters:
+            prefs = ConfigObj(event.parameters['path'])
+        elif 'prefs' in event.parameters:
+            prefs = event.parameters['prefs']
+        else:
+            raise ValueError('No valid kwargs found for file mode')
+        # Implement the logic here to rebuild the sequence.
+        core = manager.workbench.get_plugin('enaml.workbench.core')
+        cmd = 'hqc_meas.dependencies.collect_build_dep_from_config'
+        dep = core.invoke_command(cmd, {'config': prefs})
+        if isinstance(dep, Exception):
+            raise dep
+
+        seq = RootSequence.build_from_config(deepcopy(prefs), dep)
+        return seq
+
+
+def build_context(event):
+    """ Select a context for a given pulse sequence.
+
+    """
+    manager = event.workbench.get_plugin('hqc_meas.pulses')
+    parent_ui = event.parameters.get('parent_ui')
+    root = event.parameters['root']
+    dial = ContextBuilderView(parent_ui, manager=manager)
+    dial.exec_()
+    if dial.result:
+        root.context = dial.context()
 
 # =============================================================================
 # --- Descriptions ------------------------------------------------------------
 # =============================================================================
 
+SHOW_MANAGER_DESCRIPTION = \
+""" Show the task manager window."""
 
+SHOW_ERRORS_DESCRIPTION = \
+""" Show the errors which happened on plugin startup."""
 
+SEQUENCES_REQUEST_DESCRIPTION = \
+""" Request the infos associated to a list of sequences. """
+
+CONTEXTS_REQUEST_DESCRIPTION = \
+""" Request the infos associated to a list of contexts. """
+
+SHAPES_REQUEST_DESCRIPTION = \
+""" Request the infos associated to a list of shapes. """
+
+BUILD_SEQUENCE_DESCRIPTION = \
+""" Build a sequence from the one knwon to the plugin."""
+
+BUILD_CONTEXT_DESCRIPTION = \
+""" Build a context for the given root sequence."""
+
+MANAGER_STATE_DESCRIPTION = \
+""" The tasks manager gives access to the known tasks and filters."""
+
+# =============================================================================
+# --- ???????????? ------------------------------------------------------------
+# =============================================================================
+
+# TODO add protection againt recursive ones.
+def collect_pulses_dependecies(workbench, flat_walk):
+    """ Collector function for the build-dependencies extensions.
+
+    """
+    # Here we use direct call to plugin methods as this is internal to the
+    # plugin
+    manager = workbench.get_plugin('hqc_meas.pulses')
+
+    # Collect items.
+    s_res = manager.sequences_request(flat_walk['item_class'],
+                                      use_class_names=True,
+                                      views=False)
+    # Collect contexts.
+    c_res = manager.contexts_request(flat_walk['context_class'],
+                                     use_class_names=True,
+                                     views=False)
+    # Collect shapes.
+    sh_res = manager.shapes_request(flat_walk['shape_class'],
+                                      use_class_names=True,
+                                      views=False)
+
+    # Collect the templates.
+    tp_res = manager.sequences_request(flat_walk['template_id'])
+
+    # Collect the sequences.
+    sq_res = {p: load_sequence_prefs(p)[0] for p in flat_walk['sequence_path']
+              if p}
+
+    if s_res[1] or c_res[1] or sh_res[1] or tp_res[1]:
+        mess = 'Missing sequences: {}, contexts: {}, shapes: {}, templates: {}'
+
+        raise ValueError(mess.format(s_res[1], c_res[1], sh_res[1], tp_res[1]))
+
+    # Bundle all dependencies under a single dict.
+    dependencies = {}
+    dependencies.update(s_res[0])
+    dependencies['contexts'] = c_res[0]
+    dependencies['shapes'] = sh_res[0]
+    dependencies['templates'] = tp_res[0]
+    dependencies['sequences'] = sq_res
+
+    # Collect template dependencies.
+    for _, conf, _ in tp_res[0]:
+        t_conf = flatten_config(conf, ['item_class', 'context_class',
+                                       'shape_class', 'template_id'])
+        t_dep = collect_pulses_dependecies(workbench, t_conf)['pulses']
+        t_dep.pop('sequences')
+        dependencies['shapes'].update(t_dep.pop('shapes'))
+        dependencies['contexts'].update(t_dep.pop('contexts'))
+        dependencies['templates'].update(t_dep.pop('templates'))
+        dependencies.update(t_dep)
+
+    # NB : no nesting possible for pulse sequences.
+    for conf in sq_res.values():
+        s_conf = flatten_config(conf, ['item_class', 'context_class',
+                                       'shape_class', 'template_id'])
+        s_dep = collect_pulses_dependecies(workbench, s_conf)['pulses']
+        s_dep.pop('sequences')
+        dependencies['shapes'].update(s_dep.pop('shapes'))
+        dependencies['contexts'].update(s_dep.pop('contexts'))
+        dependencies['templates'].update(s_dep.pop('templates'))
+        dependencies.update(s_dep)
+
+    if dependencies:
+        return {'pulses': dependencies}
+    else:
+        return {}
 
 
 # =============================================================================
 # --- Manifest ----------------------------------------------------------------
 # =============================================================================
 
+enamldef PulsesManagerManifest(PluginManifest):
+    """Manifest declaring the extension points to Ecpy.
+
+    """
+    id = PLUGIN_ID
+    factory = manager_plugin_factory
+
+
+    # =========================================================================
+    # --- Startup Extension ----------------------------------------------------
+    # =========================================================================
+
+    Extension:
+        point = 'ecpy.app.startup'
+        AppStartup:
+            id = 'ecpy.pulses'
+            run => (workbench, cmd_args):
+                print('The package Ecpy Pulses package is installed. ')
+                #workbench.register(PulseManagerManifest()) #TODO TOOODO!
+
 
     # =========================================================================
     # --- Extension points ----------------------------------------------------
     # =========================================================================
 
+
     # =========================================================================
     # --- Extensions ----------------------------------------------------------
     # =========================================================================
+
+    Extension:
+        id = 'prefs'
+        point = 'ecpy.preferences.pref_plugin'
+        Preferences:
+            saving_method = 'pref_from_members'
+            loading_method = 'members_from_preferences'
+            auto_save = []
+
+    Extension:
+        id = 'state'
+        point = 'ecpy.state.states'
+        State:
+            id = 'ecpy.states.pulses'
+            description = MANAGER_STATE_DESCRIPTION
+            sync_members = ['sequences', 'contexts', 'shapes']
+
+    Extension:
+        id = 'item_classes'
+        point = 'ecpy.dependencies.build'
+        BuildDependency:
+            id = 'ecpy.pulses.dependencies'
+            walk_members = ['item_class', 'context_class',
+                            'shape_class', 'template_id',
+                            'sequence_path']
+            collect = collect_pulses_dependecies
+
+    Extension:
+        id = 'workspace'
+        point = u'enaml.workbench.ui.workspaces'
+        factory = workspace_factory
+
+    Extension:
+        id = 'commands'
+        point = 'enaml.workbench.core.commands'
+#        Command:
+#            id = 'ecpy.instr_manager.show_manager'
+#            description = SHOW_MANAGER_DESCRIPTION
+#            handler = show_manager
+        Command:
+            id = 'ecpy.pulses.show_starting_errors'
+            description = SHOW_ERRORS_DESCRIPTION
+            handler = show_starting_errors
+        Command:
+            id = 'ecpy.pulses.sequences_request'
+            description = SEQUENCES_REQUEST_DESCRIPTION
+            handler = sequences_request
+        Command:
+            id = 'ecpy.pulses.contexts_request'
+            description = CONTEXTS_REQUEST_DESCRIPTION
+            handler = contexts_request
+        Command:
+            id = 'ecpy.pulses.shapes_request'
+            description = SHAPES_REQUEST_DESCRIPTION
+            handler = shapes_request
+        Command:
+            id = 'ecpy.pulses.build_sequence'
+            description = BUILD_SEQUENCE_DESCRIPTION
+            handler = build_sequence
+        Command:
+            id = 'ecpy.pulses.build_context'
+            description = BUILD_CONTEXT_DESCRIPTION
+            handler = build_context
+
+    Extension:
+        id = 'menu'
+        point = 'enaml.workbench.ui.actions'
+        MenuItem:
+            path = '/tools/pulses'
+            label = 'Pulses'
+            after = 'tasks'
+            ItemGroup:
+                id = 'user'
+#        ActionItem:
+#            path = '/tasks/show_manager'
+#            label = 'Manager'
+#            command = 'ecpy.task_manager.show_manager'
+        ActionItem:
+            path = 'tools/pulses/show_errors'
+            label = 'Start up errors'
+            command = 'ecpy.pulses.show_starting_errors'
+        ActionItem:
+                path = '/workspace/pulses'
+                label = 'Pulses'
+                shortcut = 'Ctrl+3'
+                after = 'debug'
+                group = 'spaces'
+                command = 'enaml.workbench.ui.select_workspace'
+                parameters = {'workspace': 'ecpy.pulses.workspace'}
