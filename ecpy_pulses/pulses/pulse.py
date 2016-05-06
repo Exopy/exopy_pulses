@@ -10,8 +10,8 @@ from atom.api import (Instance, Unicode, Enum, Typed, Property, set_default)
 import numpy as np
 
 from ecpy.utils.atom_util import member_from_pref
-from .shapes.base_shapes import AbstractShape
-from .shapes.modulation import Modulation
+from ..shapes.base_shapes import AbstractShape
+from ..shapes.modulation import Modulation
 from .item import Item
 
 
@@ -101,7 +101,7 @@ class Pulse(Item):
 
         """
         pulse = cls()
-        for name, member in pulse.members().iteritems():
+        for name, member in pulse.members().items():
 
             # First we set the preference members
             meta = member.metadata
@@ -141,7 +141,7 @@ class Pulse(Item):
 
         """
         answers = {m: getattr(self, m, None) for m in members}
-        answers.update({k: c(self) for k, c in callables.iteritems()})
+        answers.update({k: c(self) for k, c in callables.items()})
         answers = [answers]
 
         if self.kind == 'Analogical':

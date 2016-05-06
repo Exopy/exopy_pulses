@@ -6,6 +6,9 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
+"""
+
+"""
 from atom.api import Enum, Unicode, Bool, Float, Property, Tuple, List
 from inspect import cleandoc
 
@@ -21,7 +24,8 @@ TIME_CONVERSION = {'s': {'s': 1, 'ms': 1e3, 'mus': 1e6, 'ns': 1e9},
 
 
 class BaseContext(HasPrefAtom):
-    """
+    """Base Class describing a Context
+
     """
     #: Time unit.
     time_unit = Enum('mus', 's', 'ms', 'ns').tag(pref=True)
@@ -105,5 +109,5 @@ class BaseContext(HasPrefAtom):
 
         """
         answers = {m: getattr(self, m, None) for m in members}
-        answers.update({k: c(self) for k, c in callables.iteritems()})
+        answers.update({k: c(self) for k, c in callables.items()})
         return answers

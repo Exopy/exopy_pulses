@@ -17,7 +17,7 @@ from ecpy.utils.atom_util import HasPrefAtom
 
 
 def sequence():
-    from .sequences.base_sequences import Sequence
+    from ..sequences.base_sequences import Sequence
     return Sequence
 
 

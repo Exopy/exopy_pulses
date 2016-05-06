@@ -8,30 +8,47 @@
 # -----------------------------------------------------------------------------
 """
 """
+
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+
 import os
 import logging
 import enaml
+from traceback import format_exc
 from importlib import import_module
-from atom.api import (Unicode, Dict, List, Unicode, Typed, ForwardTyped, Tuple)
+from atom.api import (Dict, List, Unicode, Typed, ForwardTyped, Tuple)
 
 from watchdog.observers import Observer
 from watchdog.events import (FileSystemEventHandler, FileCreatedEvent,
                              FileDeletedEvent, FileMovedEvent)
 from inspect import cleandoc
 
-from ecpy.utils.has_pref_plugin import HasPrefPlugin
+from ecpy.utils.plugin_tools import (HasPreferencesPlugin, ExtensionsCollector,
+                                     DeclaratorsCollector)
 from .pulses.pulse import Pulse
-from .pulses.sequences.base_sequences import Sequence, RootSequence
+from .sequences.base_sequences import Sequence, RootSequence
 from .configs import SEQUENCE_CONFIG, CONFIG_MAP_VIEW
 from .filters import SEQUENCES_FILTERS
 from .utils.sequences_io import load_sequence_prefs
 with enaml.imports():
     from .workspace.views.pulse_view import PulseView
-    from .workspace.views.sequences_views import (SequenceView,
-                                                  RootSequenceView)
+    from .workspace.views.sequence_views import (SequenceView,
+                                                 RootSequenceView)
 
 
-PACKAGE_PATH = os.path.join(os.path.dirname(__file__), '..')
+#PACKAGE_PATH = os.path.join(os.path.dirname(__file__), '..')
+PACKAGE_PATH = os.path.dirname(__file__)
+
+TEMPLATE_PATH = os.path.realpath(os.path.join(PACKAGE_PATH, 'templates'))
+
+CONTEXT_RELATIVE_PATH = "contexts"
+FILTERS_RELATIVE_PATH = "filters"
+PULSES_RELATIVE_PATH = "pulses"
+SEQUENCES_RELATIVE_PATH = "sequences"
+SHAPES_RELATIVE_PATH = "shapes"
+
 
 
 MODULE_ANCHOR = 'ecpy.pulses'
@@ -47,15 +64,11 @@ def workspace():
     return SequenceEditionSpace
 
 
-class PulsesManagerPlugin(HasPrefPlugin):
-    """
+class PulsesManagerPlugin(HasPreferencesPlugin):
+    """Plugin responsible for managing pulses.
     """
     #: Folders containings templates which should be loaded.
-    templates_folders = List(Unicode(),
-                             [os.path.realpath(
-                                 os.path.join(PACKAGE_PATH,
-                                              'templates'))]
-                             ).tag(pref=True)
+    templates_folders = List(default=[TEMPLATE_PATH]).tag(pref=True)
 
     #: Sequences loading exception.
     sequences_loading = List(Unicode()).tag(pref=True)
@@ -92,10 +105,26 @@ class PulsesManagerPlugin(HasPrefPlugin):
 
         """
         super(PulsesManagerPlugin, self).start()
-        path = os.path.realpath(os.path.join(PACKAGE_PATH,
-                                             'templates'))
-        if not os.path.isdir(path):
-            os.mkdir(path)
+
+        if not os.path.isdir(TEMPLATE_PATH):
+            try:
+                os.mkdir(TEMPLATE_PATH)
+            except Exception:
+                if TEMPLATE_PATH in self.templates_folders:
+                    self.templates_folders.remove(TEMPLATE_PATH)
+                core = self.workbench.get_plugin('enaml.workbench.core')
+                msg = 'Failed to create template folder.'
+                # Python 2 windows issue
+                try:
+                    msg += 'Traceback : %s' % format_exc()
+                except UnicodeError:
+                    msg += 'Failed to format error message.'
+                core.invoke_command('ecpy.app.errors.signal',
+                                    dict(kind='error',
+                                         message=msg))
+
+        # TODO #AfterFilters: insert here the declaratorCollctor
+
         self._refresh_sequences()
         self._refresh_template_sequences()
         self._refresh_contexts()
@@ -157,11 +186,11 @@ class PulsesManagerPlugin(HasPrefPlugin):
                                )
             missing = list(set.intersection(missing_py, missing_temp))
 
-            answer.update({key: val for key, val in self._sequences.iteritems()
+            answer.update({key: val for key, val in self._sequences.items()
                            if key in sequences})
 
             answer.update({key: tuple([val] + list(load_sequence_prefs(val)))
-                           for key, val in self._template_sequences.iteritems()
+                           for key, val in self._template_sequences.items()
                            if key in sequences})
         else:
             class_names = {val[0].__name__: val
@@ -170,11 +199,11 @@ class PulsesManagerPlugin(HasPrefPlugin):
             missing = [name for name in sequences
                        if name not in class_names]
 
-            answer.update({key: val for key, val in class_names.iteritems()
+            answer.update({key: val for key, val in class_names.items()
                            if key in sequences})
 
         if not views:
-            answer = {k: v[0] for k, v in answer.iteritems()}
+            answer = {k: v[0] for k, v in answer.items()}
 
         return answer, missing
 
@@ -205,7 +234,7 @@ class PulsesManagerPlugin(HasPrefPlugin):
             missing = [name for name in contexts
                        if name not in self._contexts.keys()]
 
-            answer.update({key: val for key, val in self._contexts.iteritems()
+            answer.update({key: val for key, val in self._contexts.items()
                            if key in contexts})
 
         else:
@@ -215,11 +244,11 @@ class PulsesManagerPlugin(HasPrefPlugin):
             missing = [name for name in contexts
                        if name not in class_names]
 
-            answer.update({key: val for key, val in class_names.iteritems()
+            answer.update({key: val for key, val in class_names.items()
                            if key in contexts})
 
         if not views:
-            answer = {k: v[0] for k, v in answer.iteritems()}
+            answer = {k: v[0] for k, v in answer.items()}
 
         return answer, missing
 
@@ -249,7 +278,7 @@ class PulsesManagerPlugin(HasPrefPlugin):
             missing = [name for name in shapes
                        if name not in self._shapes.keys()]
 
-            answer.update({key: val for key, val in self._shapes.iteritems()
+            answer.update({key: val for key, val in self._shapes.items()
                            if key in shapes})
 
         else:
@@ -259,11 +288,11 @@ class PulsesManagerPlugin(HasPrefPlugin):
             missing = [name for name in shapes
                        if name not in class_names]
 
-            answer.update({key: val for key, val in class_names.iteritems()
+            answer.update({key: val for key, val in class_names.items()
                            if key in shapes})
 
         if not views:
-            answer = {k: v[0] for k, v in answer.iteritems()}
+            answer = {k: v[0] for k, v in answer.items()}
 
         return answer, missing
 
@@ -382,7 +411,7 @@ class PulsesManagerPlugin(HasPrefPlugin):
         """ Refresh the known sequences.
 
         """
-        path = os.path.join(PACKAGE_PATH, 'sequences')
+        path = os.path.join(PACKAGE_PATH, SEQUENCES_RELATIVE_PATH)
         failed = {}
 
         modules, v_modules = self._explore_package('sequences', path, failed,
@@ -394,7 +423,7 @@ class PulsesManagerPlugin(HasPrefPlugin):
         self._explore_views(v_modules, views, 'SEQUENCES_VIEWS', failed)
 
         valid_sequences = {k: (v, views[v.__name__])
-                           for k, v in sequences.iteritems()
+                           for k, v in sequences.items()
                            if v.__name__ in views}
         valid_sequences['Sequence'] = (Sequence, SequenceView)
         valid_sequences['RootSequence'] = (RootSequence, RootSequenceView)
@@ -426,11 +455,11 @@ class PulsesManagerPlugin(HasPrefPlugin):
         views = {}
         self._explore_modules(modules, contexts, 'CONTEXTS', failed)
         self._explore_views(v_modules, views, 'CONTEXTS_VIEWS', failed)
-        print contexts, views
+        print(contexts, views)
         valid_contexts = {k: (v, views[v.__name__])
-                          for k, v in contexts.iteritems()
+                          for k, v in contexts.items()
                           if v.__name__ in views}
-        print valid_contexts
+        print(valid_contexts)
         self._contexts = valid_contexts
         self.contexts = list(valid_contexts.keys())
 
@@ -453,7 +482,7 @@ class PulsesManagerPlugin(HasPrefPlugin):
         self._explore_views(v_modules, views, 'SHAPES_VIEWS', failed)
 
         valid_shapes = {k: (v, views[v.__name__])
-                        for k, v in shapes.iteritems()
+                        for k, v in shapes.items()
                         if v.__name__ in views}
 
         self._shapes = valid_shapes
@@ -474,7 +503,7 @@ class PulsesManagerPlugin(HasPrefPlugin):
 
         """
         mapping = {}
-        for key, val in SEQUENCE_CONFIG.iteritems():
+        for key, val in SEQUENCE_CONFIG.items():
             mapping[key] = (val, CONFIG_MAP_VIEW[val])
 
         self._configs = mapping

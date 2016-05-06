@@ -93,7 +93,7 @@ class SubclassFilter(AbstractFilter):
         """
         """
         sequences = []
-        for name, t_class in py_sequences.iteritems():
+        for name, t_class in py_sequences.items():
             if issubclass(t_class, cls.task_class):
                 sequences.append(name)
 
@@ -120,7 +120,7 @@ class ClassAttrTaskFilter(AbstractFilter):
         sequences = []
         attr_name = cls.class_attr['name']
         attr_val = cls.class_attr['value']
-        for name, t_class in py_sequences.iteritems():
+        for name, t_class in py_sequences.items():
             if (hasattr(t_class, attr_name)
                     and getattr(t_class, attr_name) == attr_val):
                 sequences.append(name)

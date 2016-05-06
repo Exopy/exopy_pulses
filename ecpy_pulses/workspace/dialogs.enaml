@@ -19,8 +19,10 @@ from enaml.widgets.api import (Dialog, Container, Stack, StackItem,
                                Field, GroupBox, CheckBox, Label, Notebook,
                                Page)
 
-from ecpy.utils.widgets.dict_editor import DictEditor
-from ecpy.utils.widgets.errors_display import ErrorsDisplayContainer
+from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor, 
+                                            FieldFieldCompleterEditor)
+from ecpy.app.errors.widgets import (BasicErrorsDisplay, 
+                HierarchicalErrorsDisplay) # should delete one of the two
 from ..widgets.browsing import SequenceSelector
 
 
@@ -71,16 +73,20 @@ enamldef CompilationWidget(Container): main:
         Page:
             title = 'Errors'
             enabled << bool(errors)
-            ErrorsDisplayContainer:
+            BasicErrorsDisplay:
                 errors << main.errors
-                errors_type = 'Compilation errors'
+                kind = 'Compilation errors'
         Page:
             title = 'Variables'
-            DictEditor(_ValEditor): ed:
-                ed.model = workspace.state.sequence
-                ed.iterable_name = 'external_vars'
-                ed.title = 'Variables'
-                ed.operations = ['move']
+            DictEditor(_ValEditor): de:
+                de.mapping := workspace.state.sequence.external_vars
+                de.operations = ['move']
+                
+#            DictEditor(_ValEditor): ed:
+#                ed.model = workspace.state.sequence
+#                ed.iterable_name = 'external_vars'
+#                ed.title = 'Variables'
+#                ed.operations = ['move']
 
     Label: dur_lab:
         text = 'Compilation duration (µs)'

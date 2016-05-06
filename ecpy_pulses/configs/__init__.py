@@ -6,7 +6,7 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-from ..pulses.sequences.base_sequences import Sequence
+from ..sequences.base_sequences import Sequence
 from .base_config import SequenceConfig
 
 

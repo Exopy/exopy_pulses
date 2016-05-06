@@ -17,7 +17,8 @@ from enaml.widgets.api import (PushButton, Container, Label, Field,
 from enaml.core.api import Looper, Conditional, Include
 from enaml.workbench.core.core_plugin import CorePlugin
 
-from ecpy.utils.widgets.dict_editor import DictEditor
+from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
+                                            FieldFieldCompleterEditor)
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ...utils.entry_eval import EVALUATER_TOOLTIP
 from ...pulses.pulse import Pulse
@@ -156,7 +157,7 @@ class ViewsManager(Atom):
         items, _ = self.core.invoke_command(cmd,
                                             {'sequences': class_names,
                                              'use_class_names': True})
-        self.views.update({k: v[1] for k, v in items.iteritems()})
+        self.views.update({k: v[1] for k, v in items.items()})
 
 
 enamldef _SequenceListView(Container): list_view:
@@ -378,10 +379,23 @@ enamldef SequenceView(GroupBox): view:
 
         Page:
             title = 'Local vars'
-            DictEditor(VarEditor): ed:
-                ed.title = 'Name : formula'
-                ed.model = item
-                ed.iterable_name = 'local_vars'
+            DictEditor(FieldFieldEditor): de:
+                de.mapping := item.local_vars
+#                de.operations = ['add','move','remove']
+                #Todo_Restore Add Back autocompletion!
+                
+#            DictEditor(FieldFieldCompleterEditor): de:
+#                de.attributes = {
+#                    'entries_updater' : item.model.parent.get_bindable_vars,
+#                    'evaluater_tooltip' : EVALUATER_TOOLTIP }
+#                de.mapping := item.local_vars
+#                de.operations = ['add','move','remove']
+
+#           DictEditor(VarEditor): ed:
+#                ed.title = 'Name : formula'
+#                ed.model = item
+#                ed.iterable_name = 'local_vars'
+
 
 
 def instantiate_context_view(core, context, cache):

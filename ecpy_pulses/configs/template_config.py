@@ -14,9 +14,9 @@ from copy import deepcopy
 from ast import literal_eval
 
 from .base_config import AbstractConfig
-from ..pulses.sequences.template_sequence import TemplateSequence
 from ..contexts.template_context import TemplateContext
-from ..pulses.sequences.base_sequences import Sequence
+from ..sequences.base_sequences import Sequence
+from ..sequences.template_sequence import TemplateSequence
 from ..pulses.pulse import Pulse
 
 
