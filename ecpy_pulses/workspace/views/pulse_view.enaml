@@ -26,7 +26,7 @@ def default_add_displays(core, item):
                                                modulation=item.modulation))
 
         if item.shape:
-            cmd = 'hqc_meas.pulses.shapes_request'
+            cmd = 'ecpy.pulses.shapes_request'
             shapes, _ = core.invoke_command(cmd,
                                             {'shapes': item.shape.shape_class,
                                              'use_class_names': True})
@@ -47,9 +47,9 @@ enamldef PulseView(GroupBox): view:
     attr context << item.root.context
     attr core
     attr add_displays = default_add_displays(core, item)
-    attr pulse_state = core.invoke_command('hqc_meas.state.get',
+    attr pulse_state = core.invoke_command('ecpy.app.states.get',
                                            {'state_id':
-                                            'hqc_meas.states.pulses'})
+                                            'ecpy.app.states.pulses'})
 
     title << 'Pulse {}'.format(item.index)
     hug_height = 'strong'
@@ -142,7 +142,7 @@ enamldef PulseView(GroupBox): view:
                         a_d.pop()
                         view.add_displays = a_d
                     if change['value']:
-                        cmd = 'hqc_meas.pulses.shapes_request'
+                        cmd = 'ecpy.pulses.shapes_request'
                         shapes, _ = core.invoke_command(cmd,
                                                         {'shapes':
                                                             [change['value']]})

@@ -23,12 +23,12 @@ from .browsing import SequenceSelector
 
 # Circular import protections
 def pulse_manager():
-    from .plugin import PulsesManagerPlugin
+    from ..plugin import PulsesManagerPlugin
     return PulsesManagerPlugin
 
 
 def abstract_config():
-    from .config.base_config import AbstractConfig
+    from ..configs.base_config import AbstractConfig
     return AbstractConfig
 
 

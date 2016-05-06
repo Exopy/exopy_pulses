@@ -51,7 +51,7 @@ SHAPES_RELATIVE_PATH = "shapes"
 
 
 
-MODULE_ANCHOR = 'ecpy.pulses'
+MODULE_ANCHOR = 'ecpy_pulses'
 
 
 def workspace_state():
@@ -496,7 +496,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         """
         self._filters = SEQUENCES_FILTERS
-        self.filters = SEQUENCES_FILTERS.keys()
+        self.filters = list(SEQUENCES_FILTERS.keys())
 
     def _refresh_config(self):
         """ Place holder for a future config discovery function

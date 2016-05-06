@@ -153,7 +153,7 @@ class ViewsManager(Atom):
         with the given names.
 
         """
-        cmd = 'hqc_meas.pulses.sequences_request'
+        cmd = 'ecpy.pulses.sequences_request'
         items, _ = self.core.invoke_command(cmd,
                                             {'sequences': class_names,
                                              'use_class_names': True})
@@ -192,7 +192,7 @@ enamldef _SequenceListView(Container): list_view:
                       index = edited_list.index(loop_item),
                       factory = core.invoke_command,
                       operations = operations,
-                      args = ('hqc_meas.pulses.build_sequence',),
+                      args = ('ecpy.pulses.build_sequence',),
                       kwargs = {'parameters': {'parent_ui': button,
                                                'root': sequence.root,
                                                'mode': 'ui'},
@@ -224,7 +224,7 @@ enamldef SequenceEditor(Container): view:
             PushButton: seq:
                 text = 'Add sequence'
                 clicked ::
-                    obj = core.invoke_command('hqc_meas.pulses.build_sequence',
+                    obj = core.invoke_command('ecpy.pulses.build_sequence',
                                               {'parent_ui': view,
                                                'mode': 'ui',
                                                'root': sequence.root}, view)
@@ -286,7 +286,7 @@ enamldef NonFoldingSequenceEditor(Container): view:
             PushButton: seq:
                 text = 'Add sequence'
                 clicked ::
-                    obj = core.invoke_command('hqc_meas.pulses.build_sequence',
+                    obj = core.invoke_command('ecpy.pulses.build_sequence',
                                               {'parent_ui': view,
                                                'mode': 'ui',
                                                'root': sequence.root}, view)
@@ -403,7 +403,7 @@ def instantiate_context_view(core, context, cache):
 
     """
     if context:
-        cmd = 'hqc_meas.pulses.contexts_request'
+        cmd = 'ecpy.pulses.contexts_request'
         contexts, _ = core.invoke_command(cmd,
                                           {'contexts': context.context_class,
                                            'use_class_names': True})
@@ -455,7 +455,7 @@ enamldef RootSequenceView(GroupBox): view:
                 PushButton:
                     text = 'Change context' if item.context else 'Choose context'
                     clicked ::
-                        cmd = 'hqc_meas.pulses.build_context'
+                        cmd = 'ecpy.pulses.build_context'
                         view.core.invoke_command(cmd, {'root': item,
                                                        'parent_ui': self})
                 Include:

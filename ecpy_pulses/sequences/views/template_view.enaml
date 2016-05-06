@@ -16,10 +16,10 @@ from enaml.widgets.api import (PushButton, Container, Label, Field,
 from enaml.core.api import Conditional, Include
 
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
-from ecpy.utils.widgets.dict_editor import (DictEditor, StringStringEditor,
-                                            StringStringCompleterEditor)
+from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
+                                            FieldFieldCompleterEditor)
 
-from ...workspace.views.sequences_views import (VarEditor,
+from ...workspace.views.sequence_views import (VarEditor,
                                                instantiate_context_view)
 
 enamldef TemplateSequenceView(GroupBox): view:
@@ -67,7 +67,7 @@ enamldef TemplateSequenceView(GroupBox): view:
 
         Page:
             title = 'Template vars'
-            DictEditor(StringStringEditor): de:
+            DictEditor(FieldFieldEditor): de:
                 de.mapping = item.template_vars
                 #TODO Restore tooltip copmpleters
 

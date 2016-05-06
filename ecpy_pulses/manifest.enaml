@@ -303,7 +303,6 @@ enamldef PulsesManagerManifest(PluginManifest):
             id = 'ecpy.pulses'
             run => (workbench, cmd_args):
                 print('The Ecpy_Pulses plugin has been loaded. ')
-                #workbench.register(PulseManagerManifest()) #TODO TOOODO!
 
 
     # =========================================================================

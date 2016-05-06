@@ -69,7 +69,7 @@ class TemplateConfig(AbstractConfig):
 
         """
         core = self.manager.workbench.get_plugin('enaml.workbench.core')
-        cmd = 'hqc_meas.dependencies.collect_build_dep_from_config'
+        cmd = 'ecpy.dependencies.collect_build_dep_from_config'
         dep = core.invoke_command(cmd, {'config': self.template_config})
         if isinstance(dep, Exception):
             self.errors = {'collections': repr(dep)}
