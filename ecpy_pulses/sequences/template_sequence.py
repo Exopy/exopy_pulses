@@ -11,8 +11,8 @@ from inspect import cleandoc
 from copy import deepcopy
 from ast import literal_eval
 
-from ...utils.entry_eval import eval_entry
-from ..sequences.base_sequences import BaseSequence, Sequence
+from ..utils.entry_eval import eval_entry
+from .base_sequences import BaseSequence, Sequence
 
 
 def context():
@@ -51,7 +51,7 @@ class TemplateSequence(BaseSequence):
 
         prefix = '{}_'.format(self.index)
         # Template vars evaluation.
-        for name, formula in self.template_vars.iteritems():
+        for name, formula in self.template_vars.items():
             if name not in self._evaluated_vars:
                 try:
                     val = eval_entry(formula, sequence_locals, missings)
@@ -60,7 +60,7 @@ class TemplateSequence(BaseSequence):
                     errors[prefix + name] = repr(e)
 
         # Local vars computation.
-        for name, formula in self.local_vars.iteritems():
+        for name, formula in self.local_vars.items():
             if name not in self._evaluated_vars:
                 try:
                     val = eval_entry(formula, sequence_locals, missings)

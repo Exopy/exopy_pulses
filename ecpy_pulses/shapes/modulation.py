@@ -11,7 +11,7 @@ from math import pi as Pi
 import numpy as np
 
 from ecpy.utils.atom_util import HasPrefAtom
-from ...utils.entry_eval import eval_entry
+from ..utils.entry_eval import eval_entry
 
 FREQ_TIME_UNIT_MAP = {'s': {'Hz': 1, 'kHz': 1000, 'MHz': 1e6, 'GHz': 1e9},
                       'ms': {'Hz': 1e-3, 'kHz': 1, 'MHz': 1e3, 'GHz': 1e6},
@@ -151,5 +151,5 @@ class Modulation(HasPrefAtom):
 
         """
         answers = {m: getattr(self, m, None) for m in members}
-        answers.update({k: c(self) for k, c in callables.iteritems()})
+        answers.update({k: c(self) for k, c in callables.items()})
         return answers

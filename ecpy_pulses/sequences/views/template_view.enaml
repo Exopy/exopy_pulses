@@ -16,10 +16,11 @@ from enaml.widgets.api import (PushButton, Container, Label, Field,
 from enaml.core.api import Conditional, Include
 
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
-from ecpy.utils.widgets.dict_editor import DictEditor
+from ecpy.utils.widgets.dict_editor import (DictEditor, StringStringEditor,
+                                            StringStringCompleterEditor)
 
-from ...sequences_views import VarEditor, instantiate_context_view
-#TODO Resolve the linkage to ...sequence_views
+from ...workspace.views.sequences_views import (VarEditor,
+                                               instantiate_context_view)
 
 enamldef TemplateSequenceView(GroupBox): view:
     """ View for Sequence.
@@ -66,10 +67,14 @@ enamldef TemplateSequenceView(GroupBox): view:
 
         Page:
             title = 'Template vars'
-            DictEditor(VarEditor): ed:
-                ed.title = 'Name : formula'
-                ed.model = item
-                ed.iterable_name = 'template_vars'
+            DictEditor(StringStringEditor): de:
+                de.mapping = item.template_vars
+                #TODO Restore tooltip copmpleters
+
+            #DictEditor(VarEditor): ed:
+            #    ed.title = 'Name : formula'
+            #    ed.model = item
+            #    ed.iterable_name = 'template_vars'
 
         Page:
             title = 'Context'

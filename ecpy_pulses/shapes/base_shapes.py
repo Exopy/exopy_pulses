@@ -10,7 +10,7 @@ from atom.api import (Unicode, FloatRange)
 import numpy as np
 
 from ecpy.utils.atom_util import HasPrefAtom
-from ...utils.entry_eval import eval_entry
+from ..utils.entry_eval import eval_entry
 
 
 class AbstractShape(HasPrefAtom):
@@ -72,7 +72,7 @@ class AbstractShape(HasPrefAtom):
 
         """
         answers = {m: getattr(self, m, None) for m in members}
-        answers.update({k: c(self) for k, c in callables.iteritems()})
+        answers.update({k: c(self) for k, c in callables.items()})
         return answers
 
 

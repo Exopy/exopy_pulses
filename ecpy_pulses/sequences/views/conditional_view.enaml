@@ -16,10 +16,11 @@ from enaml.widgets.api import (PushButton, Container, Label, Field,
 from enaml.core.api import Conditional
 
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
-from ecpy.utils.widgets.dict_editor import DictEditor
+from ecpy.utils.widgets.dict_editor import (DictEditor, StringStringEditor, 
+                                            StringStringCompleterEditor)
 
-from ...sequences_views import SequenceEditor, VarEditor
-from ....utils.entry_eval import EVALUATER_TOOLTIP
+from ...workspace.views.sequences_views import SequenceEditor
+from ...utils.entry_eval import EVALUATER_TOOLTIP
 
 enamldef ConditionalSequenceView(GroupBox): view:
     """ View for Sequence.
@@ -88,9 +89,12 @@ enamldef ConditionalSequenceView(GroupBox): view:
 
         Page:
             title = 'Local vars'
-            DictEditor(VarEditor): ed:
-                ed.title = 'Name : formula'
-                ed.model = item
-                ed.iterable_name = 'local_vars'
+            DictEditor(StringStringEditor): de:
+            de.mapping = item.local_vars
+            
+            #DictEditor(VarEditor): ed:
+            #    ed.title = 'Name : formula'
+            #    ed.model = item
+            #    ed.iterable_name = 'local_vars'
 
 SEQUENCES_VIEWS = {'ConditionalSequence': ConditionalSequenceView}

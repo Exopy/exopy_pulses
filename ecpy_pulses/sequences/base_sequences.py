@@ -13,10 +13,10 @@ from inspect import cleandoc
 from copy import deepcopy
 
 from ecpy.utils.atom_util import member_from_pref
-from ...contexts.base_context import BaseContext
-from ...utils.entry_eval import eval_entry
-from ..item import Item
-from ..pulse import Pulse
+from ..contexts.base_context import BaseContext
+from ..utils.entry_eval import eval_entry
+from ..pulses.item import Item
+from ..pulses.pulse import Pulse
 
 
 class BaseSequence(Item):
@@ -137,7 +137,7 @@ class BaseSequence(Item):
 
         """
         sequence = cls()
-        for name, member in sequence.members().iteritems():
+        for name, member in sequence.members().items():
 
             # First we set the preference members
             meta = member.metadata
@@ -270,7 +270,7 @@ class BaseSequence(Item):
 
         """
         answers = {m: getattr(self, m, None) for m in members}
-        answers.update({k: c(self) for k, c in callables.iteritems()})
+        answers.update({k: c(self) for k, c in callables.items()})
         return answers
 
 
@@ -323,7 +323,7 @@ class Sequence(BaseSequence):
             self.eval_entries(root_vars, sequence_locals, missings, errors)
 
         # Local vars computation.
-        for name, formula in self.local_vars.iteritems():
+        for name, formula in self.local_vars.items():
             if name not in self._evaluated_vars:
                 try:
                     val = eval_entry(formula, sequence_locals, missings)
@@ -629,7 +629,7 @@ class RootSequence(Sequence):
         root_vars = self.external_vars.copy()
 
         # Local vars computation.
-        for name, formula in self.local_vars.iteritems():
+        for name, formula in self.local_vars.items():
             if name not in self._evaluated_vars:
                 try:
                     val = eval_entry(formula, root_vars, missings)

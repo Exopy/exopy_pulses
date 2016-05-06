@@ -8,8 +8,8 @@
 # -----------------------------------------------------------------------------
 from atom.api import Unicode, set_default
 
-from ..sequences.base_sequences import Sequence
-from ...utils.entry_eval import eval_entry
+from .base_sequences import Sequence
+from ..utils.entry_eval import eval_entry
 
 
 class ConditionalSequence(Sequence):
