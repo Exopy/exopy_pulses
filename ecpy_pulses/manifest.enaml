@@ -29,13 +29,16 @@ from ecpy.app.states.api import State
 from ecpy.app.dependencies.api import BuildDependency, RuntimeDependencyAnalyser
 from ecpy.utils.plugin_tools import make_handler
 
-#from hqc_meas.utils.widgets.errors_display import errors_display    
+from ecpy.app.errors.widgets import (ErrorsDialog, BasicErrorsDisplay)
 from ecpy.measure.workspace.checks_display import ChecksDisplay
 from .utils.flatten_config import flatten_config
 
 from .widgets.building import BuilderView, ContextBuilderView
 from .utils.sequences_io import load_sequence_prefs
 from .sequences.base_sequences import RootSequence
+
+from .filters.base_filters import (ItemFilter, SequenceFilter, TemplateFilter,
+                                   SubclassItemFilter, MetadataItemFilter)
 
 
 
@@ -80,8 +83,8 @@ def show_starting_errors(event):
     if rep:
         ChecksDisplay(ui.window, title='Pulses manager start up errors',
                       errors=manager.report()).exec_()
-    else:
-        ErrorsDisplay(ui.window, title='Pulses manager start up errors',
+    else: #TODO ???? should be a dialog
+        BasicErrorsDisplay(ui.window, #title='Pulses manager start up errors',
                       errors=manager.report()).exec_()
 
 def sequences_request(event):
@@ -146,8 +149,8 @@ def build_sequence(event):
             if seq:
                 return seq
             else:
-                ErrorsDisplay(errors=dial.model.sequence_config.errors,
-                              errors_type='Config errors').exec_()
+                BasicErrorsDisplay(errors=dial.model.sequence_config.errors,
+                                   kind='Config errors').exec_()
 
     elif mode == 'file':
         if 'path' in event.parameters:
@@ -206,6 +209,13 @@ BUILD_CONTEXT_DESCRIPTION = \
 
 MANAGER_STATE_DESCRIPTION = \
 """ The tasks manager gives access to the known tasks and filters."""
+
+FILTERS_DESC =\
+"""Filters are used when listing the items known to the application. Filters
+must inherit from one of the base classes found in filters.py.
+
+"""
+
 
 # =============================================================================
 # --- ???????????? ------------------------------------------------------------
@@ -309,10 +319,27 @@ enamldef PulsesManagerManifest(PluginManifest):
     # --- Extension points ----------------------------------------------------
     # =========================================================================
 
+    ExtensionPoint:
+        id = 'filters'
+        description = FILTERS_DESC
 
     # =========================================================================
     # --- Extensions ----------------------------------------------------------
     # =========================================================================
+
+    #: Filters
+    Extension:
+        id = 'filters'
+        point = 'ecpy.pulses.filters'
+        ItemFilter:
+            id = 'All'
+        SequenceFilter:
+            id = 'Sequences'
+        TemplateFilter:
+            id = 'Templates'
+        
+
+
 
     #Ported
     Extension:

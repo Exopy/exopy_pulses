@@ -9,17 +9,28 @@
 """ Module defining the basic filters.
 
 """
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+from atom.api import Value, Subclass, Unicode, Property, set_default
+from enaml.core.api import d_func, d_
+
+from ecpy.utils.declarator import Declarator
+
+from ..Item import Item
 
 
-class AbstractFilter(object):
+class ItemFilter(Declarator):
     """ Base class for all item filters.
 
     Filters should simply override the filter_items classmethod.
 
     """
 
-    @classmethod
-    def filter_items(cls, py_items, template_items):
+    id = d_(Unicode())
+
+    @d_func
+    def filter_items(self, py_sequences, template_sequences):
         """ Class method used to filter tasks.
 
         Parameters
@@ -27,7 +38,7 @@ class AbstractFilter(object):
             py_items : dict
                 Dictionary of known python items as name : class
 
-            template_items : dict
+            template_sequences : dict
                 Dictionary of known templates as name : path
 
         Returns
@@ -36,65 +47,46 @@ class AbstractFilter(object):
                 List of the name of the task matching the filters criteria.
 
         """
-        err_str = 'This method should be implemented by subclasses of\
-        AbstractFilter. This method is called when the program requires\
-        the task filter to filter the list of available tasks'
-        raise NotImplementedError(err_str)
-
-
-class AllSequenceFilter(AbstractFilter):
-    """ Filter returning all tasks.
-
-    """
-
-    @classmethod
-    def filter_items(cls, py_sequences, template_sequences):
-
-        items = list(py_sequences.keys()) + list(template_sequences.keys())
-        items.remove('Pulse')
-        items.remove('RootSequence')
         return items
 
 
-class PySequenceFilter(AbstractFilter):
-    """ Filter keeping only the python tasks.
+class SequenceFilter(ItemFilter):
+    """ Filter returning sequences selected in the method filter_sequences.
 
     """
 
-    @classmethod
-    def filter_items(cls, py_sequences, template_sequences):
+    @d_func
+    def filter_items(self, py_sequences, template_sequences):
 
-        sequences = py_sequences.keys()
-        sequences.remove('RootSequence')
-        return sequences
+        return py_sequences
 
 
-class TemplateSequenceFilter(AbstractFilter):
+class TemplateFilter(ItemFilter):
     """ Filter keeping only the templates.
 
     """
 
-    @classmethod
-    def filter_items(cls, py_sequences, template_sequences):
+    @d_func
+    def filter_items(self, py_sequences, template_sequences):
 
-        return template_sequences.keys()
+        return template_sequences
 
 
-class SubclassFilter(AbstractFilter):
-    """ Filter keeping only the python tasks which are subclass of task_class.
+class SubclassItemFilter(ItemFilter):
+    """ Filter keeping only the python items which are subclass of task_class.
 
     """
 
     # Class attribute to which task will be compared.
-    task_class = type
+    subclass = d_(Subclass(Item))
 
-    @classmethod
-    def filter_items(cls, py_sequences, template_sequences):
+    @d_func
+    def filter_items(self, py_sequences, template_sequences):
         """
         """
         sequences = []
         for name, t_class in py_sequences.items():
-            if issubclass(t_class, cls.task_class):
+            if issubclass(t_class, self.subclass):
                 sequences.append(name)
 
         try:
@@ -106,23 +98,26 @@ class SubclassFilter(AbstractFilter):
         return sequences
 
 
-class ClassAttrTaskFilter(AbstractFilter):
-    """ Filter keeping only the tasks with the right class attribute.
+class MetadataItemFilter(ItemFilter):
+    """ Filter keeping only the items with the right class attribute.
 
     """
 
-    class_attr = {'name': '', 'value': None}
+    meta_key = d_(Unicode())
 
-    @classmethod
-    def filter_items(cls, py_sequences, template_sequences):
+    meta_value = d_(Value())
+
+    @d_func
+    def filter_items(self, py_sequences, template_sequences):
         """
+
         """
         sequences = []
-        attr_name = cls.class_attr['name']
-        attr_val = cls.class_attr['value']
+        attr_name = self.meta_key
+        attr_val = self.meta_value
         for name, t_class in py_sequences.items():
-            if (hasattr(t_class, attr_name)
-                    and getattr(t_class, attr_name) == attr_val):
+            if (hasattr(t_class, attr_name) and
+                    getattr(t_class, attr_name) == attr_val):
                 sequences.append(name)
 
         try:
@@ -134,6 +129,17 @@ class ClassAttrTaskFilter(AbstractFilter):
         return sequences
 
 
-SEQUENCES_FILTERS = {'All': AllSequenceFilter,
-                     'Python': PySequenceFilter,
-                     'Template': TemplateSequenceFilter}
+class GroupItemFilter(MetadataItemFilter):
+    """Filter keeping only the items from the right groupm which is a
+    metadata property of those items.
+
+    """
+    #: Group to which the task must belong.
+    grup = d_(Unicode())
+
+    meta_key = set_default('group')
+
+    meta_value = Property()
+
+    def _get_meta_value(self):
+        return self.group
