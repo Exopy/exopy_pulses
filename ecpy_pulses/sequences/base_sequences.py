@@ -7,7 +7,7 @@
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
 from atom.api import (Int, Instance, Unicode, Dict, Bool, List,
-                      ContainerList, set_default)
+                      Signal, set_default)
 from itertools import chain
 from inspect import cleandoc
 from copy import deepcopy
@@ -15,8 +15,9 @@ from copy import deepcopy
 from ecpy.utils.atom_util import member_from_pref
 from ..contexts.base_context import BaseContext
 from ..utils.entry_eval import eval_entry
-from ..pulses.item import Item
-from ..pulses.pulse import Pulse
+from ecpy.utils.container_change import ContainerChange
+from ..item import Item
+from ..pulse import Pulse
 
 
 class BaseSequence(Item):
@@ -24,7 +25,9 @@ class BaseSequence(Item):
 
     This class defines the basic of a sequence but with only a very limited
     child support : only construction is supported, indexing is not handled
-    nor is child insertion, deletion or displacement.
+    nor is child insertion, deletion or displacement (This is because 
+    TemplateSequence inherits from BaseSequence, while everything else inherits
+    from Sequence which supports insertion/deletion/displacement).
 
     """
     # --- Public API ----------------------------------------------------------
@@ -33,7 +36,14 @@ class BaseSequence(Item):
     name = Unicode().tag(pref=True)
 
     #: List of items this sequence consists of.
-    items = ContainerList(Instance(Item))
+    items = List(Instance(Item)).tag(child=100)
+
+    #: Signal emitted when the list of items in this sequence changes. The
+    #: payload will be a ContainerChange instance.
+    #:
+    #:
+    #:
+    items_changed = Signal().tag(child_notifier='items')
 
     #: Dict of variables whose scope is limited to the sequence. Each key/value
     #: pair represents the name and definition of the variable.
@@ -159,7 +169,7 @@ class BaseSequence(Item):
             if item_name not in config:
                 break
             item_config = config[item_name]
-            item_class_name = item_config.pop('item_class')
+            item_id_name = item_config.pop('item_id')
             item_class = dependencies['pulses'][item_class_name]
             item = item_class.build_from_config(item_config,
                                                 dependencies)
@@ -206,7 +216,6 @@ class BaseSequence(Item):
 
         """
 
-        
         # Inplace modification of compile will update self._compiled.
         if not self._compiled:
             self._compiled = [None for i in self.items if i.enabled]
@@ -397,6 +406,85 @@ class Sequence(BaseSequence):
         for i, item in enumerate(self.items):
             para = parameters['item_{}'.format(i)]
             item.update_members_from_preferences(**para)
+
+    def add_child_item(self, index, child):
+        """Add a child item at the given index.
+
+        Parameters
+        ----------
+        index : int
+            Index at which to insert the new child item.
+
+        child : BaseTask
+            Task to insert in the list of children item.
+
+        """
+        self.children.insert(index, child)
+        child.parent = self
+
+        child.observe('linkable_vars', self.root._update_linkable_vars)
+        if isinstance(child, Sequence):
+            child.observe('_last_index', self._item_last_index_updated)
+
+        # In the absence of a root item do nothing else than inserting the
+        # child.
+        if self.has_root:
+            # Give him its root so that it can proceed to any child
+            # registration it needs to.
+            child.root = self.root
+
+            notification = ContainerChange(obj=self, name='items',
+                                           added=[(index, child)])
+            self.children_changed(notification)
+
+    def move_child_task(self, old, new):
+        """Move a child item.
+
+        Parameters
+        ----------
+        old : int
+            Index at which the child to move is currently located.
+
+        new : BaseTask
+            Index at which to insert the child item.
+
+        """
+        child = self.children.pop(old)
+        self.children.insert(new, child)
+
+        # In the absence of a root item do nothing else than moving the
+        # child.
+        if self.has_root:
+
+            notification = ContainerChange(obj=self, name='items',
+                                           moved=[(old, new, child)])
+            self.children_changed(notification)
+
+    def remove_child_task(self, index):
+        """Remove a child item from the children list.
+
+        Parameters
+        ----------
+        index : int
+            Index at which the child to remove is located.
+
+        """
+        child = self.children.pop(index)
+
+        child.unobserve('linkable_vars', self.root._update_linkable_vars)
+        with child.suppress_notifications():
+            del child.root
+            del child.parent
+
+            child.root = None
+            child.parent = None
+            child.index = 0
+        if isinstance(child, Sequence):
+            child.unobserve('_last_index', self._item_last_index_updated)
+
+        notification = ContainerChange(obj=self, name='items',
+                                       removed=[(index, child)])
+        self.children_changed(notification)
 
     # --- Private API ---------------------------------------------------------
 
