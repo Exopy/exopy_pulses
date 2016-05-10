@@ -27,14 +27,15 @@ from inspect import cleandoc
 
 from ecpy.utils.plugin_tools import (HasPreferencesPlugin, ExtensionsCollector,
                                      DeclaratorsCollector)
-from .pulses.pulse import Pulse
+from ecpy.utils.watchdog import SystematicFileUpdater
+from .pulse import Pulse
 from .sequences.base_sequences import Sequence, RootSequence
 from .configs import SEQUENCE_CONFIG, CONFIG_MAP_VIEW
-from .filters import SEQUENCES_FILTERS
+from .filters.base_filters import ItemFilter
 from .utils.sequences_io import load_sequence_prefs
 with enaml.imports():
-    from .workspace.views.pulse_view import PulseView
-    from .workspace.views.sequence_views import (SequenceView,
+    from .pulse_view import PulseView
+    from .sequences.views.sequence_views import (SequenceView,
                                                  RootSequenceView)
 
 
@@ -48,6 +49,9 @@ FILTERS_RELATIVE_PATH = "filters"
 PULSES_RELATIVE_PATH = "pulses"
 SEQUENCES_RELATIVE_PATH = "sequences"
 SHAPES_RELATIVE_PATH = "shapes"
+
+FILTERS_POINT = 'ecpy.pulses.filters'
+
 
 
 
@@ -89,7 +93,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
     shapes = List(Unicode())
 
     #: List of all known filters:
-    filters = List(Unicode())
+    filters = List()
 
     #: Reference to the workspace or None if the workspace is not active.
     workspace = ForwardTyped(workspace)
@@ -130,7 +134,13 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._refresh_contexts()
         self._refresh_shapes()
         self._refresh_config()
-        self._refresh_filters()
+
+        self._filters = ExtensionsCollector(workbench = self.workbench,
+                                            point = FILTERS_POINT,
+                                            ext_class = ItemFilter)
+        self._filters.start()
+
+
         self._bind_observers()
 
     def stop(self):
@@ -147,7 +157,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._contexts.clear()
         self._shapes.clear()
         self._configs.clear()
-        self._filters.clear()
+        self._filters.stop()
 
     def sequences_request(self, sequences, use_class_names=False,
                           views=True):
@@ -345,10 +355,20 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             exist.
 
         """
-        s_filter = self._filters.get(filter_name)
+        s_filter = self._filters.contributions.get(filter)
         if s_filter:
-            return s_filter.filter_items(self._sequences,
-                                         self._template_sequences)
+            # Remove items that should not be shown in the list
+            sequences = self._sequences.copy()
+            template_sequences = self._template_sequences.copy()
+
+            try:
+                template_sequences.pop('Pulse')
+                template_sequences.pop('RootSequence')
+            except ValueError:
+                pass
+
+            return s_filter.filter_items(sequences,
+                                         template_sequences)
 
     def report(self):
         """ Give access to the failures which happened at startup.
@@ -370,8 +390,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
     #: Task config dict for python tasks (task_class: (config, view))
     _shapes = Dict(Unicode(), Tuple())
 
-    #: Filters for sequences.
-    _filters = Dict(Unicode())
+    #: Contributed task filters.
+    _filters = Typed(ExtensionsCollector)
 
     #: Configuration object used to insert new sequences in existing ones.
     _configs = Dict()
@@ -491,12 +511,11 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         if failed:
             self._failed['shapes'] = failed
 
-    def _refresh_filters(self):
+    def _update_filters(self):
         """ Place holder for a future filter discovery function
 
         """
-        self._filters = SEQUENCES_FILTERS
-        self.filters = list(SEQUENCES_FILTERS.keys())
+        self.filters = list(change['value'].keys())
 
     def _refresh_config(self):
         """ Place holder for a future config discovery function
@@ -669,10 +688,13 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             self._observer.schedule(handler, folder, recursive=True)
 
         self._observer.start()
+
         self.observe('sequences_loading', self._update_sequences)
         self.observe('templates_folders', self._update_templates)
         self.observe('contexts_loading', self._update_contexts)
         self.observe('shapes_loading', self._update_shapes)
+        self._filters.observe('contributions', self._update_filters)
+
 
     def _unbind_observers(self):
         """ Remove the observers for the plugin.
@@ -682,6 +704,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self.unobserve('contexts_loading', self._update_contexts)
         self.unobserve('shapes_loading', self._update_shapes)
         self.unobserve('templates_folders', self._update_templates)
+        self._filters.unobserve('contributions', self._update_filters)
         self._observer.unschedule_all()
         self._observer.stop()
         self._observer.join()
@@ -711,13 +734,14 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._observer.unschedule_all()
 
         for folder in self.templates_folders:
-            handler = _FileListUpdater(self._refresh_template_tasks)
+            handler = SystematicFileUpdater(self._refresh_template_tasks)
             self._observer.schedule(handler, folder, recursive=True)
 
     @staticmethod
     def _normalise_name(name):
         """Normalize names by replacing '_' by spaces, removing the extension,
         and adding spaces between 'aA' sequences.
+
         """
         if name.endswith('.ini'):
             name = name[:-4] + '\0'
@@ -749,26 +773,3 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                     else:
                         aux += char
         return aux
-
-
-class _FileListUpdater(FileSystemEventHandler):
-    """Simple watchdog handler used for auto-updating the profiles list
-
-    """
-    def __init__(self, handler):
-        self.handler = handler
-
-    def on_created(self, event):
-        super(_FileListUpdater, self).on_created(event)
-        if isinstance(event, FileCreatedEvent):
-            self.handler()
-
-    def on_deleted(self, event):
-        super(_FileListUpdater, self).on_deleted(event)
-        if isinstance(event, FileDeletedEvent):
-            self.handler()
-
-    def on_moved(self, event):
-        super(_FileListUpdater, self).on_deleted(event)
-        if isinstance(event, FileMovedEvent):
-            self.handler()
