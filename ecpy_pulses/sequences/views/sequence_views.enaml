@@ -21,7 +21,7 @@ from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
                                             FieldFieldCompleterEditor)
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ...utils.entry_eval import EVALUATER_TOOLTIP
-from ...pulses.pulse import Pulse
+from ...pulse import Pulse
 
 # Reimplemented here to accomodate the use of a menu to either insert Pulse
 # or sequence.

@@ -10,8 +10,8 @@ from atom.api import (Instance, Unicode, Enum, Typed, Property, set_default)
 import numpy as np
 
 from ecpy.utils.atom_util import member_from_pref
-from ..shapes.base_shapes import AbstractShape
-from ..shapes.modulation import Modulation
+from .shapes.base_shapes import AbstractShape
+from .shapes.modulation import Modulation
 from .item import Item
 
 

@@ -95,7 +95,7 @@ class SequenceEditionSpace(Workspace):
 
         # Add handler to the root logger to display messages in panel.
         core = self.workbench.get_plugin(u'enaml.workbench.core')
-        cmd = u'ecpy.logging.add_handler'
+        cmd = u'ecpy.app.logging.add_handler'
         self.log_model = core.invoke_command(cmd,
                                              {'id': LOG_ID, 'mode': 'ui'},
                                              self)[0]
@@ -111,7 +111,7 @@ class SequenceEditionSpace(Workspace):
         """
         # Remove handler from the root logger.
         core = self.workbench.get_plugin(u'enaml.workbench.core')
-        cmd = u'ecpy.logging.remove_handler'
+        cmd = u'ecpy.app.logging.remove_handler'
         core.invoke_command(cmd, {'id': LOG_ID}, self)
 
         self.workbench.unregister(u'ecpy.pulses.workspace.menus')
@@ -286,7 +286,7 @@ class SequenceEditionSpace(Workspace):
         prefs['external_vars'] = repr(dict.fromkeys(seq.external_vars.keys(),
                                                     ''))
         prefs['template_vars'] = prefs.pop('external_vars')
-        del prefs['item_class']
+        del prefs['item_id']
         del prefs['time_constrained']
         save_sequence_prefs(path, prefs, doc)
 
@@ -297,7 +297,7 @@ class SequenceEditionSpace(Workspace):
 
     def _load_sequence_from_template(self, prefs):
         prefs['external_vars'] = prefs.pop('template_vars')
-        prefs['item_class'] = 'RootSequence'
+        prefs['item_id'] = 'ecpy_pulses.RootSequence'
         core = self.workbench.get_plugin('enaml.workbench.core')
         cmd = 'ecpy.pulses.build_sequence'
         return core.invoke_command(cmd, {'mode': 'file', 'prefs': prefs})

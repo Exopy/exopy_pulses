@@ -17,7 +17,7 @@ from .base_config import AbstractConfig
 from ..contexts.template_context import TemplateContext
 from ..sequences.base_sequences import Sequence
 from ..sequences.template_sequence import TemplateSequence
-from ..pulses.pulse import Pulse
+from ..pulse import Pulse
 
 
 # Circular import protection

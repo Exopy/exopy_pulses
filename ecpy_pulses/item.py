@@ -11,13 +11,13 @@
 """
 from atom.api import (Int, Unicode, List, Bool, Float, Enum, ForwardTyped, Value)
 
-from ..utils.entry_eval import eval_entry
+from .utils.entry_eval import eval_entry
 
 from ecpy.utils.atom_util import HasPrefAtom
 
 
 def sequence():
-    from ..sequences.base_sequences import Sequence
+    from .sequences.base_sequences import Sequence
     return Sequence
 
 
@@ -34,7 +34,7 @@ class Item(HasPrefAtom):
     enabled = Bool(True).tag(pref=True)
 
     #: Class of the item to use when rebuilding a sequence.
-    item_class = Unicode().tag(pref=True)
+    item_id = Unicode().tag(pref=True)
 
     #: Name of the variable which can be referenced in other items.
     linkable_vars = List()
@@ -44,6 +44,9 @@ class Item(HasPrefAtom):
 
     #: Reference to the root sequence.
     root = Value()
+
+    #: Boolean representing whever this item has a root sequence or not
+    has_root = Bool(False)
 
     #: Mode defining how the def_1 and def_2 attrs shiould be interpreted.
     def_mode = Enum('Start/Stop',
@@ -180,16 +183,19 @@ class Item(HasPrefAtom):
 
     # --- Private API ---------------------------------------------------------
 
-    def _default_item_class(self):
-        """ Default value for the item_class member.
+    def _default_item_id(self):
+        """ Default value for the item_id member.
 
         """
-        return self.__class__.__name__
+        pack, _ = self.__module__.split('.', 1)
+        return pack + '.' + type(self).__name
 
+    def _post_setattr_root(self, old, new):
+        """Make sure that all children get all the info they need to behave
+        correctly when the item get its root parent.
 
+        """
+        if new is None:
+            return
 
-
-
-
-
-
+        self.has_root = True

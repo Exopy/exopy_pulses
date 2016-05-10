@@ -10,5 +10,5 @@
 
 """
 from .sequences.base_sequences import Sequence, RootSequence
-from .pulses.pulse import Pulse
-from .pulses.item import Item
+from .pulse import Pulse
+from .item import Item

@@ -10,6 +10,7 @@
 """
 import os
 from ast import literal_eval
+from future.builtins import str as unicode
 from time import time
 from enaml.core.api import Conditional
 from enaml.layout.api import hbox, vbox, spacer

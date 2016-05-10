@@ -13,7 +13,7 @@ from enaml.layout.api import TabLayout, VSplitLayout, hbox, vbox, spacer
 
 from ecpy.utils.widgets.qt_autoscroll_html import QtAutoscrollHtml
 from ecpy.utils.widgets.dict_editor import DictEditor
-from .views.sequence_views import RootSequenceView
+from ..sequences.views.sequence_views import RootSequenceView
 from .dialogs import CompileDialog, _VarValidator
 
 enamldef SequenceEditorDockItem(DockItem):

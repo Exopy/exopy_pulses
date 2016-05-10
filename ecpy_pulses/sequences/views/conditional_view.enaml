@@ -19,7 +19,7 @@ from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor, 
                                             FieldFieldCompleterEditor)
 
-from ...workspace.views.sequence_views import SequenceEditor
+from .sequence_views import SequenceEditor
 from ...utils.entry_eval import EVALUATER_TOOLTIP
 
 enamldef ConditionalSequenceView(GroupBox): view:
