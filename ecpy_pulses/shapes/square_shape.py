@@ -6,19 +6,23 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-from atom.api import (Unicode)
+from atom.api import (Unicode, FloatRange)
+import numpy as np
 
-from ecpy.utils.atom_util import HasPrefAtom
+from ..utils.entry_eval import eval_entry
+
+from .base_shapes import AbstractShape
 
 
-class AbstractShape(HasPrefAtom):
+class SquareShape(AbstractShape):
+    """ Basic square pulse with a variable amplitude.
+
     """
-    """
 
-    shape_class = Unicode().tag(pref=True)
+    amplitude = Unicode('1.0').tag(pref=True)
 
     def eval_entries(self, sequence_locals, missing, errors, index):
-        """ Evaluate the entries defining the shape.
+        """ Evaluate the amplitude of the pulse.
 
         Parameters
         ----------
@@ -40,11 +44,24 @@ class AbstractShape(HasPrefAtom):
             Flag indicating whether or not the evaluation succeeded.
 
         """
-        return True
+        prefix = '{}_'.format(index) + 'shape_'
+
+        # Computing amplitude
+        amp = None
+        try:
+            amp = eval_entry(self.amplitude, sequence_locals, missing)
+        except Exception as e:
+            errors[prefix + 'amplitude'] = repr(e)
+
+        if amp is not None:
+            self._amplitude = amp
+            return True
+
+        else:
+            return False
 
     def compute(self, time, unit):
         """ Computes the shape of the pulse at a given time.
-
 
         Parameters
         ----------
@@ -57,18 +74,11 @@ class AbstractShape(HasPrefAtom):
         Returns
         -------
         shape : ndarray
-            Amplitudes of the pulse at the given time.
+            Amplitude of the pulse.
 
         """
-        raise NotImplementedError('')
+        return self._amplitude * np.ones(len(time))
 
-    def _default_shape_class(self):
-        return type(self).__name__
+    # --- Private API ---------------------------------------------------------
 
-    def _answer(self, members, callables):
-        """ Collect answers for the walk method.
-
-        """
-        answers = {m: getattr(self, m, None) for m in members}
-        answers.update({k: c(self) for k, c in callables.items()})
-        return answers
+    _amplitude = FloatRange(-1.0, 1.0, 1.0)

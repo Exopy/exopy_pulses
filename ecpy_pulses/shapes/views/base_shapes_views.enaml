@@ -14,11 +14,17 @@ from enaml.core.api import Conditional, Include
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ...utils.entry_eval import EVALUATER_TOOLTIP
 
-enamldef ModulationView(SplitItem):
-    """ View for the modulation of an analogical pulse.
+
+enamldef AbstractShapeView(SplitItem):
+    """ Abstract class from which all ShapeViews must inherit.
 
     """
     attr item
+
+enamldef ModulationView(AbstractShapeView):
+    """ View for the modulation of an analogical pulse.
+
+    """
     attr modulation
 
     GroupBox:
@@ -65,23 +71,3 @@ enamldef ModulationView(SplitItem):
                         selected := modulation.phase_unit
 
 
-enamldef SquareShapeView(SplitItem):
-    """ View for a square pulse.
-
-    """
-    attr item
-    attr shape
-
-    GroupBox:
-        title = 'Square'
-        constraints = [hbox(amp_lab, amp_val),
-                       align('v_center', amp_lab, amp_val)]
-
-        Label: amp_lab:
-            text = 'Amplitude'
-        QtLineCompleter: amp_val:
-            text := shape.amplitude
-            tool_tip = 'Relative amplitude of the pulse (should be between -1.0 and 1.0)'
-
-
-SHAPES_VIEWS = {'SquareShape': SquareShapeView}
