@@ -8,11 +8,11 @@
 # -----------------------------------------------------------------------------
 from atom.api import Unicode, set_default
 
-from .base_sequences import Sequence
+from .base_sequences import BaseSequence
 from ..utils.entry_eval import eval_entry
 
 
-class ConditionalSequence(Sequence):
+class ConditionalSequence(BaseSequence):
     """ Sequence whose child items will be included only if a condition is met.
 
     """
@@ -75,5 +75,3 @@ class ConditionalSequence(Sequence):
 
         else:
             return True, []
-
-SEQUENCES = [ConditionalSequence]

@@ -19,19 +19,20 @@ from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor, 
                                             FieldFieldCompleterEditor)
 
-from .sequence_views import SequenceEditor
+from .abstract_sequence_view import AbstractSequenceView
+from .sequence_editor_view import (SequenceEditor, FoldableSequenceEditor)
 from ...utils.entry_eval import EVALUATER_TOOLTIP
 
-enamldef ConditionalSequenceView(GroupBox): view:
+from .abstract_sequence_view import AbstractSequenceView
+
+enamldef ConditionalSequenceView(AbstractSequenceView): view:
     """ View for Sequence.
 
     """
-    attr item
+
     alias core : editor.core
     alias cache : editor.cache
-
-    title << '{} {}'.format(sequence.index, sequence.name)
-    padding = 2
+    
     constraints << [vbox(hbox(t_bool, cond_lab, cond_val),
                          hbox(*t_def.items), nb)]\
                    if t_def.condition else\
@@ -84,8 +85,9 @@ enamldef ConditionalSequenceView(GroupBox): view:
         tabs_closable = False
         Page:
             title = 'Sequence'
-            SequenceEditor: editor:
-                sequence := view.item
+            FoldableSequenceEditor: editor:
+                sequence << view.item
+                #sequence := view.item
 
         Page:
             title = 'Local vars'
@@ -96,5 +98,3 @@ enamldef ConditionalSequenceView(GroupBox): view:
             #    ed.title = 'Name : formula'
             #    ed.model = item
             #    ed.iterable_name = 'local_vars'
-
-SEQUENCES_VIEWS = {'ConditionalSequence': ConditionalSequenceView}

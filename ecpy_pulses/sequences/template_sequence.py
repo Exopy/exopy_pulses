@@ -12,7 +12,7 @@ from copy import deepcopy
 from ast import literal_eval
 
 from ..utils.entry_eval import eval_entry
-from .base_sequences import BaseSequence, Sequence
+from .base_sequences import AbstractSequence, BaseSequence
 
 
 def context():
@@ -20,7 +20,7 @@ def context():
     return TemplateContext
 
 
-class TemplateSequence(BaseSequence):
+class TemplateSequence(AbstractSequence):
     """ Sequence used to represent a template in a Sequence.
 
     """
@@ -189,7 +189,7 @@ class TemplateSequence(BaseSequence):
         for item in seq.items:
             item.index = i
             item.root = seq
-            if isinstance(item, Sequence):
+            if isinstance(item, BaseSequence):
                 item._recompute_indexes()
                 i = item._last_index + 1
             else:

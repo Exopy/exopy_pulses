@@ -20,13 +20,13 @@ from ..item import Item
 from ..pulse import Pulse
 
 
-class BaseSequence(Item):
+class AbstractSequence(Item):
     """ Base class for all sequences.
 
     This class defines the basic of a sequence but with only a very limited
     child support : only construction is supported, indexing is not handled
     nor is child insertion, deletion or displacement (This is because 
-    TemplateSequence inherits from BaseSequence, while everything else inherits
+    TemplateSequence inherits from AbstractSequence, while everything else inherits
     from Sequence which supports insertion/deletion/displacement).
 
     """
@@ -56,7 +56,7 @@ class BaseSequence(Item):
         self._evaluated_vars = {}
         self._compiled = []
         for i in self.items:
-            if isinstance(i, BaseSequence):
+            if isinstance(i, AbstractSequence):
                 i.cleanup_cache()
 
     def compile_sequence(self, root_vars, sequence_locals, missings, errors):
@@ -105,7 +105,7 @@ class BaseSequence(Item):
 
         callables : dict(callable)
             Dict {name: callables} to call on every item in the hierarchy. Each
-            callable should take as single argument the task.
+            callable should take as single argument the item.
 
         Returns
         -------
@@ -137,7 +137,7 @@ class BaseSequence(Item):
 
         Returns
         -------
-        sequence : Sequence
+        sequence : AbstractSequence
             Newly created and initiliazed sequence.
 
         Notes
@@ -283,7 +283,7 @@ class BaseSequence(Item):
         return answers
 
 
-class Sequence(BaseSequence):
+class BaseSequence(AbstractSequence):
     """ A sequence is an ensemble of pulses.
 
     """
@@ -387,7 +387,7 @@ class Sequence(BaseSequence):
         Reimplemented here to save items.
 
         """
-        pref = super(Sequence, self).preferences_from_members()
+        pref = super(BaseSequence, self).preferences_from_members()
 
         for i, item in enumerate(self.items):
             pref['item_{}'.format(i)] = item.preferences_from_members()
@@ -401,11 +401,15 @@ class Sequence(BaseSequence):
         Reimplemented here to update items.
 
         """
-        super(Sequence, self).update_members_from_preferences(**parameters)
+        super(BaseSequence, self).update_members_from_preferences(**parameters)
 
         for i, item in enumerate(self.items):
             para = parameters['item_{}'.format(i)]
             item.update_members_from_preferences(**para)
+
+    def append_child_item(self, child):
+        list
+        self.add_child_item()
 
     def add_child_item(self, index, child):
         """Add a child item at the given index.
@@ -415,15 +419,17 @@ class Sequence(BaseSequence):
         index : int
             Index at which to insert the new child item.
 
-        child : BaseTask
-            Task to insert in the list of children item.
+        child : Item
+            Item to insert in the list of items.
 
         """
-        self.children.insert(index, child)
+        self.items.insert(index, child)
         child.parent = self
 
+        print(self.items)
+
         child.observe('linkable_vars', self.root._update_linkable_vars)
-        if isinstance(child, Sequence):
+        if isinstance(child, BaseSequence):
             child.observe('_last_index', self._item_last_index_updated)
 
         # In the absence of a root item do nothing else than inserting the
@@ -435,9 +441,9 @@ class Sequence(BaseSequence):
 
             notification = ContainerChange(obj=self, name='items',
                                            added=[(index, child)])
-            self.children_changed(notification)
+            self.items_changed(notification)
 
-    def move_child_task(self, old, new):
+    def move_child_item(self, old, new):
         """Move a child item.
 
         Parameters
@@ -445,12 +451,12 @@ class Sequence(BaseSequence):
         old : int
             Index at which the child to move is currently located.
 
-        new : BaseTask
+        new : Item
             Index at which to insert the child item.
 
         """
-        child = self.children.pop(old)
-        self.children.insert(new, child)
+        child = self.items.pop(old)
+        self.items.insert(new, child)
 
         # In the absence of a root item do nothing else than moving the
         # child.
@@ -458,10 +464,10 @@ class Sequence(BaseSequence):
 
             notification = ContainerChange(obj=self, name='items',
                                            moved=[(old, new, child)])
-            self.children_changed(notification)
+            self.items_changed(notification)
 
-    def remove_child_task(self, index):
-        """Remove a child item from the children list.
+    def remove_child_item(self, index):
+        """Remove a child item from the items list.
 
         Parameters
         ----------
@@ -469,7 +475,7 @@ class Sequence(BaseSequence):
             Index at which the child to remove is located.
 
         """
-        child = self.children.pop(index)
+        child = self.items.pop(index)
 
         child.unobserve('linkable_vars', self.root._update_linkable_vars)
         with child.suppress_notifications():
@@ -479,12 +485,12 @@ class Sequence(BaseSequence):
             child.root = None
             child.parent = None
             child.index = 0
-        if isinstance(child, Sequence):
+        if isinstance(child, BaseSequence):
             child.unobserve('_last_index', self._item_last_index_updated)
 
         notification = ContainerChange(obj=self, name='items',
                                        removed=[(index, child)])
-        self.children_changed(notification)
+        self.items_changed(notification)
 
     # --- Private API ---------------------------------------------------------
 
@@ -492,7 +498,7 @@ class Sequence(BaseSequence):
     _last_index = Int()
 
     def _observe_root(self, change):
-        """ Observer passing the root to all children.
+        """ Observer passing the root to all items.
 
         This allow to build a sequence without a root and parent it later.
 
@@ -500,7 +506,7 @@ class Sequence(BaseSequence):
         if change['value']:
             for item in self.items:
                 item.root = self.root
-                if isinstance(item, Sequence):
+                if isinstance(item, BaseSequence):
                     item.observe('_last_index', self._item_last_index_updated)
                     item.parent = self
             # Connect only now to avoid cleaning up in an unwanted way the
@@ -511,7 +517,7 @@ class Sequence(BaseSequence):
             self.unobserve('items', self._items_updated)
             for item in self.items:
                 item.root = None
-                if isinstance(item, Sequence):
+                if isinstance(item, BaseSequence):
                     item.unobserve('_last_index',
                                    self._item_last_index_updated)
             self.observe('items', self._items_updated)
@@ -584,7 +590,7 @@ class Sequence(BaseSequence):
         item.root = self.root
         item.parent = self
         item.observe('linkable_vars', self.root._update_linkable_vars)
-        if isinstance(item, Sequence):
+        if isinstance(item, BaseSequence):
             item.observe('_last_index', self._item_last_index_updated)
 
     def _item_removed(self, item):
@@ -596,7 +602,7 @@ class Sequence(BaseSequence):
             del item.root
             del item.parent
             item.index = 0
-        if isinstance(item, Sequence):
+        if isinstance(item, BaseSequence):
             item.unobserve('_last_index', self._item_last_index_updated)
 
     def _recompute_indexes(self, first_index=0, free_index=None):
@@ -627,7 +633,7 @@ class Sequence(BaseSequence):
             linkable_vars = [prefix + var for var in item.linkable_vars]
             linked_vars.extend(linkable_vars)
 
-            if isinstance(item, Sequence):
+            if isinstance(item, BaseSequence):
                 item.unobserve('_last_index', self._item_last_index_updated)
                 item._recompute_indexes()
                 item.observe('_last_index', self._item_last_index_updated)
@@ -649,7 +655,7 @@ class Sequence(BaseSequence):
         self._recompute_indexes(index, free_index)
 
 
-class RootSequence(Sequence):
+class RootSequence(BaseSequence):
     """ Base of any pulse sequences.
 
     This Item perform the first step of compilation by evaluating all the
@@ -780,7 +786,7 @@ class RootSequence(Sequence):
 
         callables : dict(callable)
             Dict {name: callables} to call on every item in the hierarchy. Each
-            callable should take as single argument the task.
+            callable should take as single argument the item.
 
         Returns
         -------

@@ -1,0 +1,37 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""
+
+"""
+from atom.api import Atom, Dict, Value
+from enaml.layout.api import hbox, align, spacer, vbox
+from enaml.widgets.api import (PushButton, Container, Label, Field,
+                               GroupBox, ScrollArea, Menu, Action, Stack,
+                               StackItem, Form, Notebook, Page, CheckBox,
+                               ObjectCombo, Splitter, SplitItem, HGroup)
+from enaml.core.api import Looper, Conditional, Include
+from enaml.workbench.core.core_plugin import CorePlugin
+
+from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
+                                            FieldFieldCompleterEditor)
+
+
+
+enamldef AbstractSequenceView(GroupBox):
+    """Parent class of all base sequences.
+
+    """
+    attr item
+
+    #: Reference to the root view in which this object is displayed.
+    attr root
+
+    title << '{} {}'.format(item.index, item.name)
+    padding = 2
+

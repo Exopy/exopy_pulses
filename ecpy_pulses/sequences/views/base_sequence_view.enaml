@@ -1,0 +1,173 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""
+
+"""
+from atom.api import Atom, Dict, Value
+from enaml.layout.api import hbox, align, spacer, vbox
+from enaml.widgets.api import (PushButton, Container, Label, Field,
+                               GroupBox, ScrollArea, Menu, Action, Stack,
+                               StackItem, Form, Notebook, Page, CheckBox,
+                               ObjectCombo, Splitter, SplitItem, HGroup)
+from enaml.core.api import Looper, Conditional, Include
+from enaml.workbench.core.core_plugin import CorePlugin
+
+from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
+                                            FieldFieldCompleterEditor)
+from ecpy.utils.widgets.qt_completers import QtLineCompleter
+from ...utils.entry_eval import EVALUATER_TOOLTIP
+from ...pulse import Pulse
+
+from .sequence_editor_view import (SequenceEditor, FoldableSequenceEditor)
+from .abstract_sequence_view import AbstractSequenceView
+
+def instantiate_context_view(core, context, cache):
+    """ Instantiate the appropriate view for the given context.
+
+    """
+    print("base_sequence_view:406-->Called with context "+ str(context) + 
+          " cache: " + str(cache) + " core: " + str(core))
+    if context:
+        cmd = 'ecpy.pulses.get_context_info'
+        context_info, _ = core.invoke_command(cmd,
+                                          {'context': context.context_class,
+                                           'use_class_names': True})
+        view = context_info.view
+        kwargs = {'context': context}
+        if hasattr(view, 'edition_mode'):
+            kwargs['edition_mode'] = cache.get('edition_mode', False)
+        instantiated_view = view(**kwargs)
+        print("base_sequence_view:419-->Returning " + str(instantiated_view))
+
+        return instantiated_view
+
+
+enamldef BaseSequenceView(AbstractSequenceView): view:
+    """ View for Sequence.
+
+    """
+    alias t_bool:_t_bool
+    alias t_def:_t_def
+    alias nb:_nb
+
+    alias core : editor.core
+    alias cache : editor.cache
+
+    constraints << [vbox(hbox(_t_bool, *_t_def.items), _nb),
+                    align('v_center', _t_def.items[0], _t_def.items[1])]\
+                    if t_def.condition else [vbox(_t_bool, _nb)]
+
+    CheckBox: _t_bool:
+        text = 'Time'
+        checked := item.time_constrained
+        tool_tip = 'Whether to define the start and stop of the sequence.'
+
+    Conditional: _t_def:
+        condition << item.time_constrained
+
+        Label: def_lab:
+            text = 'Mode'
+        ObjectCombo: def_val:
+            items << list(item.get_member('def_mode').items)
+            selected := item.def_mode
+
+        Splitter: defs:
+            hug_width = 'ignore'
+            SplitItem:
+                Container:
+                    constraints = [hbox(lab_1, val_1),
+                                   align('v_center', lab_1, val_1)]
+                    padding = 0
+                    Label: lab_1:
+                        text << item.def_mode.split('/')[0]
+                    QtLineCompleter: val_1:
+                        hug_width = 'ignore'
+                        text := item.def_1
+                        entries_updater << item.parent.get_bindable_vars
+                        tool_tip = EVALUATER_TOOLTIP
+            SplitItem:
+                Container:
+                    constraints = [hbox(lab_2, val_2),
+                                   align('v_center', lab_2, val_2)]
+                    padding = 0
+                    Label: lab_2:
+                        text << item.def_mode.split('/')[1]
+                    QtLineCompleter: val_2:
+                        hug_width = 'ignore'
+                        text := item.def_2
+                        entries_updater << item.parent.get_bindable_vars
+                        tool_tip = EVALUATER_TOOLTIP
+
+    Notebook: _nb:
+        tabs_closable = False
+
+        Page:
+            title = 'Sequence'
+            FoldableSequenceEditor: editor:
+                sequence := view.item
+
+        Page:
+            title = 'Local vars'
+            DictEditor(FieldFieldEditor): de:
+                de.mapping := item.local_vars
+#                de.operations = ['add','move','remove']
+                #Todo_Restore Add Back autocompletion!
+                
+
+enamldef RootSequenceView(AbstractSequenceView): view:
+    """ View for root sequence.
+
+    """
+    alias additional_pages : include.objects
+
+    alias core : editor.core
+    alias cache : editor.cache
+
+    constraints << [vbox(hbox(dur, *val.items), nb),
+                    align('v_center', val.items[0], val.items[1])] \
+                   if val.items else \
+                   [vbox(dur, nb)]
+
+    CheckBox: dur:
+        text = 'Fix duration'
+        checked := item.time_constrained
+
+    Conditional: val:
+        condition << item.time_constrained
+        Label:
+            text = 'Duration'
+        QtLineCompleter:
+            hug_width = 'ignore'
+            text := item.sequence_duration
+            entries_updater << item.get_bindable_vars
+            tool_tip = EVALUATER_TOOLTIP
+
+    Notebook: nb:
+        tabs_closable = False
+        Page:
+            title = 'Sequence'
+            SequenceEditor: editor:
+                sequence << view.item
+
+        Page:
+            title = 'Context'
+            Container:
+                PushButton:
+                    text = 'Change context' if item.context else 'Choose context'
+                    clicked ::
+                        cmd = 'ecpy.pulses.build_context'
+                        view.core.invoke_command(cmd, {'root': item,
+                                                       'parent_ui': self})
+                Include:
+                    objects << [instantiate_context_view(core, item.context,
+                                                         cache)]\
+                        if getattr(item, 'context') else []
+
+        Include: include:
+            pass
