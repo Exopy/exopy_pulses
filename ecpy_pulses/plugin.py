@@ -21,39 +21,38 @@ from importlib import import_module
 from atom.api import (Dict, List, Unicode, Typed, ForwardTyped, Tuple)
 
 from watchdog.observers import Observer
-from watchdog.events import (FileSystemEventHandler, FileCreatedEvent,
-                             FileDeletedEvent, FileMovedEvent)
 from inspect import cleandoc
 
 from ecpy.utils.plugin_tools import (HasPreferencesPlugin, ExtensionsCollector,
                                      DeclaratorsCollector)
 from ecpy.utils.watchdog import SystematicFileUpdater
 from .pulse import Pulse
-from .sequences.base_sequences import Sequence, RootSequence
-from .configs import SEQUENCE_CONFIG, CONFIG_MAP_VIEW
+from .sequences.base_sequences import BaseSequence, RootSequence
 from .filters.base_filters import ItemFilter
 from .utils.sequences_io import load_sequence_prefs
 with enaml.imports():
     from .pulse_view import PulseView
-    from .sequences.views.sequence_views import (SequenceView,
-                                                 RootSequenceView)
+    from .sequences.views.abstract_sequence_view import AbstractSequenceView
+    from .sequences.views.base_sequence_view import (BaseSequenceView,
+                                                     RootSequenceView)
+
+from .declarations import (Sequence, Sequences, SequenceConfig, 
+                           SequenceConfigs, Contexts, Context, Shapes, Shape)
+from .infos import SequenceInfos, PulseInfos
+from .sequences.template_sequence import TemplateSequence
+from .sequences.views.template_view import TemplateSequenceView
 
 
-#PACKAGE_PATH = os.path.join(os.path.dirname(__file__), '..')
+
 PACKAGE_PATH = os.path.dirname(__file__)
 
 TEMPLATE_PATH = os.path.realpath(os.path.join(PACKAGE_PATH, 'templates'))
 
-CONTEXT_RELATIVE_PATH = "contexts"
-FILTERS_RELATIVE_PATH = "filters"
-PULSES_RELATIVE_PATH = "pulses"
-SEQUENCES_RELATIVE_PATH = "sequences"
-SHAPES_RELATIVE_PATH = "shapes"
-
 FILTERS_POINT = 'ecpy.pulses.filters'
-
-
-
+SEQUENCES_POINT = 'ecpy.pulses.sequences'
+CONFIGS_POINT = 'ecpy.pulses.configs'
+CONTEXTS_POINT = 'ecpy.pulses.contexts'
+SHAPES_POINT = 'ecpy.pulses.shapes'
 
 MODULE_ANCHOR = 'ecpy_pulses'
 
@@ -74,19 +73,10 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
     #: Folders containings templates which should be loaded.
     templates_folders = List(default=[TEMPLATE_PATH]).tag(pref=True)
 
-    #: Sequences loading exception.
-    sequences_loading = List(Unicode()).tag(pref=True)
-
-    #: Contexts loading exception.
-    contexts_loading = List(Unicode()).tag(pref=True)
-
-    #: Shapes loading exceptions.
-    shapes_loading = List(Unicode()).tag(pref=True)
-
-    #: List of all the known sequences.
+    #: List of all known sequences and template-sequences.
     sequences = List(Unicode())
 
-    #: List of all the known contexts
+    #: List of all known contexts
     contexts = List(Unicode())
 
     #: List of all known shape.
@@ -127,19 +117,50 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                                     dict(kind='error',
                                          message=msg))
 
-        # TODO #AfterFilters: insert here the declaratorCollctor
-
-        self._refresh_sequences()
-        self._refresh_template_sequences()
-        self._refresh_contexts()
-        self._refresh_shapes()
-        self._refresh_config()
-
-        self._filters = ExtensionsCollector(workbench = self.workbench,
-                                            point = FILTERS_POINT,
-                                            ext_class = ItemFilter)
+        #: Start the Declarators and Extensions collectors to collect
+        #: all elements of the plugin that are declared through enaml
+        #: declarations
+        self._filters = ExtensionsCollector(workbench=self.workbench,
+                                            point=FILTERS_POINT,
+                                            ext_class=ItemFilter)
         self._filters.start()
+        print("Collected Filters:")
+        print(self._filters.contributions)
 
+        self._configs = DeclaratorsCollector(workbench=self.workbench,
+                                             point=CONFIGS_POINT,
+                                             ext_class=(SequenceConfig,
+                                                        SequenceConfigs))
+        self._configs.start()
+
+        self._sequences = DeclaratorsCollector(workbench=self.workbench,
+                                               point=SEQUENCES_POINT,
+                                               ext_class=(Sequences, Sequence))
+        self._sequences.start()
+
+        self._contexts = DeclaratorsCollector(workbench=self.workbench,
+                                              point=CONTEXTS_POINT,
+                                              ext_class=(Contexts, Context))
+        self._contexts.start()
+
+        self._shapes = DeclaratorsCollector(workbench=self.workbench,
+                                            point=SHAPES_POINT,
+                                            ext_class=(Shapes, Shape))
+        self._shapes.start()
+
+        self.contexts = list(self._contexts.contributions.keys())
+        self.filters = list(self._filters.contributions.keys())
+        self.shapes = list(self._shapes.contributions.keys())
+
+        #: Last step: refresh template sequences from the template folder
+        #: and start observing that folder so that we will refresh it again
+        #: if a file will be added.
+        self._refresh_template_sequences_data()
+
+        #: Populate the Pulse Info Object
+        self._pulse_info = PulseInfos()
+        self._pulse_info.cls = Pulse
+        self._pulse_info.view = PulseView
 
         self._bind_observers()
 
@@ -152,15 +173,16 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         """
         super(PulsesManagerPlugin, self).stop()
         self._unbind_observers()
-        self._sequences.clear()
-        self._template_sequences.clear()
-        self._contexts.clear()
-        self._shapes.clear()
-        self._configs.clear()
-        self._filters.stop()
+        self._template_sequences_data.clear()
 
-    def sequences_request(self, sequences, use_class_names=False,
-                          views=True):
+        #: Stop all Extension/DeclaratorCollectors
+        self._filters.stop()
+        self._configs.stop()
+        self._sequences.stop()
+        self._contexts.stop()
+        self._shapes.stop()
+
+    def get_sequences_infos(self, sequences, use_class_names=False):
         """ Give access to sequence infos.
 
         Parameters
@@ -186,25 +208,35 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             List of the sequences which were not found.
 
         """
-        answer = {}
 
+        answer = {}
         if not use_class_names:
             missing_py = set([name for name in sequences
-                              if name not in self._sequences.keys()])
+                              if name not in
+                              self._sequences.contributions.keys()])
             missing_temp = set([name for name in sequences
-                                if name not in self._template_sequences.keys()]
-                               )
+                                if name not in
+                                self._template_sequences_data.keys()])
             missing = list(set.intersection(missing_py, missing_temp))
 
-            answer.update({key: val for key, val in self._sequences.items()
+            answer.update({key: val for key, val in
+                           self._sequences.contributions.items()
                            if key in sequences})
 
-            answer.update({key: tuple([val] + list(load_sequence_prefs(val)))
-                           for key, val in self._template_sequences.items()
-                           if key in sequences})
+            # TODO Return InfoObject
+            templ = {key: val for key, val in
+                     self._template_sequences_data.items()
+                     if key in sequences}
+
+            for _, t_info in templ:
+                prefs = load_sequence_prefs(t_info.metadata['path'])
+                t_info.metadata.update(prefs)
+
+            answer.update(templ)
+
         else:
-            class_names = {val[0].__name__: val
-                           for val in self._sequences.values()}
+            class_names = {val.cls.__name__: val
+                           for val in self._sequences.contributions.values()}
 
             missing = [name for name in sequences
                        if name not in class_names]
@@ -212,13 +244,116 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             answer.update({key: val for key, val in class_names.items()
                            if key in sequences})
 
-        if not views:
-            answer = {k: v[0] for k, v in answer.items()}
-
         return answer, missing
 
-    def contexts_request(self, contexts, use_class_names=False,
-                         views=True):
+    def get_sequence_info(self, sequence, use_class_names=False):
+        """Access a given sequence infos.
+
+        Parameters
+        ----------
+        sequence : unicode
+            Id of the sequence class for which to return the actual class.
+
+        Returns
+        -------
+        infos : SequenceInfos or None
+            Object containing all the infos about the requested sequence.
+            This object should never be manipulated directly by user code.
+
+        """
+        sequences = [sequence]
+        _answer, _missing = self.get_sequences_infos(sequences,
+                                                     use_class_names)
+
+        try:
+            answer = _answer[sequence]
+            missing = None
+        except KeyError:
+            answer = None
+            missing = [sequence]
+        return answer, missing
+
+    def get_sequences(self, sequences, use_class_names=False):
+        """Access a given sequence class.
+
+        Parameters
+        ----------
+        sequence : unicode
+            Id of the sequence class for which to return the actual class.
+
+        view : bool, optional
+            Whether or not to return the view assoicated with the sequence.
+
+        Returns
+        -------
+        task_cls : type or None
+            Class associated to the requested sequence or None if the sequence
+            was not found.
+
+        task_view : EnamlDefMeta or None, optional
+            Associated view if requested.
+
+        """
+        _answer, _missing = self.get_sequences_infos(sequences,
+                                                     use_class_names)
+        answer = {key: (val.cls, val.view) for key, val in _answer}
+
+        for key, val in _answer:
+            answer = {key, val}
+
+        return answer, _missing
+
+    def get_sequence(self, sequence, use_class_names=False):
+        """Access a given sequence class.
+
+        Parameters
+        ----------
+        sequence : unicode
+            Id of the sequence class for which to return the actual class.
+
+        view : bool, optional
+            Whether or not to return the view assoicated with the sequence.
+
+        Returns
+        -------
+        task_cls : type or None
+            Class associated to the requested sequence or None if the sequence
+            was not found.
+
+        task_view : EnamlDefMeta or None, optional
+            Associated view if requested.
+
+        """
+        _answer, _missing = self.get_sequence_info(sequence, use_class_names)
+
+        if _answer is None:
+            return (None, None)
+
+        return (_answer.cls, _answer.view)
+
+    def get_items_infos(self, items, use_class_names=False):
+        print("Get Item Infos: " + str(items))
+        _answer, _missing = self.get_sequences_infos(items, use_class_names)
+
+        additional_items = {}
+        # additional_items = {key:_pulse_info for key in
+        #                    _missing if _missing is "Pulse"}
+
+        missing = []
+
+        for el in _missing:
+            if el == "Pulse":
+                additional_items[el] = self._pulse_info
+            elif el == "__template__":
+                print("MISSING CASE")
+            else:
+                missing.append(el)
+
+        _answer.update(additional_items)
+
+        return _answer, missing
+
+    def get_contexts_infos(self, contexts, use_class_names=False):
         """ Give access to context infos.
 
         Parameters
@@ -228,8 +363,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         use_class_names : bool, optional
             Should the search be performed using class names rather than
             context names.
-        views : bool
-            When false views are not returned alongside the class.
 
         Returns
         -------
@@ -238,31 +371,60 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             If use_class_names is True the class name will be used.
 
         """
+        if type(contexts) is not list:
+            raise ValueError("plugin.py:get_contexts_infos" +
+                             " - contexts should be a list")
+
         answer = {}
 
         if not use_class_names:
             missing = [name for name in contexts
-                       if name not in self._contexts.keys()]
-
-            answer.update({key: val for key, val in self._contexts.items()
+                       if name not in self._contexts.contributions.keys()]
+            answer.update({key: val for key, val in
+                           self._contexts.contributions.items()
                            if key in contexts})
 
         else:
-            class_names = {val[0].__name__: val
-                           for val in self._contexts.values()}
-
+            class_names = {val.cls.__name__: val
+                           for val in self._contexts.contributions.values()}
             missing = [name for name in contexts
                        if name not in class_names]
 
-            answer.update({key: val for key, val in class_names.items()
-                           if key in contexts})
-
-        if not views:
-            answer = {k: v[0] for k, v in answer.items()}
+            answer.update({key: val for key, val in
+                           class_names.items() if key in contexts})
 
         return answer, missing
 
-    def shapes_request(self, shapes, use_class_names=False, views=True):
+    def get_context_info(self, context, use_class_names=False):
+        """ Give access to context infos.
+
+        Parameters
+        ----------
+        contexts : list(str)
+            The names of the requested contexts.
+        use_class_names : bool, optional
+            Should the search be performed using class names rather than
+            context names.
+
+        Returns
+        -------
+        contexts : dict
+            The required contexts infos as a dict {name: (class, view)}.
+            If use_class_names is True the class name will be used.
+
+        """
+        contexts = [context]
+        _answer, _missing = self.get_contexts_infos(contexts, use_class_names)
+
+        try:
+            answer = _answer[context]
+            missing = None
+        except KeyError:
+            answer = None
+            missing = context
+        return answer, missing
+
+    def get_shapes_infos(self, shapes, use_class_names=False):
         """ Give access to shape infos.
 
         Parameters
@@ -286,14 +448,15 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         if not use_class_names:
             missing = [name for name in shapes
-                       if name not in self._shapes.keys()]
+                       if name not in self._shapes.contributions.keys()]
 
-            answer.update({key: val for key, val in self._shapes.items()
+            answer.update({key: val for key, val
+                           in self._shapes.contributions.items()
                            if key in shapes})
 
         else:
-            class_names = {val[0].__name__: val
-                           for val in self._shapes.values()}
+            class_names = {val.cls.__name__: val
+                           for val in self._shapes.contributions.values()}
 
             missing = [name for name in shapes
                        if name not in class_names]
@@ -301,12 +464,9 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             answer.update({key: val for key, val in class_names.items()
                            if key in shapes})
 
-        if not views:
-            answer = {k: v[0] for k, v in answer.items()}
-
         return answer, missing
 
-    def config_request(self, sequence):
+    def get_config(self, sequence_id):
         """ Access the proper config for a sequence.
 
         Parameters
@@ -320,24 +480,25 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             Tuple containing the config object requested, and its visualisation
 
         """
-        templates = self._template_sequences
-        if sequence in templates:
-            conf, view = self._config['TemplateConfig']
-            t_config, t_doc = load_sequence_prefs(templates[sequence])
+        templates = self._template_sequences_data
+        if sequence_id in templates:
+            config_infos = self._config.contributions['__template__']
+            conf = config_infos.cls
+            view = config_infos.view
+            t_config, t_doc = load_sequence_prefs(templates[sequence_id])
             return conf(manager=self, config=t_config, doc=t_doc), view
 
-        elif sequence in self._sequences:
-            configs = self._configs
+        elif sequence_id in self._sequences.contributions:
+            configs = self._configs.contributions
             # Look up the hierarchy of the selected sequence to get the
             # appropriate SequenceConfig
-            sequence_class, _ = self._sequences[sequence]
+            sequence_class = self._sequences.contributions[sequence_id].cls
             for i_class in type.mro(sequence_class):
                 if i_class in configs:
-                    config = configs[i_class][0]
-                    view = configs[i_class][1]
+                    config = configs[i_class].cls
+                    view = configs[i_class].view
                     return config(manager=self,
                                   sequence_class=sequence_class), view
-
         return None, None
 
     def filter_sequences(self, filter_name):
@@ -355,20 +516,28 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             exist.
 
         """
-        s_filter = self._filters.contributions.get(filter)
+
+        s_filter = self._filters.contributions.get(filter_name)
         if s_filter:
             # Remove items that should not be shown in the list
-            sequences = self._sequences.copy()
-            template_sequences = self._template_sequences.copy()
+            sequences = self._sequences.contributions.copy()
+            template_sequences_data = self._template_sequences_data.copy() #TODO To contribution
 
             try:
-                template_sequences.pop('Pulse')
-                template_sequences.pop('RootSequence')
-            except ValueError:
+                template_sequences_data.pop('Pulse')
+                template_sequences_data.pop('RootSequence')
+            except KeyError:
                 pass
-
+            print(sequences)
+            print(template_sequences_data)
             return s_filter.filter_items(sequences,
-                                         template_sequences)
+                                         template_sequences_data)
+        else:
+            logger = logging.getLogger(__name__)
+            logger.warn("Did not find the filter " + str(filter_name) +
+                        " and returned zero elements.")
+            return []
+
 
     def report(self):
         """ Give access to the failures which happened at startup.
@@ -379,22 +548,28 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
     # --- Private API ---------------------------------------------------------
 
     #: Sequences implemented in Python
-    _sequences = Dict(Unicode(), Tuple())
+    _sequences = Typed(DeclaratorsCollector)
 
     #: Template sequences (store full path to .ini)
-    _template_sequences = Dict(Unicode(), Unicode())
+    _template_sequences_data = Dict(Unicode(), Unicode())
+
+    #: Template sequences infos
+    _template_sequences_infos = Dict(Unicode(), SequenceInfos)
+
+    #: Info Object for Pulse
+    _pulse_info = Typed(PulseInfos)
 
     #: Sequence contexts.
-    _contexts = Dict(Unicode(), Tuple())
+    _contexts = Typed(DeclaratorsCollector)
 
     #: Task config dict for python tasks (task_class: (config, view))
-    _shapes = Dict(Unicode(), Tuple())
+    _shapes = Typed(DeclaratorsCollector)
 
     #: Contributed task filters.
     _filters = Typed(ExtensionsCollector)
 
     #: Configuration object used to insert new sequences in existing ones.
-    _configs = Dict()
+    _configs = Typed(DeclaratorsCollector)
 
     # Dict holding the list of failures which happened during loading
     _failed = Dict()
@@ -402,7 +577,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
     # Watchdog observer
     _observer = Typed(Observer, ())
 
-    def _refresh_template_sequences(self):
+    def _refresh_template_sequences_data(self):
         """ Refresh the known template sequences.
 
         """
@@ -421,111 +596,51 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                 logger = logging.getLogger(__name__)
                 logger.warn('{} is not a valid directory'.format(path))
 
-        self._template_sequences = templates
-        aux = list(self._sequences.keys()) + list(templates.keys())
-        aux.remove('Pulse')
-        aux.remove('RootSequence')
+        self._template_sequences_data = templates
+        aux = (list(self._sequences.contributions.keys()) +
+               list(templates.keys()))
+
         self.sequences = aux
 
-    def _refresh_sequences(self):
-        """ Refresh the known sequences.
+
+    def _refresh_template_sequences_infos(self):
+        """ Refresh the known template sequence infos.
 
         """
-        path = os.path.join(PACKAGE_PATH, SEQUENCES_RELATIVE_PATH)
-        failed = {}
+        # TODO Should be more proper in case of update
 
-        modules, v_modules = self._explore_package('sequences', path, failed,
-                                                   self.sequences_loading)
+        templates = self._template_sequences_data
+        templates_infos = {}
 
-        sequences = {}
-        views = {}
-        self._explore_modules(modules, sequences, 'SEQUENCES', failed)
-        self._explore_views(v_modules, views, 'SEQUENCES_VIEWS', failed)
+        for template_name, template_path in templates:
 
-        valid_sequences = {k: (v, views[v.__name__])
-                           for k, v in sequences.items()
-                           if v.__name__ in views}
-        valid_sequences['Sequence'] = (Sequence, SequenceView)
-        valid_sequences['RootSequence'] = (RootSequence, RootSequenceView)
-        valid_sequences['Pulse'] = (Pulse, PulseView)
+            metadata = {'is_template': True, 'path': template_path}
+            infos = SequenceInfos(metadata=metadata)
+            infos.cls = TemplateSequence
+            infos.view = TemplateSequenceView
+            templates_infos[template_name] = infos
 
-        self._sequences = valid_sequences
-        # Here remove Pulse from the public sequence as there are other ways to
-        # access it. But keep it in private for requests.
-        aux = list(valid_sequences.keys()) +\
-            list(self._template_sequences.keys())
-        aux.remove('Pulse')
-        aux.remove('RootSequence')
-        self.sequences = aux
+        self._template_sequences_infos = templates_infos
 
-        if failed:
-            self._failed['sequences'] = failed
 
-    def _refresh_contexts(self):
-        """ Refresh the known contexts.
 
-        """
-        path = os.path.join(PACKAGE_PATH, 'contexts')
-        failed = {}
 
-        modules, v_modules = self._explore_package('contexts', path, failed,
-                                                   self.contexts_loading)
 
-        contexts = {}
-        views = {}
-        self._explore_modules(modules, contexts, 'CONTEXTS', failed)
-        self._explore_views(v_modules, views, 'CONTEXTS_VIEWS', failed)
-        print(contexts, views)
-        valid_contexts = {k: (v, views[v.__name__])
-                          for k, v in contexts.items()
-                          if v.__name__ in views}
-        print(valid_contexts)
-        self._contexts = valid_contexts
-        self.contexts = list(valid_contexts.keys())
-
-        if failed:
-            self._failed['contexts'] = failed
-
-    def _refresh_shapes(self):
-        """ Refresh the known shapes.
-
-        """
-        path = os.path.join(PACKAGE_PATH, 'shapes')
-        failed = {}
-
-        modules, v_modules = self._explore_package('shapes', path, failed,
-                                                   self.shapes_loading)
-
-        shapes = {}
-        views = {}
-        self._explore_modules(modules, shapes, 'SHAPES', failed)
-        self._explore_views(v_modules, views, 'SHAPES_VIEWS', failed)
-
-        valid_shapes = {k: (v, views[v.__name__])
-                        for k, v in shapes.items()
-                        if v.__name__ in views}
-
-        self._shapes = valid_shapes
-        self.shapes = list(valid_shapes.keys())
-
-        if failed:
-            self._failed['shapes'] = failed
-
-    def _update_filters(self):
+    def _update_filters(self, change):
         """ Place holder for a future filter discovery function
 
         """
         self.filters = list(change['value'].keys())
 
-    def _refresh_config(self):
-        """ Place holder for a future config discovery function
-
-        """
-        mapping = {}
-        for key, val in SEQUENCE_CONFIG.items():
-            mapping[key] = (val, CONFIG_MAP_VIEW[val])
-
-        self._configs = mapping
+#    def _refresh_config(self):
+#        """ Place holder for a future config discovery function
+#
+#        """
+#        mapping = {}
+#        for key, val in SEQUENCE_CONFIG.items():
+#            mapping[key] = (val, CONFIG_MAP_VIEW[val])
+#
+#        self._configs = mapping
 
     def _explore_package(self, pack, pack_path, failed, exceptions):
         """ Explore a package.
@@ -563,8 +678,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             return [], []
 
         modules = sorted(pack + '.' + m[:-3] for m in os.listdir(pack_path)
-                         if (os.path.isfile(os.path.join(pack_path, m))
-                             and m.endswith('.py')))
+                         if (os.path.isfile(os.path.join(pack_path, m)) and
+                             m.endswith('.py')))
 
         try:
             modules.remove(pack + '.__init__')
@@ -593,8 +708,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         v_modules = sorted(pack + '.views.' + m[:-6]
                            for m in os.listdir(v_path)
-                           if (os.path.isfile(os.path.join(v_path, m))
-                               and m.endswith('.enaml')))
+                           if (os.path.isfile(os.path.join(v_path, m)) and
+                               m.endswith('.enaml')))
 
         if not os.path.isfile(os.path.join(pack_path, '__init__.py')):
             log = logging.getLogger(__name__)
@@ -684,48 +799,23 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         """
 
         for folder in self.templates_folders:
-            handler = _FileListUpdater(self._refresh_template_sequences)
+            handler = SystematicFileUpdater(self._refresh_template_sequences_data)
             self._observer.schedule(handler, folder, recursive=True)
 
         self._observer.start()
 
-        self.observe('sequences_loading', self._update_sequences)
         self.observe('templates_folders', self._update_templates)
-        self.observe('contexts_loading', self._update_contexts)
-        self.observe('shapes_loading', self._update_shapes)
         self._filters.observe('contributions', self._update_filters)
-
 
     def _unbind_observers(self):
         """ Remove the observers for the plugin.
 
         """
-        self.unobserve('sequences_loading', self._update_sequences)
-        self.unobserve('contexts_loading', self._update_contexts)
-        self.unobserve('shapes_loading', self._update_shapes)
         self.unobserve('templates_folders', self._update_templates)
         self._filters.unobserve('contributions', self._update_filters)
         self._observer.unschedule_all()
         self._observer.stop()
         self._observer.join()
-
-    def _update_sequences(self, change):
-        """ Observer ensuring that loading preferences are taken into account.
-
-        """
-        self._refresh_sequences()
-
-    def _update_contexts(self, change):
-        """ Observer ensuring that loading preferences are taken into account.
-
-        """
-        self._refresh_contexts()
-
-    def _update_shapes(self, change):
-        """ Observer ensuring that loading preferences are taken into account.
-
-        """
-        self._refresh_shapes()
 
     def _update_templates(self, change):
         """ Observer ensuring that we observe the right template folders.

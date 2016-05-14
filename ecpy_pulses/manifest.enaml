@@ -6,7 +6,6 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-
 """Plugin handling the generation and compilation and of sequences of pulses, 
 and defining some default pulse shapes.
 
@@ -35,11 +34,20 @@ from .utils.flatten_config import flatten_config
 
 from .widgets.building import BuilderView, ContextBuilderView
 from .utils.sequences_io import load_sequence_prefs
-from .sequences.base_sequences import RootSequence
+from .sequences.base_sequences import (AbstractSequence, BaseSequence,
+                                       RootSequence)
+from .sequences.conditional_sequence import ConditionalSequence
+from .sequences.views.base_sequence_view import (BaseSequenceView,
+                                                 RootSequenceView)
+from .sequences.views.conditional_view import ConditionalSequenceView
+from .sequences.template_sequence import TemplateSequence
+from .sequences.views.template_view import TemplateSequenceView
 
 from .filters.base_filters import (ItemFilter, SequenceFilter, TemplateFilter,
                                    SubclassItemFilter, MetadataItemFilter)
 
+from .declarations import (Sequences, Sequence, SequenceConfigs, 
+                           SequenceConfig, Contexts, Context, Shapes, Shape)
 
 
 PLUGIN_ID = 'ecpy.pulses'
@@ -87,29 +95,61 @@ def show_starting_errors(event):
         BasicErrorsDisplay(ui.window, #title='Pulses manager start up errors',
                       errors=manager.report()).exec_()
 
-def sequences_request(event):
-    """ Handler for the 'ecpy.pulses.sequences_request' command.
+def get_sequences_infos(event):
+    """ Handler for the 'ecpy.pulses.get_sequence_info' command.
 
     """
     manager = event.workbench.get_plugin('ecpy.pulses')
-    return manager.sequences_request(**event.parameters)
+    return manager.get_sequences_infos(**event.parameters)
 
-
-def contexts_request(event):
-    """ Handler for the 'ecpy.pulses.contexts_request' command.
-
-    """
-    manager = event.workbench.get_plugin('ecpy.pulses')
-    return manager.contexts_request(**event.parameters)
-
-
-def shapes_request(event):
-    """ Handler for the 'ecpy.pulses.shapes_request' command.
+def get_sequence_info(event):
+    """ Handler for the 'ecpy.pulses.get_sequence_info' command.
 
     """
     manager = event.workbench.get_plugin('ecpy.pulses')
-    return manager.shapes_request(**event.parameters)
+    return manager.get_sequence_info(**event.parameters)
 
+def get_sequences(event):
+    """ Handler for the 'ecpy.pulses.get_sequence' command.
+
+    """
+    manager = event.workbench.get_plugin('ecpy.pulses')
+    return manager.get_sequences(**event.parameters)
+
+def get_sequence(event):
+    """ Handler for the 'ecpy.pulses.get_sequence' command.
+
+    """
+    manager = event.workbench.get_plugin('ecpy.pulses')
+    return manager.get_sequence(**event.parameters)
+
+def get_items_infos(event):
+    """ Handler for the 'ecpy.pulses.get_sequence' command.
+
+    """
+    manager = event.workbench.get_plugin('ecpy.pulses')
+    return manager.get_items_infos(**event.parameters)
+
+def get_contexts_infos(event):
+    """ Handler for the 'ecpy.pulses.get_contexts_infos' command.
+
+    """
+    manager = event.workbench.get_plugin('ecpy.pulses')
+    return manager.get_contexts_infos(**event.parameters)
+
+def get_context_info(event):
+    """ Handler for the 'ecpy.pulses.get_context_info' command.
+
+    """
+    manager = event.workbench.get_plugin('ecpy.pulses')
+    return manager.get_context_info(**event.parameters)
+
+def get_shapes_infos(event):
+    """ Handler for the 'ecpy.pulses.get_shapes_infos' command.
+
+    """
+    manager = event.workbench.get_plugin('ecpy.pulses')
+    return manager.get_shapes_infos(**event.parameters)
 
 def build_sequence(event):
     """ Handler for the 'ecpy.pulses.build_sequence' command.
@@ -134,7 +174,7 @@ def build_sequence(event):
 
     Returns
     -------
-    sequence : Sequence
+    sequence : BaseSequence
 
     """
     manager = event.workbench.get_plugin('ecpy.pulses')
@@ -192,13 +232,10 @@ SHOW_MANAGER_DESCRIPTION = \
 SHOW_ERRORS_DESCRIPTION = \
 """ Show the errors which happened on plugin startup."""
 
-SEQUENCES_REQUEST_DESCRIPTION = \
-""" Request the infos associated to a list of sequences. """
-
 CONTEXTS_REQUEST_DESCRIPTION = \
 """ Request the infos associated to a list of contexts. """
 
-SHAPES_REQUEST_DESCRIPTION = \
+GET_SHAPES_INFOS_DESCRIPTION = \
 """ Request the infos associated to a list of shapes. """
 
 BUILD_SEQUENCE_DESCRIPTION = \
@@ -216,11 +253,75 @@ must inherit from one of the base classes found in filters.py.
 
 """
 
+SEQUENCES_DESC_DESC =\
+"""Sequences are the way used to register new sequences. Please
+refer to the different kind of declarations defined in declarations.py for
+more details.
+
+"""
+
+
+SHAPES_DESC_DESC =\
+"""Shapes are the way used to register new sequences. Please
+refer to the different kind of declarations defined in declarations.py for
+more details.
+
+"""
+
+CONFIGS_DESC =\
+"""Configs are used when new sequences or pulses need to be inserted into a
+config hierarchy at runtime. They provide a way for the user to parametrize the
+config before inserting it into the hierarchy. See declarations.py for more 
+infos about how to declare a new config.
+
+"""
+
+CONTEXTS_DESC =\
+"""Configs are used when new sequences or pulses need to be inserted into a
+context hierarchy at runtime. They provide a way for the user to parametrize 
+the context before inserting it into the hierarchy. See declarations.py for 
+more infos about how to declare a new config.
+
+"""
+
+GET_SEQUENCES_INFOS_DESCRIPTION =\
+"""Retrieve the infos object associated with a sequence given the 
+name of the sequence.
+
+Parameters
+----------
+sequence_cls_name : unicode
+    Name of the sequence class name for which to retrieve the infos.
+
+Returns
+-------
+infos : SequenceInfos|None
+    Infos for the requested sequence or None if no matching sequence was found.
+
+"""
+
+GET_SEQUENCE_INFOS_DESCRIPTION =\
+"""Retrieve the infos object associated with a sequence given the 
+name of the sequence.
+
+Parameters
+----------
+sequence_cls_name : unicode
+    Name of the sequence class name for which to retrieve the infos.
+
+Returns
+-------
+infos : SequenceInfos|None
+    Infos for the requested sequence or None if no matching sequence was found.
+
+"""
+
 
 # =============================================================================
 # --- ???????????? ------------------------------------------------------------
 # =============================================================================
 
+# TODO Fix from get_sequnces_infos
 # TODO add protection againt recursive ones.
 def collect_pulses_dependecies(workbench, flat_walk):
     """ Collector function for the build-dependencies extensions.
@@ -231,20 +332,20 @@ def collect_pulses_dependecies(workbench, flat_walk):
     manager = workbench.get_plugin('ecpy.pulses')
 
     # Collect items.
-    s_res = manager.sequences_request(flat_walk['item_class'],
+    s_res = manager.get_sequences_infos(flat_walk['item_class'],
                                       use_class_names=True,
                                       views=False)
     # Collect contexts.
-    c_res = manager.contexts_request(flat_walk['context_class'],
+    c_res = manager.get_contexts_infos(flat_walk['context_class'],
                                      use_class_names=True,
                                      views=False)
     # Collect shapes.
-    sh_res = manager.shapes_request(flat_walk['shape_class'],
+    sh_res = manager.get_shapes_infos(flat_walk['shape_class'],
                                       use_class_names=True,
                                       views=False)
 
     # Collect the templates.
-    tp_res = manager.sequences_request(flat_walk['template_id'])
+    tp_res = manager.get_sequences_infos(flat_walk['template_id'])
 
     # Collect the sequences.
     sq_res = {p: load_sequence_prefs(p)[0] for p in flat_walk['sequence_path']
@@ -312,12 +413,28 @@ enamldef PulsesManagerManifest(PluginManifest):
         AppStartup:
             id = 'ecpy.pulses'
             run => (workbench, cmd_args):
-                print('The Ecpy_Pulses plugin has been loaded. ')
+                print('The Ecpy_Pulses plugin has been loaded.')
 
 
     # =========================================================================
     # --- Extension points ----------------------------------------------------
     # =========================================================================
+    
+    ExtensionPoint:
+        id = 'sequences'
+        description = SEQUENCES_DESC
+
+    ExtensionPoint:
+        id = 'shapes'
+        description = SHAPES_DESC
+
+    ExtensionPoint:
+        id = 'configs'
+        description = CONFIGS_DESC
+
+    ExtensionPoint:
+        id = 'contexts'
+        description = CONTEXTS_DESC
 
     ExtensionPoint:
         id = 'filters'
@@ -337,9 +454,61 @@ enamldef PulsesManagerManifest(PluginManifest):
             id = 'Sequences'
         TemplateFilter:
             id = 'Templates'
-        
+
+    Extension:
+        id = 'sequences'
+        point = 'ecpy.pulses.sequences'
+        Sequences:
+            path = 'ecpy_pulses.sequences'
+            Sequence:
+                sequence = 'base_sequences:BaseSequence'
+                view = 'views.base_sequence_view:BaseSequenceView'
+            Sequence:
+                sequence = 'conditional_sequence:ConditionalSequence'
+                view = 'views.conditional_view:ConditionalSequenceView'
+
+    Extension:
+        id = 'configs'
+        point = 'ecpy.pulses.configs'
+        SequenceConfigs:
+            path = 'ecpy_pulses.configs'
+            SequenceConfig:
+                config = 'base_config:SequenceConfig'
+                view = 'base_config_views:SequenceConfigView'
+                get_sequence_class => ():
+                    from ecpy_pulses.sequences.base_sequences import (
+                        BaseSequence)
+                    return BaseSequence
+            SequenceConfig:
+                config = 'template_config:TemplateConfig'
+                view = 'template_config_view:TemplateConfigView'
+                get_sequence_class => ():
+                    return '__template__'
+
+    Extension:
+        id = 'contexts'
+        point = 'ecpy.pulses.contexts'
+        Contexts:
+            path = 'ecpy_pulses.contexts'
+            Context:
+                context = 'awg_context:AWGContext'
+                view = 'views.awg_context_view:AWGContextView'
+            Context:
+                context = 'tabor_context:TABORContext'
+                view = 'views.tabor_context_view:TaborContextView'
+            Context:
+                context = 'template_context:TemplateContext'
+                view = 'views.template_context_view:TemplateContextView'
 
 
+    Extension:
+        id = 'shapes'
+        point = 'ecpy.pulses.shapes'
+        Shapes:
+            path = 'ecpy_pulses.shapes'
+            Shape:
+                shape = 'square_shape:SquareShape'
+                view = 'views.square_shape_view:SquareShapeView'
 
     #Ported
     Extension:
@@ -351,7 +520,7 @@ enamldef PulsesManagerManifest(PluginManifest):
     #Ported
     Extension:
         id = 'state'
-        point = 'ecpy.app.states.states'
+        point = 'ecpy.app.states.state'
         State:
             id = 'ecpy.pulses'
             description = MANAGER_STATE_DESCRIPTION
@@ -387,17 +556,37 @@ enamldef PulsesManagerManifest(PluginManifest):
             description = SHOW_ERRORS_DESCRIPTION
             handler = show_starting_errors
         Command:
-            id = 'ecpy.pulses.sequences_request'
-            description = SEQUENCES_REQUEST_DESCRIPTION
-            handler = sequences_request
+            id = 'ecpy.pulses.get_sequences_infos'
+            description = GET_SEQUENCE_INFOS_DESCRIPTION
+            handler = get_sequences_infos
         Command:
-            id = 'ecpy.pulses.contexts_request'
-            description = CONTEXTS_REQUEST_DESCRIPTION
-            handler = contexts_request
+            id = 'ecpy.pulses.get_sequence_info'
+            description = GET_SEQUENCE_INFOS_DESCRIPTION
+            handler = get_sequence_info
         Command:
-            id = 'ecpy.pulses.shapes_request'
-            description = SHAPES_REQUEST_DESCRIPTION
-            handler = shapes_request
+            id = 'ecpy.pulses.get_sequences'
+            description = GET_SEQUENCES_INFOS_DESCRIPTION
+            handler = get_sequences
+        Command:
+            id = 'ecpy.pulses.get_sequence'
+            description = GET_SEQUENCE_INFOS_DESCRIPTION
+            handler = get_sequence
+        Command:
+            id = 'ecpy.pulses.get_items_infos'
+            description = GET_SEQUENCE_INFOS_DESCRIPTION
+            handler = get_items_infos
+        Command:
+            id = 'ecpy.pulses.get_contexts_infos'
+            description = "HELLO"
+            handler = get_contexts_infos
+        Command:
+            id = 'ecpy.pulses.get_context_info'
+            description = "HELLO"
+            handler = get_context_info
+        Command:
+            id = 'ecpy.pulses.get_shapes_infos'
+            description = GET_SHAPES_INFOS_DESCRIPTION
+            handler = get_shapes_infos
         Command:
             id = 'ecpy.pulses.build_sequence'
             description = BUILD_SEQUENCE_DESCRIPTION

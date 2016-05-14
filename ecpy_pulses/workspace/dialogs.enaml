@@ -179,10 +179,10 @@ enamldef TemplateLoadDialog(Dialog): dial:
             selected_filter = 'Template'
             selected_sequence ::
                 name = change['value']
-                t_, _ = workspace.plugin.sequences_request([name],
+                t_, _ = workspace.plugin.get_sequences_infos([name],
                                                            views=False)
-                dial.doc = t_[name][2]
-                dial.prefs = t_[name][1]
+                dial.doc = t_.metadata['doc']
+                dial.prefs = t_.metadata['config']
 
         MultilineField: fie:
             read_only = True
