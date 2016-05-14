@@ -1,0 +1,26 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""
+"""
+from enaml.widgets.api import (Label, ObjectCombo, Container)
+
+
+enamldef BaseContextView(Container): view:
+    """ Parent class for all Context Views.
+
+    """
+    attr context
+    attr core
+
+    hug_height = 'strong'
+
+    initialized:: 
+    	print("Initialized")
+    	print(context)
+    	print(core)

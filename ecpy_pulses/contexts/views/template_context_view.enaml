@@ -6,7 +6,6 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-
 """
 """
 from enaml.layout.api import hbox, vbox
@@ -17,6 +16,7 @@ from enaml.validator import RegexValidator
 from inspect import cleandoc
 from textwrap import fill
 
+from .base_context_view import BaseContextView
 
 enamldef Mapping(FlowItem):
     attr values
@@ -67,15 +67,12 @@ enamldef MappingEditor(Container):
 
 
 # TODO fix validators
-enamldef TemplateContextView(Container): view:
-    """ View for a pulse item.
+enamldef TemplateContextView(BaseContextView): 
+    """ View for a template context.
 
     """
-    attr context
-    attr core
     attr edition_mode : bool = False
 
-    hug_height = 'strong'
     constraints = [] if edition_mode else []
 
     Conditional: ed:
@@ -108,6 +105,3 @@ enamldef TemplateContextView(Container): view:
         MappingEditor:
             context = view.context
             root = view.context.sequence.root
-
-
-CONTEXTS_VIEWS = {'TemplateContext': TemplateContextView}

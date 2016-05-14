@@ -42,11 +42,11 @@ class TemplateContext(BaseContext):
         mess = 'Missing/Erroneous mapping for channels {}'
         mapping = self.channel_mapping
         c_errors = [c for c in self.analogical_channels
-                    if c not in mapping
-                    or mapping[c] not in context.analogical_channels]
+                    if c not in mapping or
+                    mapping[c] not in context.analogical_channels]
         c_errors.extend([c for c in self.logical_channels
-                         if c not in mapping
-                         or mapping[c] not in context.logical_channels])
+                         if c not in mapping or
+                         mapping[c] not in context.logical_channels])
         if c_errors:
             errors['{}-context'.format(self.template.name)] = \
                 mess.format(c_errors)
@@ -63,6 +63,3 @@ class TemplateContext(BaseContext):
 
         """
         return self._sampling_time
-
-
-CONTEXTS = {'Template': TemplateContext}
