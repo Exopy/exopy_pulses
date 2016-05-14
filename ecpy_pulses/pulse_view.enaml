@@ -17,6 +17,8 @@ from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from .utils.entry_eval import EVALUATER_TOOLTIP
 from .shapes.views.base_shapes_views import ModulationView
 
+#from .infos import ShapeInfos
+
 
 def default_add_displays(core, item):
     if item.kind == 'Analogical':
@@ -46,10 +48,11 @@ enamldef PulseView(GroupBox): view:
     attr item
     attr context << item.root.context
     attr core
+    attr cache
     attr add_displays = default_add_displays(core, item)
     attr pulse_state = core.invoke_command('ecpy.app.states.get',
                                            {'state_id':
-                                            'ecpy.app.states.pulses'})
+                                            'ecpy.pulses'})
 
     title << 'Pulse {}'.format(item.index)
     hug_height = 'strong'
@@ -113,44 +116,49 @@ enamldef PulseView(GroupBox): view:
 
         Container:
             padding = 0
-            #constraints = [hbox(m_val, s_lab, s_val),
-            #               align('v_center', s_lab, s_val)]
+            constraints = [hbox(m_val, s_lab, s_val),
+                           align('v_center', s_lab, s_val)]
             CheckBox: m_val:
                 text = 'Use modulation'
                 checked := item.modulation.activated
-            #    checked ::
-            #        if change['value']:
-            #            a_d = view.add_displays[:]
-            #            mod = ModulationView(item=item,
-            #                                 modulation=item.modulation)
-            #            a_d.insert(0, mod)
-            #            view.add_displays = a_d
-            #        else:
-            #            a_d = view.add_displays[:]
-            #            a_d.pop(0)
-            #            view.add_displays = a_d
+                checked ::
+                    if change['value']:
+                        a_d = view.add_displays[:]
+                        mod = ModulationView(item=item,
+                                             modulation=item.modulation)
+                        a_d.insert(0, mod)
+                        view.add_displays = a_d
+                    else:
+                        a_d = view.add_displays[:]
+                        a_d.pop(0)
+                        view.add_displays = a_d
 
             Label: s_lab:
                 text = 'Shape'
             ObjectCombo: s_val:
                 items << pulse_state.shapes
                 # Assume ends in Shape
-            #    selected << item.shape.shape_class[:-5] if item.shape else ''
-            #    selected ::
-            #        if change.get('oldvalue'):
-            #            a_d = view.add_displays[:]
-            #            a_d.pop()
-            #            view.add_displays = a_d
-            #        if change['value']:
-            #            cmd = 'ecpy.pulses.shapes_request'
-            #            shapes, _ = core.invoke_command(cmd,
-            #                                            {'shapes':
-            #                                                [change['value']]})
-            #            shape = shapes[change['value']]
-            #            item.shape = shape[0]()
-            #            disp = view.add_displays[:]
-            #            disp.append(shape[1](item=item, shape=item.shape))
-            #            view.add_displays = disp
+                selected << item.shape.shape_class[:-5] if item.shape else ''
+                selected ::
+                    print("looking for shapes")
+                    print(change)
+                    if change.get('oldvalue'):
+                        a_d = view.add_displays[:]
+                        a_d.pop()
+                        view.add_displays = a_d
+                    if change['value']:
+                        print(pulse_state)
+                        print(pulse_state.shapes)
+                        print(len(pulse_state.shapes))
+                        cmd = 'ecpy.pulses.get_shapes_infos'
+                        shapes, _ = core.invoke_command(cmd,
+                                                        {'shapes':
+                                                            [change['value']]})
+                        shape = shapes[change['value']]
+                        item.shape = shape.cls()
+                        disp = view.add_displays[:]
+                        disp.append(shape.view(item=item, shape=item.shape))
+                        view.add_displays = disp
 
     Conditional: add:
         condition << item.kind == 'Analogical' and bool(add_displays)

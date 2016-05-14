@@ -9,6 +9,6 @@
 """Ecpy Pulses Plugin public interface.
 
 """
-from .sequences.base_sequences import Sequence, RootSequence
+from .sequences.base_sequences import BaseSequence, RootSequence
 from .pulse import Pulse
 from .item import Item

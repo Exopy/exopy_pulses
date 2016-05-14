@@ -6,5 +6,3 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from .base_filters import SEQUENCES_FILTERS

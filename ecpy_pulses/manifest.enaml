@@ -93,6 +93,7 @@ def show_starting_errors(event):
                       errors=manager.report()).exec_()
     else: #TODO ???? should be a dialog
         BasicErrorsDisplay(ui.window, #title='Pulses manager start up errors',
+        ChecksDisplay(ui.window, title='Pulses manager start up errors',
                       errors=manager.report()).exec_()
 
 def get_sequences_infos(event):

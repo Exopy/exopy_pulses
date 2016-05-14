@@ -8,7 +8,7 @@
 # -----------------------------------------------------------------------------
 """
 """
-from atom.api import Atom, ForwardTyped, List, Str
+from atom.api import Atom, ForwardTyped, List, Unicode
 from enaml.layout.api import hbox, spacer
 from enaml.core.api import Conditional, Include
 from enaml.widgets.api import (PushButton, ObjectCombo, Action, Container,
@@ -28,8 +28,8 @@ class _SelectorModel(Atom):
     """
     manager = ForwardTyped(pulses_manager)
 
-    selected_filter = Str('All')
-    display_sequences = List(Str())
+    selected_filter = Unicode('All')
+    display_sequences = List(Unicode())
 
     def __init__(self, manager, selected_filter):
         super(_SelectorModel, self).__init__(manager=manager)

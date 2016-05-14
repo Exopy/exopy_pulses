@@ -17,7 +17,7 @@ from enaml.core.api import d_func, d_
 
 from ecpy.utils.declarator import Declarator
 
-from ..Item import Item
+from ..item import Item
 
 
 class ItemFilter(Declarator):
@@ -47,6 +47,7 @@ class ItemFilter(Declarator):
                 List of the name of the task matching the filters criteria.
 
         """
+        items = list(py_sequences.keys()) + list(template_sequences.keys())
         return items
 
 
@@ -58,7 +59,7 @@ class SequenceFilter(ItemFilter):
     @d_func
     def filter_items(self, py_sequences, template_sequences):
 
-        return py_sequences
+        return list(py_sequences.keys())
 
 
 class TemplateFilter(ItemFilter):
@@ -69,7 +70,7 @@ class TemplateFilter(ItemFilter):
     @d_func
     def filter_items(self, py_sequences, template_sequences):
 
-        return template_sequences
+        return list(template_sequences.keys())
 
 
 class SubclassItemFilter(ItemFilter):

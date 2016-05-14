@@ -57,7 +57,7 @@ class _PulseBuilderModel(Atom):
 
         """
         self.ok_ready = False
-        config, view = self.manager.config_request(change['value'])
+        config, view = self.manager.get_config(change['value'])
         self.sequence_config = config
         self.config_view = view(model=config)
         self.ok_ready = config.config_ready
@@ -68,6 +68,7 @@ class _PulseBuilderModel(Atom):
 
         """
         self.ok_ready = change['value']
+
 
 enamldef BuilderView(Dialog): dial:
     """ Simple Dialog to add a sequence to an existing sequence.
@@ -115,8 +116,8 @@ enamldef ContextBuilderView(Dialog): dial:
             items ::
                 selected_item = items[0]
             selected_item ::
-                c_s, _ = manager.contexts_request([selected_item], views=False)
-                dial.context = c_s[selected_item]
+                contexts_infos, _ = manager.get_contexts_infos([selected_item])
+                dial.context = contexts_infos[selected_item].cls
 
         MultilineField: doc:
             text << getdoc(context) if context else ''
