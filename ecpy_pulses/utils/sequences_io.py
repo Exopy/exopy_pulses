@@ -38,6 +38,29 @@ def load_sequence_prefs(path):
     return config, doc
 
 
+def load_sequence_prefs_dict(path):
+    """ Load the preferences of a sequence stored in a file.
+
+    Parameters
+    ----------
+        path : unicode
+            Location of the template file.
+
+    Returns
+    -------
+        dict: {config:, doc:} where prefs is the data
+               needed to rebuild the task and doc
+               is the doc of the template
+    """
+    config = ConfigObj(path)
+    doc = ''
+    if config.initial_comment:
+        doc_list = [com[1:].strip() for com in config.initial_comment]
+        doc = '\n'.join(doc_list)
+
+    return {'config': config, 'doc': doc}
+
+
 def save_sequence_prefs(path, prefs, doc=''):
     """ Save a sequence to a file
 
@@ -46,7 +69,7 @@ def save_sequence_prefs(path, prefs, doc=''):
         path : unicode
             Path of the file to which save the template
         prefs : dict(str : str)
-            Dictionnary containing the tempate parameters
+            Dictionnary containing the template parameters
         doc : str
             The template doc
 
