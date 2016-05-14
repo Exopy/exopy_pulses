@@ -12,13 +12,12 @@ from enaml.core.api import Conditional
 from enaml.widgets.api import (Container, MultilineField, Field, GroupBox,
                                Form, Label, CheckBox, RadioButton)
 from ..contexts.views.template_context_view import MappingEditor
+from .base_config_views import AbstractConfigView
 
-enamldef TemplateView(Form): main:
+enamldef TemplateConfigView(AbstractConfigView): main:
     """ View allowing the user to select how to insert the template.
 
     """
-    attr model
-
     Label:
         text = 'Sequence name'
     Field:
@@ -29,7 +28,7 @@ enamldef TemplateView(Form): main:
         text = 'Merge'
         checked := model.merge
         tool_tip = fill(cleandoc('''Should the template be inserted as a
-            Sequence and forget it is a template.''')
+            Sequence and forget it is a template.'''))
 
     GroupBox:
         title = 'Description'

@@ -14,7 +14,7 @@ from atom.api import (Atom, Unicode, Bool, Subclass, ForwardTyped, Typed, Dict,
 
 from inspect import getdoc, cleandoc
 
-from ..pulses.item import Item
+from ..item import Item
 
 
 # Circular import protection

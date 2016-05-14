@@ -10,15 +10,17 @@ from enaml.widgets.api import (Container, MultilineField, Field, GroupBox,
                                Form, Label)
 
 
-enamldef NoneView(Container):
+enamldef AbstractConfigView(Form):
+    """Base View for a config from which any other config must inherit
+
+    """
+
     attr model
 
 
-enamldef SimpleView(Form): main:
+enamldef SequenceConfigView(AbstractConfigView): main:
+    """Config View of a simple config
     """
-    """
-    attr model
-
     Label:
         text = 'Sequence name'
     Field:

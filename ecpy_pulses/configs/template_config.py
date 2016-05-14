@@ -15,7 +15,7 @@ from ast import literal_eval
 
 from .base_config import AbstractConfig
 from ..contexts.template_context import TemplateContext
-from ..sequences.base_sequences import Sequence
+from ..sequences.base_sequences import BaseSequence
 from ..sequences.template_sequence import TemplateSequence
 from ..pulse import Pulse
 
@@ -100,7 +100,7 @@ class TemplateConfig(AbstractConfig):
             t_config.merge(config)
             config = t_config
 
-            seq = Sequence.build_from_config(t_config, dep)
+            seq = BaseSequence.build_from_config(t_config, dep)
 
             self._apply_mapping(seq)
 
@@ -130,7 +130,7 @@ class TemplateConfig(AbstractConfig):
                 mapping = item.context.channel_mapping
                 for channel in mapping:
                     mapping[channel] = c_mapping.get(item.channel, '')
-            elif isinstance(item, Sequence):
+            elif isinstance(item, BaseSequence):
                 self._apply_mapping(item)
 
     def _default_context(self):
