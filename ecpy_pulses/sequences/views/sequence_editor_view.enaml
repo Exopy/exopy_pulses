@@ -26,7 +26,7 @@ from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
                                             FieldFieldCompleterEditor)
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ...utils.entry_eval import EVALUATER_TOOLTIP
-from ecpy.utils.widgets.list_editor import PopupListMenu
+# from ecpy.utils.widgets.list_editor import PopupListMenu
 from ecpy.utils.container_change import ContainerChange
 from ...pulse import Pulse
 
@@ -36,9 +36,85 @@ from functools import partial
 from ..base_sequences import AbstractSequence
 from ...infos import SequenceInfos, PulseInfos
 
+#: TODO A Nice thing wold be to make the stock ecpy popuplistmenu more flexible.
+#: For the time beeing, this will suffice.
+enamldef PopupListMenu(Menu):
+    """Popup menu used to alter add, delete or move elements in the list.
+
+    """
+    #: Reference to the list being edited.
+    attr model
+
+    #: Index of the element being edited.
+    attr index : int
+
+    #: Dict mapping operation to function to use to perform it.
+    #: Possible entries are:
+    #: - 'add' : function to add an entry, receive index and 'before'/'after'
+    #: - 'remove' : function to remove an entry, receive the index and new pos.
+    #: - 'move' : function move an element receive the index and the new index.
+    attr operations : dict
+
+    Conditional: 
+        condition = bool('addP' in operations or 'addS' in operations)
+        Menu:
+            title = 'Add before'
+            Action:
+                text = 'Pulse'
+                visible = 'addP' in operations
+                triggered ::
+                    operations['addP'](index, 'before')
+            Action:
+                text = 'Sequence'
+                visible = 'addS' in operations
+                triggered ::
+                    operations['addS'](index, 'before')
+        Menu:
+            title = 'Add after'
+            Action:
+                text = 'Pulse'
+                visible = 'addP' in operations
+                triggered ::
+                    operations['addP'](index, 'after')
+            Action:
+                text = 'Sequence'
+                visible = 'addS' in operations
+                triggered ::
+                    operations['addS'](index, 'after')
+        Action:
+            separator = True
+
+    Action:
+        visible = 'remove' in operations
+        text = 'Delete'
+        triggered :: operations['remove'](index)
+    Action:
+        separator = True
+
+    Action:
+        visible = 'move' in operations and index != 0
+        text = 'Move to top'
+        triggered ::
+            operations['move'](index, 0)
+    Action:
+        visible = 'move' in operations and index != 0
+        text = 'Move up'
+        triggered ::
+            operations['move'](index, index - 1)
+    Action:
+        visible = 'move' in operations and index != len(model)-1
+        text = 'Move down'
+        triggered ::
+            operations['move'](index, index + 1)
+    Action:
+        visible = 'move' in operations and index != len(model)-1
+        text = 'Move to bottom'
+        triggered ::
+            operations['move'](index, len(model))
+ 
 
 enamldef ItemEditorButton(PushButton):
-    """A push button displayed on the right of a task in the editor.
+    """A push button displayed on the right of an item in the editor.
 
     This button generates a popup menu which is used to add, move and remove
     task directly from the editor.
@@ -280,7 +356,7 @@ class SequenceEditor(Container):
 
             """
             pulse = Pulse()
-            if task:
+            if pulse:
                 if position == 'after':
                     index += 1
                 self.sequence.add_child_item(index, pulse)
@@ -289,12 +365,12 @@ class SequenceEditor(Container):
             """Handler for the add entry of the menu.
 
             """
-            obj = core.invoke_command('ecpy.pulses.build_sequence',
+            obj = self.core.invoke_command('ecpy.pulses.build_sequence',
                                       {'parent_ui': self,
                                        'mode': 'ui',
                                        'root': self.sequence.root}, self)
             if obj:
-                if task:
+                if obj:
                     if position == 'after':
                         index += 1
                     self.sequence.add_child_item(index, obj)
@@ -311,7 +387,8 @@ class SequenceEditor(Container):
             """
             self.sequence.remove_child_item(index)
 
-        return {'addP': addP, 'addS': addS, 'move': move, 'remove': remove}
+        return {'addP': addP, 'addS': addS,
+                'move': move, 'remove': remove}
 
     def _default__empty_button(self):
         """Button used to add the fist task.
