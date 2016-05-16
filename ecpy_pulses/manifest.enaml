@@ -92,7 +92,8 @@ def show_starting_errors(event):
         ChecksDisplay(ui.window, title='Pulses manager start up errors',
                       errors=manager.report()).exec_()
     else: #TODO ???? should be a dialog
-        BasicErrorsDisplay(ui.window, #title='Pulses manager start up errors',
+        #BasicErrorsDisplay(ui.window, #title='Pulses manager start up errors',
+        #              errors=manager.report()).exec_()
         ChecksDisplay(ui.window, title='Pulses manager start up errors',
                       errors=manager.report()).exec_()
 
