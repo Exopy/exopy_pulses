@@ -16,6 +16,7 @@ from enaml.widgets.api import (PushButton, ObjectCombo, Action, Container,
 
 from ecpy.utils.widgets.qt_list_str_widget import QtListStrWidget
 from ecpy.utils.transformers import ids_to_unique_names
+from ..utils.normalizers import normalize_sequence_name
 
 
 # Circular import protection
@@ -23,52 +24,6 @@ def pulses_manager():
     from ..plugin import PulsesManagerPlugin
     return PulsesManagerPlugin
 
-
-# TODO would be nicer with regex but I never managed to get the regex right.
-def normalize_name(name):
-    """Normalize names.
-
-    For tasks, replaces '_' by spaces and add spaces between 'aA' sequences.
-    For templates, only the extension file is removed.
-
-    """
-    if name.endswith('.sequence.ini'):
-        name, _, _ = name.rsplit('.', 2)
-        return name.capitalize()
-
-    if name.endswith('Sequence'):
-        name = name[:-8] + '\0'
-
-    package = None
-    if '.' in name:
-        package, name = name.rsplit('.', 1)
-
-    aux = ''
-    for i, char in enumerate(name):
-        if char == '_':
-            aux += ' '
-            continue
-
-        if char != '\0':
-            if char.isupper() and i != 0:
-                if name[i-1].islower():
-                    if name[i+1].islower():
-                        aux += ' ' + char.lower()
-                    else:
-                        aux += ' ' + char
-                else:
-                    if name[i+1].islower():
-                        aux += ' ' + char.lower()
-                    else:
-                        aux += char
-            else:
-                if i == 0:
-                    aux += char.upper()
-                else:
-                    aux += char
-
-    return package + '.' + aux if package else aux
-    
 
 enamldef SequenceSelector(Container): sel:
     """ Simple sequence selector supporting filtering.
@@ -96,8 +51,10 @@ enamldef SequenceSelector(Container): sel:
     attr sequences = manager.list_sequences('All')
 
     #: Mappping between user understandable names and ids.
-    attr _sequence_map << (ids_to_unique_names(sequences, normalize_name,
-                                               preformatter=normalize_name)
+    attr _sequence_map << (ids_to_unique_names(sequences, 
+                                               normalize_sequence_name,
+                                               preformatter=
+                                                       normalize_sequence_name)
                            if sequences else {})
 
     #: Currently selected sequence.
@@ -116,4 +73,3 @@ enamldef SequenceSelector(Container): sel:
             new_seq = change['value']
             if new_seq:
                 sel.selected_sequence = _sequence_map[new_seq]
-

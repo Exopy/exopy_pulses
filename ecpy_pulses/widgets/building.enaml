@@ -20,6 +20,8 @@ from enaml.widgets.api import (PushButton, Menu, Action, Container, Dialog,
 from ecpy.utils.widgets.qt_list_str_widget import QtListStrWidget
 from .browsing import SequenceSelector
 
+from ecpy.utils.transformers import ids_to_unique_names
+from ..utils.normalizers import normalize_context_name
 
 # Circular import protections
 def pulse_manager():
@@ -50,9 +52,6 @@ enamldef BuilderView(Dialog): dial:
     func _update():
         if selector.selected_sequence:
             config, view = manager.get_config(selector.selected_sequence)
-            print('here')
-            print(config)
-            print(view)
             if config is None:
                 dial.config = None
                 conf.objects = [Label(text=('No configuration view was'+ 
@@ -95,20 +94,48 @@ enamldef ContextBuilderView(Dialog): dial:
     """ Simple dialog to choose the context to add to a sequence.
 
     """
+    #: Reference to the sequence manager (aka: the plugin)
     attr manager
+
+    #: Reference to the currently selected context's class.
     attr context
+
+    #: List of avaible contexts loaded at creation of this view
+    attr contexts = manager.contexts
+
+    #: Mapping from sanitized names to class names
+    attr _context_map << (ids_to_unique_names(contexts, 
+                                              normalize_context_name,
+                                              preformatter=
+                                                normalize_context_name)
+                          if contexts else {})
+
+    #: Currently selected context.
+    attr selected_context = _context_map[sorted(_context_map)[0]]
+
+
+    func _update():
+        if selected_context:
+            contexts_infos, _ = manager.get_contexts_infos([selected_context])
+            if contexts_infos:
+                info = contexts_infos[selected_context]
+                dial.context = info.cls
+                doc.text = getdoc(info.cls)
+
+    initialized :: _update()
+
     title = 'Select the context you want to use.'
 
     Container:
         constraints << [hbox(selector, doc, vbox(ok, cancel, spacer))]
+
         QtListStrWidget: selector:
-            items << sorted(manager.contexts)
-            selected_item = ''
-            items ::
-                selected_item = items[0]
+            items << sorted(dial._context_map)
             selected_item ::
-                contexts_infos, _ = manager.get_contexts_infos([selected_item])
-                dial.context = contexts_infos[selected_item].cls
+                new_context = change['value']
+                if new_context:
+                    dial.selected_context = _context_map[new_context]
+                    _update()
 
         MultilineField: doc:
             text << getdoc(context) if context else ''
@@ -123,4 +150,3 @@ enamldef ContextBuilderView(Dialog): dial:
             text = 'Cancel'
             clicked ::
                 dial.reject()
-
