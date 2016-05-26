@@ -52,7 +52,7 @@ class ItemFilter(Declarator):
 
 
 class SequenceFilter(ItemFilter):
-    """ Filter returning sequences selected in the method filter_sequences.
+    """ Filter returning sequences selected in the method list_sequences.
 
     """
 

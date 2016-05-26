@@ -38,7 +38,7 @@ class AbstractConfig(Atom):
     root = Typed(Item)
 
     #: Bool indicating if the build can be done.
-    config_ready = Bool(False)
+    ready = Bool(False)
 
     #: Dict of errors which happened during construction.
     errors = Dict()
@@ -46,7 +46,7 @@ class AbstractConfig(Atom):
     def check_parameters(self, change):
         """Check if enough parameters have been provided to build the item.
 
-        This methodd should fire the config_ready event each time it is called
+        This methodd should fire the ready event each time it is called
         sending True if everything is allright, False otherwise.
 
         """
@@ -95,6 +95,6 @@ class SequenceConfig(AbstractConfig):
 
         """
         if change['value']:
-            self.config_ready = True
+            self.ready = True
         else:
-            self.config_ready = False
+            self.ready = False

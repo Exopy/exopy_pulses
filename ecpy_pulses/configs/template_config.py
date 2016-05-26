@@ -112,9 +112,9 @@ class TemplateConfig(AbstractConfig):
 
         """
         if change['value']:
-            self.config_ready = True
+            self.ready = True
         else:
-            self.config_ready = False
+            self.ready = False
 
     # --- Private API ---------------------------------------------------------
 

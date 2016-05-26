@@ -497,11 +497,13 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                 if i_class in configs:
                     config = configs[i_class].cls
                     view = configs[i_class].view
-                    return config(manager=self,
-                                  sequence_class=sequence_class), view
+                    print(config)
+                    c = config(manager=self,
+                                  sequence_class=sequence_class)
+                    return c, view(model=c)
         return None, None
 
-    def filter_sequences(self, filter_name):
+    def list_sequences(self, filter_name='All'):
         """ Filter the known sequences using the specified filter.
 
         Parameters

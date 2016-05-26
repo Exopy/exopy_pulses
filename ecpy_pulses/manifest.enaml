@@ -184,14 +184,14 @@ def build_sequence(event):
     if mode == 'ui':
         parent_ui = event.parameters.get('parent_ui')
         root = event.parameters['root']
-        dial = BuilderView(parent_ui, manager=manager, root=root)
+        dial = BuilderView(parent_ui, manager=manager)
         dial.exec_()
         if dial.result:
-            seq = dial.model.sequence_config.build_sequence()
+            seq = dial.config.build_sequence()
             if seq:
                 return seq
             else:
-                BasicErrorsDisplay(errors=dial.model.sequence_config.errors,
+                BasicErrorsDisplay(errors=dial.config.errors,
                                    kind='Config errors').exec_()
 
     elif mode == 'file':

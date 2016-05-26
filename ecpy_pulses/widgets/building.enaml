@@ -32,52 +32,40 @@ def abstract_config():
     return AbstractConfig
 
 
-class _PulseBuilderModel(Atom):
-    """ Simple model for the PulseBuilder dialog.
-
-    """
-    # Pulses manager.
-    manager = ForwardTyped(pulse_manager)
-
-    # Reference to the root sequence to which a sequence should be added.
-    root = Value()
-
-    # Name of the currently selected sequence.
-    sequence_name = Str()
-
-    # Currently in use sequence config.
-    sequence_config = ForwardTyped(abstract_config)
-    config_view = Instance(Object)
-
-    # Bool indicating whether or not the sequence can be built.
-    ok_ready = Bool()
-
-    def _observe_sequence_name(self, change):
-        """ Observer requesting the appropriate config for a task.
-
-        """
-        self.ok_ready = False
-        config, view = self.manager.get_config(change['value'])
-        self.sequence_config = config
-        self.config_view = view(model=config)
-        self.ok_ready = config.config_ready
-
-    @observe('sequence_config.config_ready')
-    def _config_complete(self, change):
-        """ Observe the config to notify the ui that config is ready.
-
-        """
-        self.ok_ready = change['value']
-
-
 enamldef BuilderView(Dialog): dial:
     """ Simple Dialog to add a sequence to an existing sequence.
 
     """
-    attr manager
-    attr root
-    attr model = _PulseBuilderModel(manager=manager, root=root)
+    #: Reference to the sequence manager (aka: the plugin).
+    alias manager : selector.manager
+
+    #: Config object corresponding to the currently selected sequence.
+    attr config
+
+    #: Reference to the sequence selector.
+    alias selector : selector
+
     title = 'Select the sequence you want to add'
+
+    func _update():
+        if selector.selected_sequence:
+            config, view = manager.get_config(selector.selected_sequence)
+            print('here')
+            print(config)
+            print(view)
+            if config is None:
+                dial.config = None
+                conf.objects = [Label(text=('No configuration view was'+ 
+                                            'found for this task'))]
+                return
+            dial.config = config
+            conf.objects = [view]
+        else:
+            dial.config = None
+            conf.objects = []
+
+
+    initialized :: _update()
 
     Container:
         constraints << [hbox(selector,
@@ -86,19 +74,22 @@ enamldef BuilderView(Dialog): dial:
                                                             spacer)]))]
         SequenceSelector: selector:
             hug_width = 'strong'
-            manager << dial.manager
-            selected_sequence >> model.sequence_name
+            selected_sequence :: _update()
+
         Include: conf:
-            objects  << [model.config_view] if model.config_view else []
+            pass
+
         PushButton: ok:
             text = 'Ok'
-            enabled << model.ok_ready
+            enabled << config.ready if config else False
             clicked ::
                 dial.accept()
+
         PushButton: cancel:
             text = 'Cancel'
             clicked ::
                 dial.reject()
+
 
 enamldef ContextBuilderView(Dialog): dial:
     """ Simple dialog to choose the context to add to a sequence.
