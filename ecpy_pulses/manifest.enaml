@@ -13,6 +13,7 @@ and defining some default pulse shapes.
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+
 from ast import literal_eval
 from future.builtins import str
 from configobj import ConfigObj

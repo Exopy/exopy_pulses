@@ -6,6 +6,12 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
+"""
+
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
 
 # TODO would be nicer with regex but I never managed to get the regex right.
 def normalize_sequence_name(name):

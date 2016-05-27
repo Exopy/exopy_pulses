@@ -13,6 +13,7 @@ database entries used to define a pulse.
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+
 from inspect import cleandoc
 from textwrap import fill
 

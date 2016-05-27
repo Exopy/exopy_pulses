@@ -6,6 +6,13 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
+"""
+
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+
 from atom.api import Unicode, set_default
 
 from .base_sequences import BaseSequence
