@@ -34,7 +34,7 @@ def instantiate_context_view(core, context, cache):
     print("base_sequence_view:406-->Called with context "+ str(context) + 
           " cache: " + str(cache) + " core: " + str(core))
     if context:
-        cmd = 'ecpy.pulses.get_context_info'
+        cmd = 'ecpy.pulses.get_context_infos'
         context_info, _ = core.invoke_command(cmd,
                                           {'context': context.context_class,
                                            'use_class_names': True})

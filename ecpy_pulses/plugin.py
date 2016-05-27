@@ -246,7 +246,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         return answer, missing
 
-    def get_sequence_info(self, sequence, use_class_names=False):
+    def get_sequence_infos(self, sequence, use_class_names=False):
         """Access a given sequence infos.
 
         Parameters
@@ -324,7 +324,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             Associated view if requested.
 
         """
-        _answer, _missing = self.get_sequence_info(sequence, use_class_names)
+        _answer, _missing = self.get_sequence_infos(sequence, use_class_names)
 
         if _answer is None:
             return (None, None)
@@ -395,7 +395,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         return answer, missing
 
-    def get_context_info(self, context, use_class_names=False):
+    def get_context_infos(self, context, use_class_names=False):
         """ Give access to context infos.
 
         Parameters

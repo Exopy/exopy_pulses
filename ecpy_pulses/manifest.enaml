@@ -97,62 +97,6 @@ def show_starting_errors(event):
         ChecksDisplay(ui.window, title='Pulses manager start up errors',
                       errors=manager.report()).exec_()
 
-def get_sequences_infos(event):
-    """ Handler for the 'ecpy.pulses.get_sequence_info' command.
-
-    """
-    manager = event.workbench.get_plugin('ecpy.pulses')
-    return manager.get_sequences_infos(**event.parameters)
-
-def get_sequence_info(event):
-    """ Handler for the 'ecpy.pulses.get_sequence_info' command.
-
-    """
-    manager = event.workbench.get_plugin('ecpy.pulses')
-    return manager.get_sequence_info(**event.parameters)
-
-def get_sequences(event):
-    """ Handler for the 'ecpy.pulses.get_sequence' command.
-
-    """
-    manager = event.workbench.get_plugin('ecpy.pulses')
-    return manager.get_sequences(**event.parameters)
-
-def get_sequence(event):
-    """ Handler for the 'ecpy.pulses.get_sequence' command.
-
-    """
-    manager = event.workbench.get_plugin('ecpy.pulses')
-    return manager.get_sequence(**event.parameters)
-
-def get_items_infos(event):
-    """ Handler for the 'ecpy.pulses.get_sequence' command.
-
-    """
-    manager = event.workbench.get_plugin('ecpy.pulses')
-    return manager.get_items_infos(**event.parameters)
-
-def get_contexts_infos(event):
-    """ Handler for the 'ecpy.pulses.get_contexts_infos' command.
-
-    """
-    manager = event.workbench.get_plugin('ecpy.pulses')
-    return manager.get_contexts_infos(**event.parameters)
-
-def get_context_info(event):
-    """ Handler for the 'ecpy.pulses.get_context_info' command.
-
-    """
-    manager = event.workbench.get_plugin('ecpy.pulses')
-    return manager.get_context_info(**event.parameters)
-
-def get_shapes_infos(event):
-    """ Handler for the 'ecpy.pulses.get_shapes_infos' command.
-
-    """
-    manager = event.workbench.get_plugin('ecpy.pulses')
-    return manager.get_shapes_infos(**event.parameters)
-
 def build_sequence(event):
     """ Handler for the 'ecpy.pulses.build_sequence' command.
 
@@ -171,7 +115,7 @@ def build_sequence(event):
         should be a RootSequence not a TemplateSequence. Used in file mode.
 
     prefs : dict, optional
-        Sequence config describing the sequence to rebuilf. The stored sequence
+        Sequence config describing the sequence to rebuild. The stored sequence
         should be a RootSequence not a TemplateSequence. Used in file mode.
 
     Returns
@@ -446,7 +390,6 @@ enamldef PulsesManagerManifest(PluginManifest):
     # --- Extensions ----------------------------------------------------------
     # =========================================================================
 
-    #: Filters
     Extension:
         id = 'filters'
         point = 'ecpy.pulses.filters'
@@ -512,14 +455,12 @@ enamldef PulsesManagerManifest(PluginManifest):
                 shape = 'square_shape:SquareShape'
                 view = 'views.square_shape_view:SquareShapeView'
 
-    #Ported
     Extension:
         id = 'prefs'
         point = 'ecpy.app.preferences.plugin'
         Preferences:
             pass
 
-    #Ported
     Extension:
         id = 'state'
         point = 'ecpy.app.states.state'
@@ -545,7 +486,6 @@ enamldef PulsesManagerManifest(PluginManifest):
         point = u'enaml.workbench.ui.workspaces'
         factory = workspace_factory
 
-    #ToCheck
     Extension:
         id = 'commands'
         point = 'enaml.workbench.core.commands'
@@ -560,35 +500,35 @@ enamldef PulsesManagerManifest(PluginManifest):
         Command:
             id = 'ecpy.pulses.get_sequences_infos'
             description = GET_SEQUENCE_INFOS_DESCRIPTION
-            handler = get_sequences_infos
+            handler = make_handler(PLUGIN_ID, 'get_sequences_infos')
         Command:
-            id = 'ecpy.pulses.get_sequence_info'
+            id = 'ecpy.pulses.get_sequence_infos'
             description = GET_SEQUENCE_INFOS_DESCRIPTION
-            handler = get_sequence_info
+            handler = make_handler(PLUGIN_ID, 'get_sequence_infos')
         Command:
             id = 'ecpy.pulses.get_sequences'
             description = GET_SEQUENCES_INFOS_DESCRIPTION
-            handler = get_sequences
+            handler = make_handler(PLUGIN_ID, 'get_sequences')
         Command:
             id = 'ecpy.pulses.get_sequence'
             description = GET_SEQUENCE_INFOS_DESCRIPTION
-            handler = get_sequence
+            handler = make_handler(PLUGIN_ID, 'get_sequence')
         Command:
             id = 'ecpy.pulses.get_items_infos'
             description = GET_SEQUENCE_INFOS_DESCRIPTION
-            handler = get_items_infos
+            handler = make_handler(PLUGIN_ID, 'get_items_infos')
         Command:
             id = 'ecpy.pulses.get_contexts_infos'
             description = "HELLO"
-            handler = get_contexts_infos
+            handler = make_handler(PLUGIN_ID, 'get_contexts_infos')
         Command:
-            id = 'ecpy.pulses.get_context_info'
+            id = 'ecpy.pulses.get_context_infos'
             description = "HELLO"
-            handler = get_context_info
+            handler = make_handler(PLUGIN_ID,'get_context_infos')
         Command:
             id = 'ecpy.pulses.get_shapes_infos'
             description = GET_SHAPES_INFOS_DESCRIPTION
-            handler = get_shapes_infos
+            handler = make_handler(PLUGIN_ID,'get_shapes_infos')
         Command:
             id = 'ecpy.pulses.build_sequence'
             description = BUILD_SEQUENCE_DESCRIPTION
@@ -598,7 +538,6 @@ enamldef PulsesManagerManifest(PluginManifest):
             description = BUILD_CONTEXT_DESCRIPTION
             handler = build_context
 
-    #Checked
     Extension:
         id = 'menu'
         point = 'enaml.workbench.ui.actions'
