@@ -110,8 +110,7 @@ class TemplateConfig(AbstractConfig):
 
             return seq
 
-    @observe('template_name')
-    def check_parameters(self, change):
+    def _post_setattr_template_name(self, old, new):
         """ Observer notifying that the configurer is ready to build.
 
         """

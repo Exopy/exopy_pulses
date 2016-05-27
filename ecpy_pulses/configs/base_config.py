@@ -92,9 +92,8 @@ class SequenceConfig(AbstractConfig):
     def build_sequence(self):
         return self.sequence_class(name=self.sequence_name)
 
-    @observe('sequence_name')
-    def check_parameters(self, change):
+    def _post_setattr_sequence_name(self, old, new):
         """ Observer notifying that the configurer is ready to build.
 
         """
-        self.ready = bool(change['value'])
+        self.ready = bool(new)

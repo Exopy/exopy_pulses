@@ -160,8 +160,14 @@ class TABORContext(BaseContext):
         """
         return 1/self.sampling_frequency*TIME_CONVERSION['s'][self.time_unit]
 
-    @observe('sampling_frequency', 'time_unit')
-    def _reset_sampling_time(self, change):
+    def _post_setattr_sampling_frequency(self, old, new):
+        """ Observer resetting the sampling_time property.
+
+        """
+        member = self.get_member('sampling_time')
+        member.reset(self)
+
+    def _post_setattr_time_unit(self, old, new):
         """ Observer resetting the sampling_time property.
 
         """
