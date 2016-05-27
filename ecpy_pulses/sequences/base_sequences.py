@@ -32,7 +32,7 @@ class AbstractSequence(Item):
 
     This class defines the basic of a sequence but with only a very limited
     child support : only construction is supported, indexing is not handled
-    nor is child insertion, deletion or displacement (This is because 
+    nor is child insertion, deletion or displacement (This is because
     TemplateSequence inherits from AbstractSequence, while everything else inherits
     from Sequence which supports insertion/deletion/displacement).
 
@@ -261,7 +261,7 @@ class AbstractSequence(Item):
                                                            miss, errors)
                     if success:
                         compiled[index] = items
-            
+
             known_locals = set(sequence_locals.keys())
             # If none of the variables found missing during last pass is now
             # known stop compilation as we now reached a dead end. Same if an
@@ -279,8 +279,7 @@ class AbstractSequence(Item):
                 # Clean the compiled items once the pulse is transfered
                 self.cleanup_cache()
                 return True, pulses
-            
-            
+
     def _answer(self, members, callables):
         """ Collect answers for the walk method.
 

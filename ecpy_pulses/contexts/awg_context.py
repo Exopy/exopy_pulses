@@ -142,9 +142,9 @@ class AWGContext(BaseContext):
         for channel in used_channels:
             # Convert to sixteen bits integers
             array = array_analog[channel] +\
-                array_M1[channel]*(2**14) + array_M2[channel]*(2**15)
+                array_M1[channel] * (2**14) + array_M2[channel] * (2**15)
             # Creating and filling a byte array for each channel.
-            aux = np.empty(2*sequence_length, dtype=np.uint8)
+            aux = np.empty(2 * sequence_length, dtype=np.uint8)
             aux[::2] = array % 2**8
             aux[1::2] = array // 2**8
             to_send[int(channel[-1])] = bytearray(aux)
@@ -155,7 +155,8 @@ class AWGContext(BaseContext):
         """ Getter for the sampling time prop of BaseContext.
 
         """
-        return 1/self.sampling_frequency*TIME_CONVERSION['s'][self.time_unit]
+        return (1 / self.sampling_frequency *
+                TIME_CONVERSION['s'][self.time_unit])
 
     def _post_setattr_sampling_frequency(self, old, new):
         """ Observer resetting the sampling_time property.

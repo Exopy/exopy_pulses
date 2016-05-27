@@ -16,7 +16,6 @@ from __future__ import (division, unicode_literals, print_function,
 import os
 import logging
 import enaml
-from traceback import format_exc
 from importlib import import_module
 from atom.api import (Dict, List, Unicode, Typed, ForwardTyped)
 
@@ -316,7 +315,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             Associated view if requested.
 
         """
-        _answer, _missing = self.get_sequence_infos(sequence, use_class_names)
+        _answer, _ = self.get_sequence_infos(sequence, use_class_names)
 
         if _answer is None:
             return (None, None)
