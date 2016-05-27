@@ -94,7 +94,4 @@ class SequenceConfig(AbstractConfig):
         """ Observer notifying that the configurer is ready to build.
 
         """
-        if change['value']:
-            self.ready = True
-        else:
-            self.ready = False
+        self.ready = bool(change['value'])

@@ -184,7 +184,6 @@ class SequenceEditionSpace(Workspace):
                 dial.exec_()
                 if dial.result:
                     s_ = self.state
-                    self.state
                     self._save_sequence_to_template(s_.sequence_path,
                                                     s_.sequence_doc)
 

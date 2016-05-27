@@ -407,10 +407,6 @@ class BaseSequence(AbstractSequence):
             para = parameters['item_{}'.format(i)]
             item.update_members_from_preferences(**para)
 
-    def append_child_item(self, child):
-        list
-        self.add_child_item()
-
     def add_child_item(self, index, child):
         """Add a child item at the given index.
 

@@ -33,7 +33,6 @@ def flatten_config(config, entries):
     results = defaultdict(set)
     for entry in entries:
         # Make sure that all entries exists in the dict.
-        results[entry]
         if entry in config.scalars:
             results[entry].add(config[entry])
 

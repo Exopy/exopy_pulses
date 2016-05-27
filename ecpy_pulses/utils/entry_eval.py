@@ -6,18 +6,15 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Provides methods to evaluate a text containing mathematical formulas and 
+"""Provides methods to evaluate a text containing mathematical formulas and
 database entries used to define a pulse.
 
 """
-from math import cos, sin, tan, acos, asin, atan, exp, log, log10
-import cmath as cm
-import numpy as np
-from math import pi as Pi
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
 from inspect import cleandoc
 from textwrap import fill
-from future.utils import exec_
-
 
 EVALUATER_TOOLTIP = '\n'.join([
     fill(cleandoc("""In this field you can enter a text and

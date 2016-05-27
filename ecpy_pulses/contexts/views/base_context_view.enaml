@@ -19,8 +19,3 @@ enamldef BaseContextView(Container): view:
     attr core
 
     hug_height = 'strong'
-
-    initialized:: 
-    	print("Initialized")
-    	print(context)
-    	print(core)

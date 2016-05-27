@@ -18,7 +18,7 @@ import logging
 import enaml
 from traceback import format_exc
 from importlib import import_module
-from atom.api import (Dict, List, Unicode, Typed, ForwardTyped, Tuple)
+from atom.api import (Dict, List, Unicode, Typed, ForwardTyped)
 
 from watchdog.observers import Observer
 from inspect import cleandoc
@@ -26,27 +26,19 @@ from inspect import cleandoc
 from ecpy.utils.plugin_tools import (HasPreferencesPlugin, ExtensionsCollector,
                                      DeclaratorsCollector)
 from ecpy.utils.watchdog import SystematicFileUpdater
-from .pulse import Pulse
-from .sequences.base_sequences import BaseSequence, RootSequence
-from .filters.base_filters import ItemFilter
-from .utils.sequences_io import load_sequence_prefs
-with enaml.imports():
-    from .pulse_view import PulseView
-    from .sequences.views.abstract_sequence_view import AbstractSequenceView
-    from .sequences.views.base_sequence_view import (BaseSequenceView,
-                                                     RootSequenceView)
-
-from .declarations import (Sequence, Sequences, SequenceConfig, 
-                           SequenceConfigs, Contexts, Context, Shapes, Shape)
-from .infos import SequenceInfos, PulseInfos
 from .sequences.template_sequence import TemplateSequence
 from .sequences.views.template_view import TemplateSequenceView
+from .pulse import Pulse
+from .filters.base_filters import ItemFilter
+from .utils.sequences_io import load_sequence_prefs
 
+from .declarations import (Sequence, Sequences, SequenceConfig,
+                           SequenceConfigs, Contexts, Context, Shapes, Shape)
+from .infos import SequenceInfos, PulseInfos
 
+with enaml.imports():
+    from .pulse_view import PulseView
 
-PACKAGE_PATH = os.path.dirname(__file__)
-
-TEMPLATE_PATH = os.path.realpath(os.path.join(PACKAGE_PATH, 'templates'))
 
 FILTERS_POINT = 'ecpy.pulses.filters'
 SEQUENCES_POINT = 'ecpy.pulses.sequences'
@@ -71,7 +63,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
     """Plugin responsible for managing pulses.
     """
     #: Folders containings templates which should be loaded.
-    templates_folders = List(default=[TEMPLATE_PATH]).tag(pref=True)
+    templates_folders = List().tag(pref=True)
 
     #: List of all known sequences and template-sequences.
     sequences = List(Unicode())
@@ -99,23 +91,23 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         """
         super(PulsesManagerPlugin, self).start()
+        core = self.workbench.get_plugin('enaml.workbench.core')
+        core.invoke_command('ecpy.app.errors.enter_error_gathering')
 
-        if not os.path.isdir(TEMPLATE_PATH):
-            try:
-                os.mkdir(TEMPLATE_PATH)
-            except Exception:
-                if TEMPLATE_PATH in self.templates_folders:
-                    self.templates_folders.remove(TEMPLATE_PATH)
-                core = self.workbench.get_plugin('enaml.workbench.core')
-                msg = 'Failed to create template folder.'
-                # Python 2 windows issue
-                try:
-                    msg += 'Traceback : %s' % format_exc()
-                except UnicodeError:
-                    msg += 'Failed to format error message.'
-                core.invoke_command('ecpy.app.errors.signal',
-                                    dict(kind='error',
-                                         message=msg))
+        state = core.invoke_command('ecpy.app.states.get',
+                                    {'state_id': 'ecpy.app.directory'})
+
+        t_dir = os.path.join(state.app_directory, 'pulses')
+        # Create tasks subfolder if it does not exist.
+        if not os.path.isdir(t_dir):
+            os.mkdir(t_dir)
+
+        temp_dir = os.path.join(t_dir, 'templates')
+        # Create profiles subfolder if it does not exist.
+        if not os.path.isdir(temp_dir):
+            os.mkdir(temp_dir)
+
+        self.templates_folders = [temp_dir]
 
         #: Start the Declarators and Extensions collectors to collect
         #: all elements of the plugin that are declared through enaml
@@ -262,8 +254,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         """
         sequences = [sequence]
-        _answer, _missing = self.get_sequences_infos(sequences,
-                                                     use_class_names)
+        _answer, _ = self.get_sequences_infos(sequences,
+                                              use_class_names)
 
         try:
             answer = _answer[sequence]
@@ -371,7 +363,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             If use_class_names is True the class name will be used.
 
         """
-        if type(contexts) is not list:
+        if not isinstance(contexts, list):
             raise ValueError("plugin.py:get_contexts_infos" +
                              " - contexts should be a list")
 
@@ -414,7 +406,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         """
         contexts = [context]
-        _answer, _missing = self.get_contexts_infos(contexts, use_class_names)
+        _answer, _ = self.get_contexts_infos(contexts, use_class_names)
 
         try:
             answer = _answer[context]
@@ -480,6 +472,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             Tuple containing the config object requested, and its visualisation
 
         """
+
         templates = self._template_sequences_data
         if sequence_id in templates:
             config_infos = self._config.contributions['__template__']
@@ -499,7 +492,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                     view = configs[i_class].view
                     print(config)
                     c = config(manager=self,
-                                  sequence_class=sequence_class)
+                               sequence_class=sequence_class)
                     return c, view(model=c)
         return None, None
 
@@ -539,7 +532,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             logger.warn("Did not find the filter " + str(filter_name) +
                         " and returned zero elements.")
             return []
-
 
     def report(self):
         """ Give access to the failures which happened at startup.
@@ -801,7 +793,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         """
 
         for folder in self.templates_folders:
-            handler = SystematicFileUpdater(self._refresh_template_sequences_data)
+            handler = SystematicFileUpdater(
+                self._refresh_template_sequences_data)
             self._observer.schedule(handler, folder, recursive=True)
 
         self._observer.start()
@@ -849,13 +842,13 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
             if char != '\0':
                 if char.isupper() and i != 0:
-                    if name[i-1].islower():
-                        if name[i+1].islower():
+                    if name[i - 1].islower():
+                        if name[i + 1].islower():
                             aux += ' ' + char.lower()
                         else:
                             aux += ' ' + char
                     else:
-                        if name[i+1].islower():
+                        if name[i + 1].islower():
                             aux += ' ' + char.lower()
                         else:
                             aux += char

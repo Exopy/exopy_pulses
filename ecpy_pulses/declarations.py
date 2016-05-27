@@ -16,7 +16,7 @@ from traceback import format_exc
 from inspect import cleandoc
 
 from future.utils import python_2_unicode_compatible
-from atom.api import Unicode, List, Value, Dict, Property
+from atom.api import Unicode, Dict, Property
 from enaml.core.api import d_, d_func
 from ecpy.utils.declarator import (Declarator, GroupDeclarator, import_and_get)
 

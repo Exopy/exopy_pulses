@@ -396,7 +396,7 @@ class SequenceEditor(Container):
         return EmptyEditorButtons(editor=self)
 
     # =========================================================================
-    # --- Old ViewManager ---------------------------------------------------------
+    # --- Old ViewManager -----------------------------------------------------
     # =========================================================================
     #: Dict mapping Task names to their view.
     views = Dict()
