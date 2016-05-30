@@ -33,11 +33,10 @@ def default_add_displays(core, item):
                                                modulation=item.modulation))
 
         if item.shape:
-            cmd = 'ecpy.pulses.shapes_request'
-            shapes, _ = core.invoke_command(cmd,
-                                            {'shapes': item.shape.shape_id})
-            shape = shapes[item.shape.shape_id]
-            add_displays.append(shape[1](item=item, shape=item.shape))
+            cmd = 'ecpy.pulses.get_shape_infos'
+            s_info, _ = core.invoke_command(cmd,
+                                            {'shape': item.shape.shape_id})
+            add_displays.append(s_info.view(item=item, shape=item.shape))
 
         return add_displays
 

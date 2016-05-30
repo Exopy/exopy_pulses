@@ -438,8 +438,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         Returns
         -------
-        shapes : dict
-            The required shapes infos as a dict {name: (class, view)}.
+        shapes : ShapeInfo
+            The required shapes infos .
 
         """
 

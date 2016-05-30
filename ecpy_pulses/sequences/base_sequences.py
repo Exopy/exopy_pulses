@@ -419,8 +419,6 @@ class BaseSequence(AbstractSequence):
         self.items.insert(index, child)
         child.parent = self
 
-        print(self.items)
-
         child.observe('linkable_vars', self.root._update_linkable_vars)
         if isinstance(child, BaseSequence):
             child.observe('_last_index', self._item_last_index_updated)
@@ -499,9 +497,10 @@ class BaseSequence(AbstractSequence):
         if change['value']:
             for item in self.items:
                 item.root = self.root
+                if isinstance(item, Item):
+                    item.parent = self
                 if isinstance(item, BaseSequence):
                     item.observe('_last_index', self._item_last_index_updated)
-                    item.parent = self
             # Connect only now to avoid cleaning up in an unwanted way the
             # root linkable vars attr.
             self.observe('items', self._items_updated)
@@ -856,6 +855,8 @@ class RootSequence(BaseSequence):
                                                          dependencies)
         if 'context' in config:
             seq.context = context
+
+        seq._observe_root({'value':True})
         return seq
 
     # --- Private API ---------------------------------------------------------

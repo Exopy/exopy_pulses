@@ -146,14 +146,26 @@ def build_sequence(event):
             prefs = event.parameters['prefs']
         else:
             raise ValueError('No valid kwargs found for file mode')
-        # Implement the logic here to rebuild the sequence.
-        core = manager.workbench.get_plugin('enaml.workbench.core')
-        cmd = 'ecpy.app.dependencies.collect_build_dep_from_config'
-        dep = core.invoke_command(cmd, {'config': prefs})
-        if isinstance(dep, Exception):
-            raise dep
 
-        seq = RootSequence.build_from_config(deepcopy(prefs), dep)
+        # Collect the dependencies
+        core = event.workbench.get_plugin('enaml.workbench.core')
+        cmd = 'ecpy.app.dependencies.analyse'
+
+        cont = core.invoke_command(cmd, {'obj': prefs}) 
+        if cont.errors:
+            raise RuntimeError('Failed to analyse dependencies :\n%s' %
+                               cont.errors)
+
+        cmd = 'ecpy.app.dependencies.collect'
+        cont = core.invoke_command(cmd, {'kind': 'build',
+                                         'dependencies': cont.dependencies})
+        if cont.errors:
+            raise RuntimeError('Failed to collect dependencies :\n%s' %
+                               cont.errors)
+        build_dep = cont.dependencies
+
+        # Implement the logic here to rebuild the sequence
+        seq = RootSequence.build_from_config(deepcopy(prefs), build_dep)
         return seq
 
 

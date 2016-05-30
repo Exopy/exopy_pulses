@@ -254,16 +254,24 @@ class SequenceEditor(Container):
         if items:
             for item in items:
                 button = ItemEditorButton(item=item, editor=self)
-                view = self._instantiate_view(item, 
-                                                   {'root':
-                                                    self.sequence.root})
+                view = self._instantiate_view(item, {'root':
+                                                     self.sequence.root})
                 self._children_buttons[item] = (button, view)
+                button.set_parent(self)
+                view.set_parent(self)
 
             self.insert_children(None, chain(*self._children_buttons.values()))
 
         elif 'addP' in self.operations:
             self._empty_button.set_parent(self)
             self._empty_button.show()
+
+    def _post_setattr_sequence(self, old, new):
+        old.unobserve('items', self._update_views)
+        old.unobserve('items_changed', self._update_views)
+        self._update_views(None)
+        new.observe('items', self._update_views)
+        new.observe('items_changed', self._update_views)
             
     def _update_views(self, change, root=True):
         """Handler updating as needed the views when the children member is
@@ -397,7 +405,7 @@ class SequenceEditor(Container):
     views = Dict()
 
     def _setup_views(self, children):
-        t_classes = set([type(item).__name__ for item in children])
+        t_classes = set([item.item_id for item in children])
         self.get_views(t_classes)
 
     def _instantiate_view(self, item, attrs):
@@ -418,27 +426,26 @@ class SequenceEditor(Container):
             Created item view.
 
         """
-        pack, _ = self.__module__.split('.', 1)
-        name = pack + '.' +type(item).__name__
+        it_id = item.item_id
 
         views = self.views
-        if name not in views:
-            self.get_views([name])
-        view = views[name]
+        if it_id not in views:
+            self.get_views([it_id])
+        view = views[it_id]
         kwargs = {'item': item, 'core': self.core, 'cache': self.cache}
         for key in attrs:
             if hasattr(view, key):
                 kwargs[key] = attrs[key]
+
         return view(**kwargs)
 
-    def get_views(self, class_names):
+    def get_views(self, item_id):
         """ Helper method updating the known views with the ones associated
-        with the given names.
+        with the given item_id.
 
         """
         cmd = 'ecpy.pulses.get_items_infos'
-        items, _ = self.core.invoke_command(cmd,
-                                            {'items': class_names})
+        items, _ = self.core.invoke_command(cmd, {'items': item_id})
         self.views.update({k: v.view for k, v in items.items()})
 
 
