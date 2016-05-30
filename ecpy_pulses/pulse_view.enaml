@@ -143,16 +143,11 @@ enamldef PulseView(GroupBox): view:
                 # Assume ends in Shape
                 selected << item.shape.shape_id[:-5] if item.shape else ''
                 selected ::
-                    print("looking for shapes")
-                    print(change)
                     if change.get('oldvalue'):
                         a_d = view.add_displays[:]
                         a_d.pop()
                         view.add_displays = a_d
                     if change['value']:
-                        print(pulse_state)
-                        print(pulse_state.shapes)
-                        print(len(pulse_state.shapes))
                         cmd = 'ecpy.pulses.get_shapes_infos'
                         shapes, _ = core.invoke_command(cmd,
                                                         {'shapes':

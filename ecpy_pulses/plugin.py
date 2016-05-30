@@ -116,8 +116,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                                             point=FILTERS_POINT,
                                             ext_class=ItemFilter)
         self._filters.start()
-        print("Collected Filters:")
-        print(self._filters.contributions)
 
         self._configs = DeclaratorsCollector(workbench=self.workbench,
                                              point=CONFIGS_POINT,
@@ -155,6 +153,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._pulse_info.view = PulseView
 
         self._bind_observers()
+
+        core.invoke_command('ecpy.app.errors.exit_error_gathering')
 
     def stop(self):
         """ Stop the plugin life-cycle.

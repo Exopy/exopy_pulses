@@ -13,7 +13,7 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 
-from atom.api import (Unicode, Value, Bool, Typed, observe)
+from atom.api import (Unicode, Value, Bool, Typed)
 from copy import deepcopy
 from ast import literal_eval
 
