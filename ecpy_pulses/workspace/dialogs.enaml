@@ -109,6 +109,7 @@ enamldef CompilationWidget(Container): main:
             res, report = seq.compile_sequence(use_context=use_context)
             stop = time()
             main.elapsed_time = (stop - start)*1e6
+
             if not res:
                 dur_val.background = 'red'
                 miss, err = report
@@ -184,8 +185,7 @@ enamldef TemplateLoadDialog(Dialog): dial:
             selected_filter = 'Template'
             selected_sequence ::
                 name = change['value']
-                t_, _ = workspace.plugin.get_sequences_infos([name],
-                                                           views=False)
+                t_, _ = workspace.plugin.get_sequences_infos([name])
                 dial.doc = t_.metadata['doc']
                 dial.prefs = t_.metadata['config']
 
@@ -221,9 +221,8 @@ RIGHT_CONTEXT = \
 ''' Right type of context found, you can continue.'''
 
 
-def _validate_context(workspace):
-    context = workspace.state.sequence.context
-    test = context is not None and context.context_class != 'TemplateContext'
+def _validate_context(context):
+    test = context is not None and context.context_id == 'TemplateContext'
     return WRONG_CONTEXT if not test else RIGHT_CONTEXT
 
 
@@ -233,12 +232,9 @@ enamldef TemplateSaveDialog(Dialog): dial:
     attr workspace
     attr path
     attr doc = ''
-    attr can_proceed : bool = False
-    event stack_changed
-    stack_changed ::
-        self.can_proceed = sta.stack_items[self.step].valid
-
     alias step : sta.index
+    attr can_proceed : bool << sta.stack_items()[step].valid
+
 
     title = 'Save sequence as template.'
 
@@ -251,7 +247,7 @@ enamldef TemplateSaveDialog(Dialog): dial:
                 attr valid : bool << typ.text == RIGHT_CONTEXT
                 Container:
                     MultilineField: typ:
-                        text = _validate_context(workspace)
+                        text << _validate_context(workspace.state.sequence.context)
 
             StackItem: f_sel:
                 attr valid : bool = False
@@ -307,7 +303,6 @@ enamldef TemplateSaveDialog(Dialog): dial:
                 text = 'Previous'
                 clicked ::
                     dial.step -= 1
-                    dial.stack_changed()
 
         Conditional: nex:
             condition << step < len(sta.stack_items())-1
@@ -316,7 +311,6 @@ enamldef TemplateSaveDialog(Dialog): dial:
                 enabled << can_proceed
                 clicked ::
                     dial.step += 1
-                    dial.stack_changed()
 
         Conditional: sav:
             condition << step == len(sta.stack_items())-1

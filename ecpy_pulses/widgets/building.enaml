@@ -110,24 +110,20 @@ enamldef ContextBuilderView(Dialog): dial:
 
     #: Mapping from sanitized names to class names
     attr _context_map << (ids_to_unique_names(contexts, 
-                                              normalize_context_name,
-                                              preformatter=
-                                                normalize_context_name)
+                                              normalize_context_name)
                           if contexts else {})
-
-    #: Currently selected context.
-    attr selected_context = _context_map[sorted(_context_map)[0]]
 
 
     func _update():
-        if selected_context:
-            contexts_infos, _ = manager.get_contexts_infos([selected_context])
+        sc = _context_map[selector.selected_item]
+        if sc:
+            contexts_infos, _ = manager.get_contexts_infos([sc])
             if contexts_infos:
-                info = contexts_infos[selected_context]
+                info = contexts_infos[sc]
                 dial.context = info.cls
-                doc.text = getdoc(info.cls)
 
-    initialized :: _update()
+    initialized :: 
+        _update()
 
     title = 'Select the context you want to use.'
 
@@ -137,10 +133,7 @@ enamldef ContextBuilderView(Dialog): dial:
         QtListStrWidget: selector:
             items << sorted(dial._context_map)
             selected_item ::
-                new_context = change['value']
-                if new_context:
-                    dial.selected_context = _context_map[new_context]
-                    _update()
+                _update()
 
         MultilineField: doc:
             text << getdoc(context) if context else ''
