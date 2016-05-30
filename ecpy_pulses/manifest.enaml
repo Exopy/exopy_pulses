@@ -185,6 +185,9 @@ CONTEXTS_REQUEST_DESCRIPTION = \
 GET_SHAPES_INFOS_DESCRIPTION = \
 """ Request the infos associated to a list of shapes. """
 
+GET_SHAPE_INFOS_DESCRIPTION = \
+""" Request the infos associated to a single shape. """
+
 BUILD_SEQUENCE_DESCRIPTION = \
 """ Build a sequence from the one knwon to the plugin."""
 
@@ -263,82 +266,6 @@ infos : SequenceInfos|None
 
 """
 
-
-# =============================================================================
-# --- ???????????? ------------------------------------------------------------
-# =============================================================================
-
-# TODO Fix from get_sequnces_infos
-# TODO add protection againt recursive ones.
-def collect_pulses_dependecies(workbench, flat_walk):
-    """ Collector function for the build-dependencies extensions.
-
-    """
-    # Here we use direct call to plugin methods as this is internal to the
-    # plugin
-    manager = workbench.get_plugin('ecpy.pulses')
-
-    # Collect items.
-    s_res = manager.get_sequences_infos(flat_walk['item_class'],
-                                      use_class_names=True,
-                                      views=False)
-    # Collect contexts.
-    c_res = manager.get_contexts_infos(flat_walk['context_class'],
-                                     use_class_names=True,
-                                     views=False)
-    # Collect shapes.
-    sh_res = manager.get_shapes_infos(flat_walk['shape_class'],
-                                      use_class_names=True,
-                                      views=False)
-
-    # Collect the templates.
-    tp_res = manager.get_sequences_infos(flat_walk['template_id'])
-
-    # Collect the sequences.
-    sq_res = {p: load_sequence_prefs(p)[0] for p in flat_walk['sequence_path']
-              if p}
-
-    if s_res[1] or c_res[1] or sh_res[1] or tp_res[1]:
-        mess = 'Missing sequences: {}, contexts: {}, shapes: {}, templates: {}'
-
-        raise ValueError(mess.format(s_res[1], c_res[1], sh_res[1], tp_res[1]))
-
-    # Bundle all dependencies under a single dict.
-    dependencies = {}
-    dependencies.update(s_res[0])
-    dependencies['contexts'] = c_res[0]
-    dependencies['shapes'] = sh_res[0]
-    dependencies['templates'] = tp_res[0]
-    dependencies['sequences'] = sq_res
-
-    # Collect template dependencies.
-    for _, conf, _ in tp_res[0]:
-        t_conf = flatten_config(conf, ['item_class', 'context_class',
-                                       'shape_class', 'template_id'])
-        t_dep = collect_pulses_dependecies(workbench, t_conf)['pulses']
-        t_dep.pop('sequences')
-        dependencies['shapes'].update(t_dep.pop('shapes'))
-        dependencies['contexts'].update(t_dep.pop('contexts'))
-        dependencies['templates'].update(t_dep.pop('templates'))
-        dependencies.update(t_dep)
-
-    # NB : no nesting possible for pulse sequences.
-    for conf in sq_res.values():
-        s_conf = flatten_config(conf, ['item_class', 'context_class',
-                                       'shape_class', 'template_id'])
-        s_dep = collect_pulses_dependecies(workbench, s_conf)['pulses']
-        s_dep.pop('sequences')
-        dependencies['shapes'].update(s_dep.pop('shapes'))
-        dependencies['contexts'].update(s_dep.pop('contexts'))
-        dependencies['templates'].update(s_dep.pop('templates'))
-        dependencies.update(s_dep)
-
-    if dependencies:
-        return {'pulses': dependencies}
-    else:
-        return {}
-
-
 # =============================================================================
 # --- Manifest ----------------------------------------------------------------
 # =============================================================================
@@ -412,6 +339,9 @@ enamldef PulsesManagerManifest(PluginManifest):
             Sequence:
                 sequence = 'conditional_sequence:ConditionalSequence'
                 view = 'views.conditional_view:ConditionalSequenceView'
+            Sequence:
+                sequence = 'base_sequences:RootSequence'
+                view = 'views.base_sequence_view:RootSequenceView'
 
     Extension:
         id = 'configs'
@@ -470,18 +400,126 @@ enamldef PulsesManagerManifest(PluginManifest):
             description = MANAGER_STATE_DESCRIPTION
             sync_members = ['sequences', 'contexts', 'shapes']
 
-    #ToPort
-    #Extension:
-    #    id = 'item_classes'
-    #    point = 'ecpy.app.dependencies.build'
-    #    BuildDependency:
-    #        id = 'ecpy.pulses.dependencies'
-    #        walk_members = ['item_class', 'context_class',
-    #                        'shape_class', 'template_id',
-    #                        'sequence_path']
-    #        collect = collect_pulses_dependecies
+    Extension:
+        id = 'build_deps'
+        point = 'ecpy.app.dependencies.build'
+        BuildDependency:
+            id = 'ecpy.pulses.items'
+            analyse => (workbench, obj, getter, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
 
-    #Ported
+                i_id = getter(obj, 'item_id')
+                i_infos, _ = manager.get_item_infos(i_id)
+
+                if i_infos is None:
+                    errors[i_id] = 'Unknown item.'
+                    return
+
+                dependencies.add(i_id)
+                return i_infos.dependencies
+
+            validate => (workbench, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+                for i_id in dependencies:
+                    i_infos, _ = manager.get_item_infos(i_id)
+                    if i_infos is None:
+                        errors[i_id] = 'Unknown item.'
+
+            collect => (workbench, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+                for i_id in dependencies:
+                    i_infos, _ = manager.get_item_infos(i_id)
+                    if i_infos is None:
+                        errors[i_id] = 'Unknown item.'
+                        continue
+
+                    dependencies[i_id] = i_infos.cls
+
+        BuildDependency:
+            id = 'ecpy.pulses.contexts'
+            analyse => (workbench, obj, getter, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+
+                c_id = getter(obj, 'context_id')
+                c_infos, _ = manager.get_context_infos(c_id)
+
+                if c_infos is None:
+                    errors[c_id] = 'Unknown context.'
+                    return
+
+                dependencies.add(c_id)
+                return c_infos.dependencies
+
+            validate => (workbench, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+                for c_id in dependencies:
+                    c_infos = manager.get_context_infos(c_id)
+                    if c_infos is None:
+                        errors[c_id] = 'Unknown context.'
+
+            collect => (workbench, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+                for c_id in dependencies:
+                    c_infos, _ = manager.get_context_infos(c_id)
+                    if c_infos is None:
+                        errors[c_id] = 'Unknown context.'
+                        continue
+
+                    dependencies[c_id] = c_infos.cls
+
+        BuildDependency:
+            id = 'ecpy.pulses.shapes'
+            analyse => (workbench, obj, getter, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+
+                s_id = getter(obj, 'shape_id')
+                s_infos, _ = manager.get_shape_infos(s_id)
+
+                if s_infos is None:
+                    errors[s_id] = 'Unknown shape.'
+                    return
+
+                dependencies.add(s_id)
+                return s_infos.dependencies
+
+            validate => (workbench, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+                for s_id in dependencies:
+                    s_infos = manager.get_shape_infos(s_id)
+                    if s_infos is None:
+                        errors[s_id] = 'Unknown shape.'
+
+            collect => (workbench, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+                for s_id in dependencies:
+                    s_infos, _ = manager.get_shape_infos(s_id)
+                    if s_infos is None:
+                        errors[s_id] = 'Unknown shape.'
+                        continue
+
+                    dependencies[s_id] = s_infos.cls
+
+        BuildDependency:
+            id = 'ecpy.pulses.modulation'
+            analyse => (workbench, obj, getter, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+
+                s_id = type(obj).__name__
+                dependencies.add(s_id)
+                print(dependencies)
+
+                return set()
+
+            validate => (workbench, dependencies, errors):
+                return
+
+            collect => (workbench, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+                for el in dependencies:
+                    cls = manager.get_modulation_class()
+                    dependencies[el] = cls
+
+
     Extension:
         id = 'workspace'
         point = u'enaml.workbench.ui.workspaces'
@@ -519,6 +557,10 @@ enamldef PulsesManagerManifest(PluginManifest):
             description = GET_SEQUENCE_INFOS_DESCRIPTION
             handler = make_handler(PLUGIN_ID, 'get_items_infos')
         Command:
+            id = 'ecpy.pulses.get_item_infos'
+            description = GET_SEQUENCE_INFOS_DESCRIPTION
+            handler = make_handler(PLUGIN_ID, 'get_item_infos')
+        Command:
             id = 'ecpy.pulses.get_contexts_infos'
             description = "HELLO"
             handler = make_handler(PLUGIN_ID, 'get_contexts_infos')
@@ -530,6 +572,10 @@ enamldef PulsesManagerManifest(PluginManifest):
             id = 'ecpy.pulses.get_shapes_infos'
             description = GET_SHAPES_INFOS_DESCRIPTION
             handler = make_handler(PLUGIN_ID,'get_shapes_infos')
+        Command:
+            id = 'ecpy.pulses.get_shape_infos'
+            description = GET_SHAPE_INFOS_DESCRIPTION
+            handler = make_handler(PLUGIN_ID,'get_shape_infos')
         Command:
             id = 'ecpy.pulses.build_sequence'
             description = BUILD_SEQUENCE_DESCRIPTION

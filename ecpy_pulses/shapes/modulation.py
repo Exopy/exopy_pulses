@@ -13,7 +13,7 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 
-from atom.api import (Unicode, Enum, Float, Bool)
+from atom.api import (Unicode, Enum, Float, Bool, Constant)
 from math import pi as Pi
 import numpy as np
 
@@ -25,6 +25,7 @@ FREQ_TIME_UNIT_MAP = {'s': {'Hz': 1, 'kHz': 1000, 'MHz': 1e6, 'GHz': 1e9},
                       'mus': {'Hz': 1e-6, 'kHz': 1e-3, 'MHz': 1, 'GHz': 1e3},
                       'ns': {'Hz': 1e-9, 'kHz': 1e-6, 'MHz': 1e-3, 'GHz': 1}}
 
+DEP_TYPE = 'ecpy.pulses.modulation'
 
 class Modulation(HasPrefAtom):
     """ Modulation to apply to the pulse.
@@ -34,6 +35,9 @@ class Modulation(HasPrefAtom):
     are requested they can be implemented in cutom shapes.
 
     """
+    #: Identifier for the build dependency collector
+    dep_type = Constant(DEP_TYPE).tag(pref=True)
+
     #: Flag indicating whether or not the modulation is activated.
     activated = Bool().tag(pref=True)
 
@@ -137,15 +141,15 @@ class Modulation(HasPrefAtom):
         if not self.activated:
             return 1
 
-        unit_corr = 2*Pi*FREQ_TIME_UNIT_MAP[unit][self.frequency_unit]
+        unit_corr = 2 * Pi * FREQ_TIME_UNIT_MAP[unit][self.frequency_unit]
         phase = self._phase
         if self.phase_unit == 'deg':
-            phase *= Pi/180
+            phase *= Pi / 180
 
         if self.kind == 'sin':
-            return np.sin(unit_corr*self._frequency*time + phase)
+            return np.sin(unit_corr * self._frequency * time + phase)
         else:
-            return np.cos(unit_corr*self._frequency*time + phase)
+            return np.cos(unit_corr * self._frequency * time + phase)
 
     # --- Private API ---------------------------------------------------------
 

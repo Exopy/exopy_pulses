@@ -13,7 +13,7 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 
-from atom.api import Atom, Subclass, Dict
+from atom.api import Atom, Subclass, Dict, Coerced
 import enaml
 
 from .sequences.base_sequences import AbstractSequence
@@ -30,7 +30,16 @@ with enaml.imports():
     from .pulse_view import PulseView
 
 
-class SequenceInfos(Atom):
+class ObjectDependentInfos(Atom):
+    """ Base info object for everything with dependencies.
+
+    """
+
+    #: Runtime dependencies ids of this object.
+    dependencies = Coerced(set, ())
+
+
+class SequenceInfos(ObjectDependentInfos):
     """An object used to store the informations about a sequence.
 
     """
@@ -45,7 +54,7 @@ class SequenceInfos(Atom):
     metadata = Dict()
 
 
-class PulseInfos(Atom):
+class PulseInfos(ObjectDependentInfos):
     """An object used to store the informations about a sequence.
 
     """
@@ -71,7 +80,7 @@ class ConfigInfos(Atom):
     view = Subclass(AbstractConfigView)
 
 
-class ContextInfos(Atom):
+class ContextInfos(ObjectDependentInfos):
     """Object used to store informations about a Context, declared in a manifest.
 
     """
@@ -85,7 +94,7 @@ class ContextInfos(Atom):
     metadata = Dict()
 
 
-class ShapeInfos(Atom):
+class ShapeInfos(ObjectDependentInfos):
     """Object used to store informations about a shape.
 
     """

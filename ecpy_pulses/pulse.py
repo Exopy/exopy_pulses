@@ -16,7 +16,8 @@ from __future__ import (division, unicode_literals, print_function,
 from atom.api import (Instance, Unicode, Enum, Typed, Property, set_default)
 import numpy as np
 
-from ecpy.utils.atom_util import member_from_pref
+from ecpy.utils.atom_util import (member_from_pref,
+                                  update_members_from_preferences)
 from .shapes.base_shapes import AbstractShape
 from .shapes.modulation import Modulation
 from .item import Item
@@ -41,7 +42,7 @@ class Pulse(Item):
     modulation = Typed(Modulation, ()).tag(pref=True)
 
     #: Shape of the pulse. Only enabled in analogical mode.
-    shape = Instance(AbstractShape).tag(pref=True)
+    shape = Typed(AbstractShape).tag(pref=True)
 
     linkable_vars = set_default(['start', 'stop', 'duration'])
 
@@ -108,34 +109,19 @@ class Pulse(Item):
 
         """
         pulse = cls()
-        for name, member in pulse.members().items():
 
-            # First we set the preference members
-            meta = member.metadata
-            if meta and 'pref' in meta:
-                if name not in config:
-                    continue
+        #: Initialize the shape object with the right class, so that after
+        #: update_members_from_preferences can do all the rest (initialize
+        #: the shape's members)
+        if 'shape' in config:
+            shape_config = config['shape']
+            if not shape_config == 'None':
+                s_id = shape_config.pop('shape_id')
+                s_cls = dependencies['ecpy.pulses.shapes'][s_id]
+                shape = s_cls()
+                pulse.shape = shape
 
-                if name not in ('modulation', 'shape'):
-                    # member_from_pref handle containers
-                    value = config[name]
-                    validated = member_from_pref(member, value)
-
-                    setattr(pulse, name, validated)
-
-                elif name == 'modulation':
-                    mod = pulse.modulation
-                    mod.update_members_from_preferences(**config[name])
-
-                else:
-                    shape_config = config[name]
-                    if shape_config == 'None':
-                        continue
-                    shape_name = shape_config.pop('shape_class')
-                    shape_class = dependencies['pulses']['shapes'][shape_name]
-                    shape = shape_class()
-                    shape.update_members_from_preferences(**shape_config)
-                    pulse.shape = shape
+        update_members_from_preferences(pulse, config)
 
         return pulse
 
@@ -171,6 +157,6 @@ class Pulse(Item):
             time = np.linspace(self.start, self.stop, n_points, False)
             mod = self.modulation.compute(time, context.time_unit)
             shape = self.shape.compute(time, context.time_unit)
-            return mod*shape
+            return mod * shape
         else:
             return np.ones(n_points, dtype=np.int8)

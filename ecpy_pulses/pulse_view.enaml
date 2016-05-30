@@ -35,9 +35,8 @@ def default_add_displays(core, item):
         if item.shape:
             cmd = 'ecpy.pulses.shapes_request'
             shapes, _ = core.invoke_command(cmd,
-                                            {'shapes': item.shape.shape_class,
-                                             'use_class_names': True})
-            shape = shapes[item.shape.shape_class]
+                                            {'shapes': item.shape.shape_id})
+            shape = shapes[item.shape.shape_id]
             add_displays.append(shape[1](item=item, shape=item.shape))
 
         return add_displays
@@ -143,7 +142,7 @@ enamldef PulseView(GroupBox): view:
             ObjectCombo: s_val:
                 items << pulse_state.shapes
                 # Assume ends in Shape
-                selected << item.shape.shape_class[:-5] if item.shape else ''
+                selected << item.shape.shape_id[:-5] if item.shape else ''
                 selected ::
                     print("looking for shapes")
                     print(change)

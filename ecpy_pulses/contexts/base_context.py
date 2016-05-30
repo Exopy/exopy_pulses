@@ -13,11 +13,13 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 
-from atom.api import Enum, Unicode, Bool, Float, Property, Tuple, List
+from atom.api import (Enum, Unicode, Bool, Float, Property, Tuple, List,
+                      Constant)
 from inspect import cleandoc
 
 from ecpy.utils.atom_util import HasPrefAtom
 
+DEP_TYPE = 'ecpy.pulses.contexts'
 
 # Time conversion dictionary first key is the original unit, second the final
 # one.
@@ -31,6 +33,9 @@ class BaseContext(HasPrefAtom):
     """Base Class describing a Context
 
     """
+    #: Identifier for the build dependency collector
+    dep_type = Constant(DEP_TYPE).tag(pref=True)
+
     #: Time unit.
     time_unit = Enum('mus', 's', 'ms', 'ns').tag(pref=True)
 
@@ -56,7 +61,7 @@ class BaseContext(HasPrefAtom):
     tolerance = Float(0.000000001).tag(pref=True)
 
     #: Name of the context class. Used for persistence purposes.
-    context_class = Unicode().tag(pref=True)
+    context_id = Unicode().tag(pref=True)
 
     def compile_sequence(self, pulses, **kwargs):
         """
@@ -102,11 +107,12 @@ class BaseContext(HasPrefAtom):
                 raise ValueError('Time does not fit the instr resolution')
             return time
 
-    def _default_context_class(self):
+    def _default_context_id(self):
         """ Default value the context class member.
 
         """
-        return type(self).__name__
+        pack, _ = self.__module__.split('.', 1)
+        return pack + '.' + type(self).__name__
 
     def _answer(self, members, callables):
         """ Collect answers for the walk method.

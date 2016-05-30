@@ -26,11 +26,16 @@ def sequence():
     return BaseSequence
 
 
+#: Id used to identify dependencies type.
+DEP_TYPE = 'ecpy.pulses.items'
+
+
 class Item(HasPrefAtom):
     """ Base component of a pulse Sequence
 
     """
-    # --- Public API ----------------------------------------------------------
+    #: Identifier for the build dependency collector
+    dep_type = Constant(DEP_TYPE).tag(pref=True)
 
     #: Index identifying the item inside the sequence.
     index = Int()
@@ -193,7 +198,7 @@ class Item(HasPrefAtom):
 
         """
         pack, _ = self.__module__.split('.', 1)
-        return pack + '.' + type(self).__name
+        return pack + '.' + type(self).__name__
 
     def _post_setattr_root(self, old, new):
         """Make sure that all children get all the info they need to behave

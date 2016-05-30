@@ -13,16 +13,21 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 
-from atom.api import (Unicode)
+from atom.api import (Unicode, Constant)
 
 from ecpy.utils.atom_util import HasPrefAtom
+
+#: Id used to identify dependencies type.
+DEP_TYPE = 'ecpy.pulses.shapes'
 
 
 class AbstractShape(HasPrefAtom):
     """
     """
+    #: Identifier for the build dependency collector
+    dep_type = Constant(DEP_TYPE).tag(pref=True)
 
-    shape_class = Unicode().tag(pref=True)
+    shape_id = Unicode().tag(pref=True)
 
     def eval_entries(self, sequence_locals, missing, errors, index):
         """ Evaluate the entries defining the shape.
@@ -69,8 +74,9 @@ class AbstractShape(HasPrefAtom):
         """
         raise NotImplementedError('')
 
-    def _default_shape_class(self):
-        return type(self).__name__
+    def _default_shape_id(self):
+        pack, _ = self.__module__.split('.', 1)
+        return pack + '.' + type(self).__name__
 
     def _answer(self, members, callables):
         """ Collect answers for the walk method.

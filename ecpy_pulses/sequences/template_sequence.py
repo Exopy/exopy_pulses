@@ -181,9 +181,9 @@ class TemplateSequence(AbstractSequence):
         config = t_config
 
         context_config = config['context']
-        context_class_name = context_config.pop('context_class')
-        context_class = dep['contexts'][context_class_name]
-        context = context_class()
+        context_id_name = context_config.pop('context_id')
+        context_id = dep['contexts'][context_id_name]
+        context = context_id()
         context.update_members_from_preferences(**context_config)
 
         seq = super(TemplateSequence, cls).build_from_config(t_config,

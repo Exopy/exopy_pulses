@@ -33,6 +33,7 @@ from .utils.sequences_io import load_sequence_prefs
 
 from .declarations import (Sequence, Sequences, SequenceConfig,
                            SequenceConfigs, Contexts, Context, Shapes, Shape)
+from .shapes.modulation import Modulation
 from .infos import SequenceInfos, PulseInfos
 
 with enaml.imports():
@@ -173,16 +174,13 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._contexts.stop()
         self._shapes.stop()
 
-    def get_sequences_infos(self, sequences, use_class_names=False):
+    def get_sequences_infos(self, sequences):
         """ Give access to sequence infos.
 
         Parameters
         ----------
         sequences : list(str)
             The names of the requested sequences.
-        use_class_names : bool, optional
-            Should the search be performed using class names rather than
-            sequence names.
         views : bool
             When false views are not returned alongside the class.
 
@@ -191,7 +189,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         sequences : dict
             The required sequences infos as a dict. For Python sequences the
             entry will contain the class and the view ({name: (class, view)}).
-            If use_class_names is True the class name will be used.
             For templates the entry will contain the path, the data as a
             ConfigObj object and the doc ({name : (path, data, doc)})
 
@@ -201,43 +198,32 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         """
 
         answer = {}
-        if not use_class_names:
-            missing_py = set([name for name in sequences
-                              if name not in
-                              self._sequences.contributions.keys()])
-            missing_temp = set([name for name in sequences
-                                if name not in
-                                self._template_sequences_data.keys()])
-            missing = list(set.intersection(missing_py, missing_temp))
+        missing_py = set([name for name in sequences
+                          if name not in
+                          self._sequences.contributions.keys()])
+        missing_temp = set([name for name in sequences
+                            if name not in
+                            self._template_sequences_data.keys()])
+        missing = list(set.intersection(missing_py, missing_temp))
 
-            answer.update({key: val for key, val in
-                           self._sequences.contributions.items()
-                           if key in sequences})
+        answer.update({key: val for key, val in
+                       self._sequences.contributions.items()
+                       if key in sequences})
 
-            # TODO Return InfoObject
-            templ = {key: val for key, val in
-                     self._template_sequences_data.items()
-                     if key in sequences}
+        # TODO Return InfoObject
+        templ = {key: val for key, val in
+                 self._template_sequences_data.items()
+                 if key in sequences}
 
-            for _, t_info in templ:
-                prefs = load_sequence_prefs(t_info.metadata['path'])
-                t_info.metadata.update(prefs)
+        for _, t_info in templ:
+            prefs = load_sequence_prefs(t_info.metadata['path'])
+            t_info.metadata.update(prefs)
 
-            answer.update(templ)
-
-        else:
-            class_names = {val.cls.__name__: val
-                           for val in self._sequences.contributions.values()}
-
-            missing = [name for name in sequences
-                       if name not in class_names]
-
-            answer.update({key: val for key, val in class_names.items()
-                           if key in sequences})
+        answer.update(templ)
 
         return answer, missing
 
-    def get_sequence_infos(self, sequence, use_class_names=False):
+    def get_sequence_infos(self, sequence):
         """Access a given sequence infos.
 
         Parameters
@@ -253,8 +239,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         """
         sequences = [sequence]
-        _answer, _ = self.get_sequences_infos(sequences,
-                                              use_class_names)
+        _answer, _ = self.get_sequences_infos(sequences)
 
         try:
             answer = _answer[sequence]
@@ -264,7 +249,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             missing = [sequence]
         return answer, missing
 
-    def get_sequences(self, sequences, use_class_names=False):
+    def get_sequences(self, sequences):
         """Access a given sequence class.
 
         Parameters
@@ -285,8 +270,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             Associated view if requested.
 
         """
-        _answer, _missing = self.get_sequences_infos(sequences,
-                                                     use_class_names)
+        _answer, _missing = self.get_sequences_infos(sequences)
         answer = {key: (val.cls, val.view) for key, val in _answer}
 
         for key, val in _answer:
@@ -294,7 +278,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         return answer, _missing
 
-    def get_sequence(self, sequence, use_class_names=False):
+    def get_sequence(self, sequence):
         """Access a given sequence class.
 
         Parameters
@@ -315,16 +299,16 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             Associated view if requested.
 
         """
-        _answer, _ = self.get_sequence_infos(sequence, use_class_names)
+        _answer, _ = self.get_sequence_infos(sequence)
 
         if _answer is None:
             return (None, None)
 
         return (_answer.cls, _answer.view)
 
-    def get_items_infos(self, items, use_class_names=False):
-        print("Get Item Infos: " + str(items))
-        _answer, _missing = self.get_sequences_infos(items, use_class_names)
+    def get_items_infos(self, items):
+        print("Get Items Infos: " + str(items))
+        _answer, _missing = self.get_sequences_infos(items)
 
         additional_items = {}
         # additional_items = {key:_pulse_info for key in
@@ -333,33 +317,42 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         missing = []
 
         for el in _missing:
-            if el == "Pulse":
+            if el == "ecpy_pulses.Pulse":
                 additional_items[el] = self._pulse_info
-            elif el == "__template__":
+            elif el == "ecpy_pulses.__template__":
                 print("MISSING CASE")
             else:
                 missing.append(el)
 
         _answer.update(additional_items)
 
+        print("returning: " + str(_answer) + " and Missing:" + str(missing))
         return _answer, missing
 
-    def get_contexts_infos(self, contexts, use_class_names=False):
+    def get_item_infos(self, item):
+        print("Get Item Infos: " + str(item))
+        _answer, _ = self.get_items_infos([item])
+
+        try:
+            answer = _answer[item]
+            missing = None
+        except KeyError:
+            answer = None
+            missing = [item]
+        return answer, missing
+
+    def get_contexts_infos(self, contexts):
         """ Give access to context infos.
 
         Parameters
         ----------
         contexts : list(str)
             The names of the requested contexts.
-        use_class_names : bool, optional
-            Should the search be performed using class names rather than
-            context names.
 
         Returns
         -------
         contexts : dict
             The required contexts infos as a dict {name: (class, view)}.
-            If use_class_names is True the class name will be used.
 
         """
         if not isinstance(contexts, list):
@@ -368,44 +361,35 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         answer = {}
 
-        if not use_class_names:
-            missing = [name for name in contexts
-                       if name not in self._contexts.contributions.keys()]
-            answer.update({key: val for key, val in
-                           self._contexts.contributions.items()
-                           if key in contexts})
+        a = {val.cls.__name__: val for val in
+             self._contexts.contributions.values()}
+        print (a)
+        print("end")
 
-        else:
-            class_names = {val.cls.__name__: val
-                           for val in self._contexts.contributions.values()}
-            missing = [name for name in contexts
-                       if name not in class_names]
-
-            answer.update({key: val for key, val in
-                           class_names.items() if key in contexts})
+        missing = [name for name in contexts
+                   if name not in self._contexts.contributions.keys()]
+        answer.update({key: val for key, val in
+                       self._contexts.contributions.items()
+                       if key in contexts})
 
         return answer, missing
 
-    def get_context_infos(self, context, use_class_names=False):
+    def get_context_infos(self, context):
         """ Give access to context infos.
 
         Parameters
         ----------
         contexts : list(str)
             The names of the requested contexts.
-        use_class_names : bool, optional
-            Should the search be performed using class names rather than
-            context names.
 
         Returns
         -------
         contexts : dict
             The required contexts infos as a dict {name: (class, view)}.
-            If use_class_names is True the class name will be used.
 
         """
         contexts = [context]
-        _answer, _ = self.get_contexts_infos(contexts, use_class_names)
+        _answer, _ = self.get_contexts_infos(contexts)
 
         try:
             answer = _answer[context]
@@ -415,16 +399,13 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             missing = context
         return answer, missing
 
-    def get_shapes_infos(self, shapes, use_class_names=False):
+    def get_shapes_infos(self, shapes):
         """ Give access to shape infos.
 
         Parameters
         ----------
         shapes : list(str)
             The names of the requested shapes.
-        use_class_names : bool, optional
-            Should the search be performed using class names rather than
-            context names.
         views : bool
             When flase views are not returned alongside the class.
 
@@ -432,30 +413,50 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         -------
         shapes : dict
             The required shapes infos as a dict {name: (class, view)}.
-            If use_class_names is True the class name will be used.
 
         """
         answer = {}
 
-        if not use_class_names:
-            missing = [name for name in shapes
-                       if name not in self._shapes.contributions.keys()]
+        missing = [name for name in shapes
+                   if name not in self._shapes.contributions.keys()]
 
-            answer.update({key: val for key, val
-                           in self._shapes.contributions.items()
-                           if key in shapes})
-
-        else:
-            class_names = {val.cls.__name__: val
-                           for val in self._shapes.contributions.values()}
-
-            missing = [name for name in shapes
-                       if name not in class_names]
-
-            answer.update({key: val for key, val in class_names.items()
-                           if key in shapes})
+        answer.update({key: val for key, val
+                       in self._shapes.contributions.items()
+                       if key in shapes})
 
         return answer, missing
+
+    def get_shape_infos(self, shape):
+        """ Give access to a single shape infos.
+
+        Parameters
+        ----------
+        shapes : list(str)
+            The names of the requested shapes.
+        views : bool
+            When flase views are not returned alongside the class.
+
+        Returns
+        -------
+        shapes : dict
+            The required shapes infos as a dict {name: (class, view)}.
+
+        """
+
+        shapes = [shape]
+        _answer, _ = self.get_shapes_infos(shapes)
+
+        try:
+            answer = _answer[shape]
+            missing = None
+        except KeyError:
+            answer = None
+            missing = shape
+
+        return answer, missing
+
+    def get_modulation_class(self):
+        return Modulation
 
     def get_config(self, sequence_id):
         """ Access the proper config for a sequence.

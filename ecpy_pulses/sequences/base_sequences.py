@@ -19,7 +19,10 @@ from itertools import chain
 from inspect import cleandoc
 from copy import deepcopy
 
-from ecpy.utils.atom_util import member_from_pref
+from ecpy.utils.atom_util import (tagged_members, member_to_pref,
+                                  member_from_pref,
+                                  update_members_from_preferences)
+
 from ..contexts.base_context import BaseContext
 from ..utils.entry_eval import eval_entry
 from ecpy.utils.container_change import ContainerChange
@@ -154,19 +157,7 @@ class AbstractSequence(Item):
 
         """
         sequence = cls()
-        for name, member in sequence.members().items():
-
-            # First we set the preference members
-            meta = member.metadata
-            if meta and 'pref' in meta:
-                if name not in config:
-                    continue
-
-                # member_from_pref handle containers
-                value = config[name]
-                validated = member_from_pref(member, value)
-
-                setattr(sequence, name, validated)
+        update_members_from_preferences(sequence, config)
 
         i = 0
         pref = 'item_{}'
@@ -176,10 +167,10 @@ class AbstractSequence(Item):
             if item_name not in config:
                 break
             item_config = config[item_name]
-            item_id_name = item_config.pop('item_id')
-            item_class = dependencies['pulses'][item_class_name]
-            item = item_class.build_from_config(item_config,
-                                                dependencies)
+            i_id = item_config.pop('item_id')
+            i_cls = dependencies['ecpy.pulses.items'][i_id]
+            item = i_cls.build_from_config(item_config,
+                                           dependencies)
             validated.append(item)
             i += 1
 
@@ -855,10 +846,11 @@ class RootSequence(BaseSequence):
         config = deepcopy(config)
         if 'context' in config:
             context_config = config['context']
-            c_class_name = context_config.pop('context_class')
-            context_class = dependencies['pulses']['contexts'][c_class_name]
-            context = context_class()
-            context.update_members_from_preferences(**context_config)
+            c_id = context_config.pop('context_id')
+            c_cls = dependencies['ecpy.pulses.contexts'][c_id]
+            context = c_cls()
+
+            context.update_members_from_preferences(context_config)
 
         seq = super(RootSequence, cls).build_from_config(config,
                                                          dependencies)

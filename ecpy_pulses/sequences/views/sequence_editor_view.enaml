@@ -131,7 +131,6 @@ enamldef ItemEditorButton(PushButton):
     clicked::
         items = editor.sequence.items
         if editor.operations:
-            print(editor.operations)
             popup = PopupListMenu(model=items, index=items.index(item),
                                   operations=editor.operations)
             popup.popup()
@@ -158,15 +157,11 @@ enamldef EmptyEditorButtons(Container): view:
     PushButton: seq:
         text = 'Add Sequence'
         clicked ::
-            print("Adding sequence")
-            print(core)
             obj = core.invoke_command('ecpy.pulses.build_sequence',
                                       {'parent_ui': editor,
                                        'mode': 'ui',
                                        'root': editor.sequence.root},
                                        view)
-            print(obj)
-            print("Added sequence!")
             if obj:
                 editor.sequence.add_child_item(0, obj)
 
@@ -402,12 +397,8 @@ class SequenceEditor(Container):
     views = Dict()
 
     def _setup_views(self, children):
-        print("setup_views")
-        print(children)
         t_classes = set([type(item).__name__ for item in children])
-        print("t_classes")
         self.get_views(t_classes)
-        print("got classes")
 
     def _instantiate_view(self, item, attrs):
         """ A helper function instantiating a task view.
@@ -427,8 +418,9 @@ class SequenceEditor(Container):
             Created item view.
 
         """
-        print("sequence_view::140--> InstantiateView called")
-        name = type(item).__name__
+        pack, _ = self.__module__.split('.', 1)
+        name = pack + '.' +type(item).__name__
+
         views = self.views
         if name not in views:
             self.get_views([name])
@@ -444,17 +436,10 @@ class SequenceEditor(Container):
         with the given names.
 
         """
-        print(str(self) + " instance get views from core: " + str(self.core))
-        print(class_names)
-        print(len(class_names))
         cmd = 'ecpy.pulses.get_items_infos'
         items, _ = self.core.invoke_command(cmd,
-                                            {'items': class_names,
-                                             'use_class_names': True})
-        print("got views")
-        print(items)
+                                            {'items': class_names})
         self.views.update({k: v.view for k, v in items.items()})
-        print("get update")
 
 
 
