@@ -32,13 +32,13 @@ class TemplateContext(BaseContext):
     channel_mapping = Dict().tag(pref=True)
 
     #: Reference to the template sequence to which this context is attached.
-    template = Typed(TemplateSequence)
+    template_sequence = Typed(TemplateSequence)
 
     def prepare_compilation(self, errors):
         """
 
         """
-        context = self.template.root.context
+        context = self.template_sequence.root.context
         self._sampling_time = context.sampling_time
         self.time_unit = context.time_unit
         self.rectify_time = context.rectify_time
@@ -52,7 +52,7 @@ class TemplateContext(BaseContext):
                          if c not in mapping or
                          mapping[c] not in context.logical_channels])
         if c_errors:
-            errors['{}-context'.format(self.template.name)] = \
+            errors['{}-context'.format(self.template_sequence.name)] = \
                 mess.format(c_errors)
             return False
 

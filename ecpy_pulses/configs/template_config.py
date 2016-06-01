@@ -17,6 +17,8 @@ from atom.api import (Unicode, Value, Bool, Typed)
 from copy import deepcopy
 from ast import literal_eval
 
+from ecpy.utils.atom_util import update_members_from_preferences
+
 from .base_config import AbstractConfig
 from ..contexts.template_context import TemplateContext
 from ..sequences.base_sequences import BaseSequence
@@ -72,20 +74,37 @@ class TemplateConfig(AbstractConfig):
         """ Build sequence using the selected template.
 
         """
-        core = self.manager.workbench.get_plugin('enaml.workbench.core')
-        cmd = 'ecpy.dependencies.collect_build_dep_from_config'
-        dep = core.invoke_command(cmd, {'config': self.template_config})
-        if isinstance(dep, Exception):
-            self.errors = {'collections': repr(dep)}
-            return
-
+        print("Going to build sequence from template")
         config = self.template_config
+        config['item_id'] = "ecpy_pulses.__template__"
+        # "ecpy_pulses.TemplateSequence"
+        core = self.manager.workbench.get_plugin('enaml.workbench.core')
+
+        cmd = 'ecpy.app.dependencies.analyse'
+        cont = core.invoke_command(cmd, {'obj': self.template_config})
+        if cont.errors:
+            raise RuntimeError('Failed to analyse dependencies :\n%s' %
+                               cont.errors)
+
+        cmd = 'ecpy.app.dependencies.collect'
+        cont = core.invoke_command(cmd, {'kind': 'build',
+                                         'dependencies': cont.dependencies})
+        if cont.errors:
+            raise RuntimeError('Failed to collect dependencies :\n%s' %
+                               cont.errors)
+        build_dep = cont.dependencies
+
+        print("deps:", build_dep)
+        print("configs: ", config)
         config['name'] = self.template_name
         config['template_id'] = '__template__'
-        dep['pulses']['templates']['__template__'] = ('', config, '')
+        config['template_doc'] = self.template_doc
+
+        # build_dep['ecpy_pulses']['templates']['__template__'] = ('', config, '')
 
         if not self.merge:
-            seq = TemplateSequence.build_from_config(deepcopy(config), dep)
+            seq = TemplateSequence.build_from_config(deepcopy(config),
+                                                     build_dep)
             return seq
 
         else:
@@ -97,14 +116,14 @@ class TemplateConfig(AbstractConfig):
             else:
                 self.root.external_vars.update(t_vars)
 
-            _, t_config, _ = dep['pulses']['templates'][config['template_id']]
+           #_, t_config, _ = build_dep['pulses']['templates'][config['template_id']]
             # Don't want to alter the dependencies dict in case somebody else
             # use the same template.
-            t_config = deepcopy(t_config)
+            t_config = deepcopy(config)
             t_config.merge(config)
             config = t_config
 
-            seq = BaseSequence.build_from_config(t_config, dep)
+            seq = BaseSequence.build_from_config(t_config, build_dep)
 
             self._apply_mapping(seq)
 
@@ -139,5 +158,6 @@ class TemplateConfig(AbstractConfig):
         """
         config = self.template_config
         context = TemplateContext()
-        context.update_members_from_preferences(**config['context'])
+
+        update_members_from_preferences(context, config['context'])
         return context

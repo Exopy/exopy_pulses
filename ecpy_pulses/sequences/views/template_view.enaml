@@ -16,11 +16,13 @@ from enaml.widgets.api import (PushButton, Container, Label, Field,
 from enaml.core.api import Conditional, Include
 
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
+from ...utils.entry_eval import EVALUATER_TOOLTIP
 from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
                                             FieldFieldCompleterEditor)
 
 from .abstract_sequence_view import AbstractSequenceView
 from .base_sequence_view import instantiate_context_view
+
 
 enamldef TemplateSequenceView(AbstractSequenceView): view:
     """ View for Sequence.
@@ -30,8 +32,13 @@ enamldef TemplateSequenceView(AbstractSequenceView): view:
     alias defs:_defs
     alias nb:_nb
 
+    attr cache
+    attr core
+
     constraints << [vbox(hbox(vbox(_def_lab, _def_val), _defs), _nb)]
 
+    initialized::
+        print("TemplateSequenceView::Init  ", sequence, item.context) 
 
     Label: _def_lab:
         text = 'Mode'
@@ -78,4 +85,4 @@ enamldef TemplateSequenceView(AbstractSequenceView): view:
         Page:
             title = 'Context'
             Include:
-                objects << [instantiate_context_view(core, sequence.context)]
+                objects << [instantiate_context_view(core, item.context, cache)]

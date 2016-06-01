@@ -169,38 +169,58 @@ enamldef TemplateLoadDialog(Dialog): dial:
     """ Dialog used to load a template sequence for edition.
 
     """
-    attr workspace
+    alias manager : selector.manager
     attr doc = ''
     attr prefs
+    attr t_infos
 
     title = 'Load template.'
 
-    Container:
-        padding = 2
-        constraints = [vbox(hbox(sel, fie), hbox(spacer, canc, load))]
 
-        SequenceSelector: sel:
-            manager = workspace.plugin
+    #: Reference to the sequence selector.
+    alias selector : selector
+
+    title = 'Select the sequence you want to add'
+
+    func _update():
+        if selector.selected_sequence:
+            t_infos, _ = manager.get_sequence_infos(selector.selected_sequence)
+            if t_infos is None:
+                dial.prefs = None
+                conf.doc = [Label(text=('This template has no Docs'))]
+                return
+            dial.prefs = t_infos.metadata['config']
+            dial.doc = t_infos.metadata['doc']
+            dial.t_infos = t_infos
+
+        else:
+            dial.prefs = None
+            dial.doc = []
+
+
+    initialized :: _update()
+
+    Container:
+        constraints << [hbox(selector, fie, vbox(load, cancel,spacer))]
+        SequenceSelector: selector:
+            hug_width = 'strong'
             display_filters = False
-            selected_filter = 'Template'
-            selected_sequence ::
-                name = change['value']
-                t_, _ = workspace.plugin.get_sequences_infos([name])
-                dial.doc = t_.metadata['doc']
-                dial.prefs = t_.metadata['config']
+            selected_filter << 'Templates'
+            selected_sequence :: _update()
 
         MultilineField: fie:
             read_only = True
             text << dial.doc
 
-        PushButton: canc:
-            text = 'Cancel'
-            clicked :: dial.reject()
-
         PushButton: load:
             text = 'Load'
             enabled << prefs is not None
             clicked :: dial.accept()
+
+        PushButton: cancel:
+            text = 'Cancel'
+            clicked ::
+                dial.reject()
 
 
 def _format_path(folder, filename):
@@ -222,7 +242,7 @@ RIGHT_CONTEXT = \
 
 
 def _validate_context(context):
-    test = context is not None and context.context_id == 'TemplateContext'
+    test = context is not None and context.context_id == 'ecpy_pulses.TemplateContext'
     return WRONG_CONTEXT if not test else RIGHT_CONTEXT
 
 

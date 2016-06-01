@@ -35,9 +35,11 @@ from .declarations import (Sequence, Sequences, SequenceConfig,
                            SequenceConfigs, Contexts, Context, Shapes, Shape)
 from .shapes.modulation import Modulation
 from .infos import SequenceInfos, PulseInfos
+from .sequences.template_sequence import TemplateSequence
 
 with enaml.imports():
     from .pulse_view import PulseView
+    from .sequences.views.template_view import TemplateSequenceView
 
 
 FILTERS_POINT = 'ecpy.pulses.filters'
@@ -152,6 +154,10 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._pulse_info.cls = Pulse
         self._pulse_info.view = PulseView
 
+        #self._template_sequence_info = SequenceInfos()
+        #self._template_sequence_info = TemplateSequence
+        #self._template_sequence_info.view = TemplateSequenceView
+
         self._bind_observers()
 
         core.invoke_command('ecpy.app.errors.exit_error_gathering')
@@ -166,6 +172,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         super(PulsesManagerPlugin, self).stop()
         self._unbind_observers()
         self._template_sequences_data.clear()
+        self._template_sequences_infos.clear()
 
         #: Stop all Extension/DeclaratorCollectors
         self._filters.stop()
@@ -196,14 +203,14 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             List of the sequences which were not found.
 
         """
-
+        print("req. sequences: ", sequences)
         answer = {}
         missing_py = set([name for name in sequences
                           if name not in
                           self._sequences.contributions.keys()])
         missing_temp = set([name for name in sequences
                             if name not in
-                            self._template_sequences_data.keys()])
+                            self._template_sequences_infos.keys()])
         missing = list(set.intersection(missing_py, missing_temp))
 
         answer.update({key: val for key, val in
@@ -212,12 +219,16 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         # TODO Return InfoObject
         templ = {key: val for key, val in
-                 self._template_sequences_data.items()
+                 self._template_sequences_infos.items()
                  if key in sequences}
 
-        for _, t_info in templ:
-            prefs = load_sequence_prefs(t_info.metadata['path'])
-            t_info.metadata.update(prefs)
+
+        for t_name, t_info in templ.items():
+            #: Load Metadata if it was not alredy loaded
+            if not t_info.metadata['loaded']:
+                config, doc = load_sequence_prefs(t_info.metadata['path'])
+                t_info.metadata['config'] = config
+                t_info.metadata['doc'] = doc
 
         answer.update(templ)
 
@@ -320,7 +331,10 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             if el == "ecpy_pulses.Pulse":
                 additional_items[el] = self._pulse_info
             elif el == "ecpy_pulses.__template__":
-                print("MISSING CASE")
+                infos = SequenceInfos()
+                infos.cls = TemplateSequence
+                infos.view = TemplateSequenceView
+                additional_items[el] = infos
             else:
                 missing.append(el)
 
@@ -361,6 +375,9 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         answer = {}
 
+        print ("Contexts are:")
+        print(self._contexts.contributions.keys())
+        print("class names are")
         a = {val.cls.__name__: val for val in
              self._contexts.contributions.values()}
         print (a)
@@ -372,6 +389,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                        self._contexts.contributions.items()
                        if key in contexts})
 
+        print("returned: " + str(answer))
         return answer, missing
 
     def get_context_infos(self, context):
@@ -388,6 +406,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             The required contexts infos as a dict {name: (class, view)}.
 
         """
+        print("Get context info--> " + str(context))
         contexts = [context]
         _answer, _ = self.get_contexts_infos(contexts)
 
@@ -397,6 +416,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         except KeyError:
             answer = None
             missing = context
+        print("get_context_infos returned: " + str(answer))
         return answer, missing
 
     def get_shapes_infos(self, shapes):
@@ -415,6 +435,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             The required shapes infos as a dict {name: (class, view)}.
 
         """
+        print("Asked for shapes: " + str(shapes))
         answer = {}
 
         missing = [name for name in shapes
@@ -424,6 +445,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                        in self._shapes.contributions.items()
                        if key in shapes})
 
+        print("Returning shapes: " + str(answer) +
+              "and missing: " + str(missing))
         return answer, missing
 
     def get_shape_infos(self, shape):
@@ -442,6 +465,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             The required shapes infos .
 
         """
+        print("Asked for shape: " + str(shape))
 
         shapes = [shape]
         _answer, _ = self.get_shapes_infos(shapes)
@@ -475,11 +499,15 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         templates = self._template_sequences_data
         if sequence_id in templates:
-            config_infos = self._config.contributions['__template__']
-            conf = config_infos.cls
-            view = config_infos.view
+            config_infos = self._configs.contributions['__template__']
+            conf_cls = config_infos.cls
+            conf_view = config_infos.view
             t_config, t_doc = load_sequence_prefs(templates[sequence_id])
-            return conf(manager=self, config=t_config, doc=t_doc), view
+            print(conf_cls)
+            conf = conf_cls(manager=self, template_config=t_config,
+                            template_doc=t_doc)
+            view = conf_view(model=conf)
+            return conf, view
 
         elif sequence_id in self._sequences.contributions:
             configs = self._configs.contributions
@@ -595,7 +623,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                list(templates.keys()))
 
         self.sequences = aux
-
+        self._refresh_template_sequences_infos()
 
     def _refresh_template_sequences_infos(self):
         """ Refresh the known template sequence infos.
@@ -606,9 +634,10 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         templates = self._template_sequences_data
         templates_infos = {}
 
-        for template_name, template_path in templates:
+        for template_name, template_path in templates.items():
 
-            metadata = {'is_template': True, 'path': template_path}
+            metadata = {'is_template': True, 'path': template_path,
+                        'loaded': False}
             infos = SequenceInfos(metadata=metadata)
             infos.cls = TemplateSequence
             infos.view = TemplateSequenceView

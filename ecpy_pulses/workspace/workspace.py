@@ -253,14 +253,14 @@ class SequenceEditionSpace(Workspace):
                 logger.info('Sequence correctly loaded from file.')
 
         elif mode == 'template':
-            dial = TemplateLoadDialog(self.content, workspace=self)
+            dial = TemplateLoadDialog(self.content, manager=self.plugin)
             dial.exec_()
             if dial.result:
                 seq = self._load_sequence_from_template(dial.prefs)
                 self.state.sequence = seq
                 self.state.sequence_type = 'Template'
-                self.state.sequence_path = dial.path
-                self.state.sequence_doc = dial.doc
+                self.state.sequence_path = dial.t_infos.metadata['path']
+                self.state.sequence_doc = dial.t_infos.metadata['doc']
                 logger = logging.getLogger(__name__)
                 logger.info('Sequence correctly loaded from template.')
 

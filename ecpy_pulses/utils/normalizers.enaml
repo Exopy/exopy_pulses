@@ -33,6 +33,7 @@ def normalize_sequence_name(name):
         package, name = name.rsplit('.', 1)
 
     aux = ''
+    n_len = len(name)
     for i, char in enumerate(name):
         if char == '_':
             aux += ' '
@@ -41,12 +42,12 @@ def normalize_sequence_name(name):
         if char != '\0':
             if char.isupper() and i != 0:
                 if name[i-1].islower():
-                    if name[i+1].islower():
+                    if i+1 != n_len and name[i+1].islower():
                         aux += ' ' + char.lower()
                     else:
                         aux += ' ' + char
                 else:
-                    if name[i+1].islower():
+                    if i+1 != n_len and name[i+1].islower():
                         aux += ' ' + char.lower()
                     else:
                         aux += char

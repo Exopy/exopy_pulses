@@ -303,10 +303,12 @@ class SequenceEditor(Container):
                     button = ItemEditorButton(item=child, editor=self)
                     view = self._instantiate_view(child, {'root':
                                                     self.sequence.root})
+                    print("instantiated view: ", view, "from: ", child)
                     self._children_buttons[child] = (button, view)
-
                     button.set_parent(self)
+                    print('a')
                     view.set_parent(self)
+                    print('b')
                     if self.operations:
                         button.show()
                     view.show()

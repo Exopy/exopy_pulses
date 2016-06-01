@@ -18,12 +18,13 @@ from inspect import cleandoc
 from copy import deepcopy
 from ast import literal_eval
 
+from ecpy.utils.atom_util import update_members_from_preferences
+
 from ..utils.entry_eval import eval_entry
 from .base_sequences import AbstractSequence, BaseSequence
 
-
 def context():
-    from ...contexts.template_context import TemplateContext
+    from ..contexts.template_context import TemplateContext
     return TemplateContext
 
 
@@ -163,11 +164,13 @@ class TemplateSequence(AbstractSequence):
         # First get the underlying template from the dependencies and merge
         # config into it as it has more recent infos about the context and
         # the vars.
-        dep = dependencies['pulses']
-        _, t_config, doc = dep['templates'][config['template_id']]
+        dep = dependencies
+
+        # _, t_config, doc = dep['templates'][config['template_id']]
+
         # Don't want to alter the dependencies dict in case somebody else use
         # the same template.
-        t_config = deepcopy(t_config)
+        t_config = deepcopy(config)
 
         # Make sure the template_vars stored in the config match the one
         # declared in the template.
@@ -182,13 +185,13 @@ class TemplateSequence(AbstractSequence):
 
         context_config = config['context']
         context_id_name = context_config.pop('context_id')
-        context_id = dep['contexts'][context_id_name]
+        context_id = dep['ecpy.pulses.contexts'][context_id_name]
         context = context_id()
-        context.update_members_from_preferences(**context_config)
+        update_members_from_preferences(context, context_config)
 
         seq = super(TemplateSequence, cls).build_from_config(t_config,
                                                              dependencies)
-        seq.docs = doc
+        seq.docs = config['template_doc']
         seq.context = context
 
         # Do the indexing of the children once and for all.
@@ -212,4 +215,4 @@ class TemplateSequence(AbstractSequence):
         """
         c = change['value']
         if c:
-            c.template = self
+            c.template_sequence = self

@@ -28,8 +28,8 @@ enamldef Mapping(FlowItem):
     attr mapping
     attr key
     Container:
-        Label:
-            text = loop_item
+        Label: lab:
+            text = key
         ObjectCombo:
             items << list(values)
             selected << mapping[key]
@@ -72,7 +72,7 @@ enamldef MappingEditor(Container):
 
 
 # TODO fix validators
-enamldef TemplateContextView(BaseContextView): 
+enamldef TemplateContextView(BaseContextView): view:
     """ View for a template context.
 
     """
@@ -109,4 +109,4 @@ enamldef TemplateContextView(BaseContextView):
         condition =  not edition_mode
         MappingEditor:
             context = view.context
-            root = view.context.sequence.root
+            root = view.context.template_sequence.root

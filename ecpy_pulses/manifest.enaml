@@ -148,6 +148,8 @@ def build_sequence(event):
             raise ValueError('No valid kwargs found for file mode')
 
         # Collect the dependencies
+        print("preferences are")
+        print(prefs)
         core = event.workbench.get_plugin('enaml.workbench.core')
         cmd = 'ecpy.app.dependencies.analyse'
 
