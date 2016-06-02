@@ -127,26 +127,6 @@ class Pulse(Item):
 
     # --- Private API ---------------------------------------------------------
 
-    def _answer(self, members, callables):
-        """ Collect the answers for the walk method.
-
-        A pulse also collect the answers of its modulation and shape.
-
-        """
-        answers = {m: getattr(self, m, None) for m in members}
-        answers.update({k: c(self) for k, c in callables.items()})
-        answers = [answers]
-
-        if self.kind == 'Analogical':
-            # Accessing modulation members.
-            answers.append(self.modulation._answer(members, callables))
-
-            # Accessing shape members.
-            if self.shape:
-                answers.append(self.shape._answer(members, callables))
-
-        return answers
-
     def _get_waveform(self):
         """ Getter for the waveform property.
 

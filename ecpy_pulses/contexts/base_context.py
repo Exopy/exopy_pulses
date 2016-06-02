@@ -113,11 +113,3 @@ class BaseContext(HasPrefAtom):
         """
         pack, _ = self.__module__.split('.', 1)
         return pack + '.' + type(self).__name__
-
-    def _answer(self, members, callables):
-        """ Collect answers for the walk method.
-
-        """
-        answers = {m: getattr(self, m, None) for m in members}
-        answers.update({k: c(self) for k, c in callables.items()})
-        return answers

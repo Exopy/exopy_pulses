@@ -103,35 +103,6 @@ class AbstractSequence(Item):
         """
         raise NotImplementedError()
 
-    def walk(self, members, callables):
-        """ Explore the items hierarchy.
-
-        Missing values will be filled with None.
-
-        Parameters
-        ----------
-        members : list(str)
-            Names of the members whose value should be retrieved.
-
-        callables : dict(callable)
-            Dict {name: callables} to call on every item in the hierarchy. Each
-            callable should take as single argument the item.
-
-        Returns
-        -------
-        answer : list
-            List summarizing the result of the exploration.
-
-        """
-        answer = [self._answer(members, callables)]
-        for item in self.items:
-            if isinstance(item, Pulse):
-                answer.append(item._answer(members, callables))
-            else:
-                answer.append(item.walk(members, callables))
-
-        return answer
-
     @classmethod
     def build_from_config(cls, config, dependencies):
         """ Create a new instance using the provided infos for initialisation.
@@ -271,14 +242,6 @@ class AbstractSequence(Item):
                 self.cleanup_cache()
                 return True, pulses
 
-    def _answer(self, members, callables):
-        """ Collect answers for the walk method.
-
-        """
-        answers = {m: getattr(self, m, None) for m in members}
-        answers.update({k: c(self) for k, c in callables.items()})
-        return answers
-
 
 class BaseSequence(AbstractSequence):
     """ A sequence is an ensemble of pulses.
@@ -342,7 +305,7 @@ class BaseSequence(AbstractSequence):
 
         res, pulses = self._compile_items(root_vars, local_namespace,
                                           missings, errors)
-                                          
+      
         if res:
             if self.time_constrained:
                 # Check if start, stop and duration of sequence are compatible.
@@ -353,13 +316,13 @@ class BaseSequence(AbstractSequence):
 
                 if start_err:
                     mess = cleandoc('''The start time of the following items {}
-                        is smaller than the start time of the sequence {}''')
+                        is before the start time of the sequence {}''')
                     mess = mess.replace('\n', ' ')
                     ind = [p.index for p in start_err]
                     errors[self.name + '-start'] = mess.format(ind, self.index)
                 if stop_err:
                     mess = cleandoc('''The stop time of the following items {}
-                        is larger than the stop time of the sequence {}''')
+                        is after the stop time of the sequence {}''')
                     mess = mess.replace('\n', ' ')
                     ind = [p.index for p in stop_err]
                     errors[self.name + '-stop'] = mess.format(ind, self.index)
@@ -765,37 +728,6 @@ class RootSequence(BaseSequence):
         return (self.linkable_vars + self.local_vars.keys() +
                 self.external_vars.keys())
 
-    def walk(self, members, callables):
-        """ Explore the items hierarchy.
-
-        Missing values will be filled with None. Overrided here to add context
-        entries.
-
-        Parameters
-        ----------
-        members : list(str)
-            Names of the members whose value should be retrieved.
-
-        callables : dict(callable)
-            Dict {name: callables} to call on every item in the hierarchy. Each
-            callable should take as single argument the item.
-
-        Returns
-        -------
-        answer : list
-            List summarizing the result of the exploration.
-
-        """
-        answer = [self._answer(members, callables),
-                  self.context._answer(members, callables)]
-        for item in self.items:
-            if isinstance(item, Pulse):
-                answer.append(item._answer(members, callables))
-            else:
-                answer.append(item.walk(members, callables))
-
-        return answer
-
     def preferences_from_members(self):
         """ Get the members values as string to store them in .ini files.
 
@@ -860,18 +792,6 @@ class RootSequence(BaseSequence):
         return seq
 
     # --- Private API ---------------------------------------------------------
-
-    def _answer(self, members, callables):
-        """
-
-        """
-        answers = super(RootSequence, self)._answer(members, callables)
-        con_members = [m for m in members
-                       if m.startswith('context.')]
-        answers.update({m: getattr(self.context, m[8:], None)
-                        for m in con_members})
-
-        return answers
 
     def _observe_time_constrained(self, change):
         """ Keep the linkable_vars list in sync with fix_sequence_duration.
