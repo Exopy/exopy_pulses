@@ -17,7 +17,8 @@ from inspect import cleandoc
 from textwrap import fill
 from enaml.core.api import Conditional
 from enaml.widgets.api import (Container, MultilineField, Field, GroupBox,
-                               Form, Label, CheckBox, RadioButton)
+                               Form, Label, CheckBox, RadioButton, PushButton)
+from enaml.layout.api import hbox, vbox, spacer
 from ..contexts.views.template_context_view import MappingEditor
 from .base_config_views import AbstractConfigView
 
@@ -31,21 +32,42 @@ enamldef TemplateConfigView(AbstractConfigView): main:
         text >> model.template_name
         submit_triggers = ['lost_focus', 'return_pressed', 'auto_sync']
 
-    CheckBox:
-        text = 'Merge'
-        checked := model.merge
-        tool_tip = fill(cleandoc('''Should the template be inserted as a
-            Sequence and forget it is a template.'''))
-
     GroupBox:
         title = 'Description'
-        MultilineField:
+
+        constraints << ([vbox(fi, hbox(me, vbox(*con.items)))] if con.condition
+                        else [vbox(fi, hbox(me, spacer))])
+
+        MultilineField: fi:
             hug_height = 'weak'
             read_only = True
             text << model.template_doc
+        CheckBox: me:
+            text = 'Merge'
+            checked := model.merge
+            enabled << bool(model.root.context)
+            tool_tip << (fill(cleandoc('''Should the template be inserted as a
+                sequence and forget it is a template.''')) if enabled else 
+                fill(cleandoc('''To merge you should first select a context.''')))
+        Conditional: con:
+            condition << not bool(model.root.context)
+            Label:
+                text = "To merge you must select a context."
+            PushButton:
+                text = 'Select context'
+                clicked ::
+                    core = model.manager.workbench.get_plugin('enaml.workbench.core')
+                    cmd = 'ecpy.pulses.build_context'
+                    core.invoke_command(cmd, {'root': model.root,
+                                              'parent_ui': self})
+
+
+
+
 
     Conditional:
         condition << model.merge
+
         RadioButton:
             text = 'Insert template_vars in root'
             checked := model.t_vars_as_root

@@ -166,8 +166,6 @@ class TemplateSequence(AbstractSequence):
         # the vars.
         dep = dependencies
 
-        # _, t_config, doc = dep['templates'][config['template_id']]
-
         # Don't want to alter the dependencies dict in case somebody else use
         # the same template.
         t_config = deepcopy(config)

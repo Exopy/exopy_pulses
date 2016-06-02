@@ -504,8 +504,10 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             conf_view = config_infos.view
             t_config, t_doc = load_sequence_prefs(templates[sequence_id])
             print(conf_cls)
-            conf = conf_cls(manager=self, template_config=t_config,
-                            template_doc=t_doc)
+            conf = conf_cls(manager=self,
+                            template_config=t_config,
+                            template_doc=t_doc,
+                            root=self.workspace.state.sequence)
             view = conf_view(model=conf)
             return conf, view
 
@@ -516,12 +518,13 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             sequence_class = self._sequences.contributions[sequence_id].cls
             for i_class in type.mro(sequence_class):
                 if i_class in configs:
-                    config = configs[i_class].cls
-                    view = configs[i_class].view
-                    print(config)
-                    c = config(manager=self,
-                               sequence_class=sequence_class)
-                    return c, view(model=c)
+                    conf_cls = configs[i_class].cls
+                    conf_view = configs[i_class].view
+                    conf = conf_cls(manager=self,
+                                    sequence_class=sequence_class,
+                                    root=self.workspace.state.sequence)
+                    view = conf_view(model=conf)
+                    return conf, view
         return None, None
 
     def list_sequences(self, filter_name='All'):
@@ -548,7 +551,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
             try:
                 template_sequences_data.pop('Pulse')
-                template_sequences_data.pop('RootSequence')
+                template_sequences_data.pop('ecpy_pulses.RootSequence')
             except KeyError:
                 pass
             print(sequences)

@@ -74,12 +74,26 @@ class TemplateConfig(AbstractConfig):
         """ Build sequence using the selected template.
 
         """
-        print("Going to build sequence from template")
         config = self.template_config
-        config['item_id'] = "ecpy_pulses.__template__"
-        # "ecpy_pulses.TemplateSequence"
-        core = self.manager.workbench.get_plugin('enaml.workbench.core')
 
+        #: Here we set the item id of the "root" of the sequence (that
+        #: needed to collect the right dependency). If we NOT merging,
+        #: then the template will be added as a TemplateSequence (and
+        #: therefore we need a TemplateSequence as dependecy). If we
+        #: ARE merging, then the root is a BaseSequence holding every-
+        #: thing and we must collect it.
+        if not self.merge:
+            config['item_id'] = "ecpy_pulses.__template__"
+        else:
+            config['item_id'] = "ecpy_pulses.BaseSequence"
+
+        #: Set the rest of the config variables that are needed.
+        config['name'] = self.template_name
+        config['template_id'] = '__template__'
+        config['template_doc'] = self.template_doc
+
+        #: Collect Dependencies
+        core = self.manager.workbench.get_plugin('enaml.workbench.core')
         cmd = 'ecpy.app.dependencies.analyse'
         cont = core.invoke_command(cmd, {'obj': self.template_config})
         if cont.errors:
@@ -92,15 +106,12 @@ class TemplateConfig(AbstractConfig):
         if cont.errors:
             raise RuntimeError('Failed to collect dependencies :\n%s' %
                                cont.errors)
+
+        #: Shorthand
         build_dep = cont.dependencies
 
         print("deps:", build_dep)
         print("configs: ", config)
-        config['name'] = self.template_name
-        config['template_id'] = '__template__'
-        config['template_doc'] = self.template_doc
-
-        # build_dep['ecpy_pulses']['templates']['__template__'] = ('', config, '')
 
         if not self.merge:
             seq = TemplateSequence.build_from_config(deepcopy(config),
@@ -116,7 +127,6 @@ class TemplateConfig(AbstractConfig):
             else:
                 self.root.external_vars.update(t_vars)
 
-           #_, t_config, _ = build_dep['pulses']['templates'][config['template_id']]
             # Don't want to alter the dependencies dict in case somebody else
             # use the same template.
             t_config = deepcopy(config)
