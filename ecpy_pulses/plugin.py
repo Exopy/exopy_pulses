@@ -154,10 +154,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._pulse_info.cls = Pulse
         self._pulse_info.view = PulseView
 
-        #self._template_sequence_info = SequenceInfos()
-        #self._template_sequence_info = TemplateSequence
-        #self._template_sequence_info.view = TemplateSequenceView
-
         self._bind_observers()
 
         core.invoke_command('ecpy.app.errors.exit_error_gathering')
@@ -203,7 +199,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             List of the sequences which were not found.
 
         """
-        print("req. sequences: ", sequences)
         answer = {}
         missing_py = set([name for name in sequences
                           if name not in
@@ -318,12 +313,9 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         return (_answer.cls, _answer.view)
 
     def get_items_infos(self, items):
-        print("Get Items Infos: " + str(items))
         _answer, _missing = self.get_sequences_infos(items)
 
         additional_items = {}
-        # additional_items = {key:_pulse_info for key in
-        #                    _missing if _missing is "Pulse"}
 
         missing = []
 
@@ -340,11 +332,9 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         _answer.update(additional_items)
 
-        print("returning: " + str(_answer) + " and Missing:" + str(missing))
         return _answer, missing
 
     def get_item_infos(self, item):
-        print("Get Item Infos: " + str(item))
         _answer, _ = self.get_items_infos([item])
 
         try:
@@ -375,13 +365,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         answer = {}
 
-        print ("Contexts are:")
-        print(self._contexts.contributions.keys())
-        print("class names are")
         a = {val.cls.__name__: val for val in
              self._contexts.contributions.values()}
-        print (a)
-        print("end")
 
         missing = [name for name in contexts
                    if name not in self._contexts.contributions.keys()]
@@ -389,7 +374,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                        self._contexts.contributions.items()
                        if key in contexts})
 
-        print("returned: " + str(answer))
         return answer, missing
 
     def get_context_infos(self, context):
@@ -406,7 +390,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             The required contexts infos as a dict {name: (class, view)}.
 
         """
-        print("Get context info--> " + str(context))
         contexts = [context]
         _answer, _ = self.get_contexts_infos(contexts)
 
@@ -416,7 +399,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         except KeyError:
             answer = None
             missing = context
-        print("get_context_infos returned: " + str(answer))
         return answer, missing
 
     def get_shapes_infos(self, shapes):
@@ -435,7 +417,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             The required shapes infos as a dict {name: (class, view)}.
 
         """
-        print("Asked for shapes: " + str(shapes))
         answer = {}
 
         missing = [name for name in shapes
@@ -445,8 +426,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                        in self._shapes.contributions.items()
                        if key in shapes})
 
-        print("Returning shapes: " + str(answer) +
-              "and missing: " + str(missing))
         return answer, missing
 
     def get_shape_infos(self, shape):
@@ -465,8 +444,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             The required shapes infos .
 
         """
-        print("Asked for shape: " + str(shape))
-
         shapes = [shape]
         _answer, _ = self.get_shapes_infos(shapes)
 
@@ -542,7 +519,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             exist.
 
         """
-
         s_filter = self._filters.contributions.get(filter_name)
         if s_filter:
             # Remove items that should not be shown in the list
@@ -554,8 +530,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                 template_sequences_data.pop('ecpy_pulses.RootSequence')
             except KeyError:
                 pass
-            print(sequences)
-            print(template_sequences_data)
             return s_filter.filter_items(sequences,
                                          template_sequences_data)
         else:

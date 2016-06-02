@@ -37,9 +37,6 @@ enamldef TemplateSequenceView(AbstractSequenceView): view:
 
     constraints << [vbox(hbox(vbox(_def_lab, _def_val), _defs), _nb)]
 
-    initialized::
-        print("TemplateSequenceView::Init  ", sequence, item.context) 
-
     Label: _def_lab:
         text = 'Mode'
     ObjectCombo: _def_val:

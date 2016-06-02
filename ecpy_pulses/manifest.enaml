@@ -148,8 +148,6 @@ def build_sequence(event):
             raise ValueError('No valid kwargs found for file mode')
 
         # Collect the dependencies
-        print("preferences are")
-        print(prefs)
         core = event.workbench.get_plugin('enaml.workbench.core')
         cmd = 'ecpy.app.dependencies.analyse'
 
@@ -520,7 +518,6 @@ enamldef PulsesManagerManifest(PluginManifest):
 
                 s_id = type(obj).__name__
                 dependencies.add(s_id)
-                print(dependencies)
 
                 return set()
 

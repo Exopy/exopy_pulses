@@ -43,7 +43,6 @@ enamldef SequenceSelector(Container): sel:
     #: Currently selected filter.
     attr selected_filter = 'All'
     selected_filter ::
-        print("selected Filter: ", selected_filter)
         if selected_filter:
             sequences = manager.list_sequences(selected_filter)
             if sequences:

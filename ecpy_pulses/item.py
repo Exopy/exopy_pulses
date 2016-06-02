@@ -87,6 +87,9 @@ class Item(HasPrefAtom):
     #: context.
     stop = Float()
 
+    #: Evaluated entries by the eval_entries method
+    eval_entries = Dict()
+
     def eval_entries(self, root_vars, sequence_locals, missings, errors):
         """ Attempt to eval the  def_1 and def_2 parameters of the item.
 

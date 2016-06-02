@@ -110,9 +110,6 @@ class TemplateConfig(AbstractConfig):
         #: Shorthand
         build_dep = cont.dependencies
 
-        print("deps:", build_dep)
-        print("configs: ", config)
-
         if not self.merge:
             seq = TemplateSequence.build_from_config(deepcopy(config),
                                                      build_dep)
