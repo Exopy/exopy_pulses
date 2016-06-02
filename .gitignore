@@ -66,3 +66,5 @@ new.enaml
 .idea/ecpy_pulses.iml
 
 .idea/.name
+
+.spyderproject
