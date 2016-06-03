@@ -27,6 +27,7 @@ enamldef AbstractSequenceView(GroupBox):
     """Parent class of all base sequences.
 
     """
+    #: Item (Actually sequence) that owns this view
     attr item
 
     #: Reference to the root view in which this object is displayed.

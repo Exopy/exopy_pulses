@@ -386,6 +386,9 @@ class BaseSequence(AbstractSequence):
         if isinstance(child, BaseSequence):
             child.observe('_last_index', self._item_last_index_updated)
 
+        self._last_index += 1
+        child.index = self._last_index
+
         # In the absence of a root item do nothing else than inserting the
         # child.
         if self.has_root:
@@ -393,9 +396,19 @@ class BaseSequence(AbstractSequence):
             # registration it needs to.
             child.root = self.root
 
-            notification = ContainerChange(obj=self, name='items',
-                                           added=[(index, child)])
-            self.items_changed(notification)
+            #: If we update linkable vars on this item then we need to inform
+            #: the root of this.
+            child.observe('linkable_vars', self.root._update_linkable_vars)
+            if isinstance(child, BaseSequence):
+                child.observe('_last_index', self._item_last_index_updated)
+
+        self._recompute_indexes()
+
+        #: Wrap it up and notify the rest of the world, if it is listening.
+        notification = ContainerChange(obj=self, name='items',
+                                       added=[(index, child)])
+        self.items_changed(notification)
+
 
     def move_child_item(self, old, new):
         """Move a child item.
@@ -412,13 +425,11 @@ class BaseSequence(AbstractSequence):
         child = self.items.pop(old)
         self.items.insert(new, child)
 
-        # In the absence of a root item do nothing else than moving the
-        # child.
-        if self.has_root:
+        self._recompute_indexes()
 
-            notification = ContainerChange(obj=self, name='items',
-                                           moved=[(old, new, child)])
-            self.items_changed(notification)
+        notification = ContainerChange(obj=self, name='items',
+                                       moved=[(old, new, child)])
+        self.items_changed(notification)
 
     def remove_child_item(self, index):
         """Remove a child item from the items list.
@@ -441,6 +452,8 @@ class BaseSequence(AbstractSequence):
             child.index = 0
         if isinstance(child, BaseSequence):
             child.unobserve('_last_index', self._item_last_index_updated)
+
+        self._recompute_indexes()
 
         notification = ContainerChange(obj=self, name='items',
                                        removed=[(index, child)])
@@ -466,16 +479,13 @@ class BaseSequence(AbstractSequence):
                     item.observe('_last_index', self._item_last_index_updated)
             # Connect only now to avoid cleaning up in an unwanted way the
             # root linkable vars attr.
-            self.observe('items', self._items_updated)
 
         else:
-            self.unobserve('items', self._items_updated)
             for item in self.items:
                 item.root = None
                 if isinstance(item, BaseSequence):
                     item.unobserve('_last_index',
                                    self._item_last_index_updated)
-            self.observe('items', self._items_updated)
 
     def _observe_time_constrained(self, change):
         """
@@ -485,80 +495,6 @@ class BaseSequence(AbstractSequence):
             self.linkable_vars = ['start', 'stop', 'duration']
         else:
             self.linkable_vars = []
-
-    def _items_updated(self, change):
-        """ Observer for the items list.
-
-        """
-        if self.root:
-            # The whole list changed.
-            if change['type'] == 'update':
-                added = set(change['value']) - set(change['oldvalue'])
-                removed = set(change['oldvalue']) - set(change['value'])
-                for item in removed:
-                    self._item_removed(item)
-                for item in added:
-                    self._item_added(item)
-
-            # An operation has been performed on the list.
-            elif change['type'] == 'container':
-                op = change['operation']
-
-                # itemren have been added
-                if op in ('__iadd__', 'append', 'extend', 'insert'):
-                    if 'item' in change:
-                        self._item_added(change['item'])
-                    if 'items' in change:
-                        for item in change['items']:
-                            self._item_added(item)
-
-                # itemren have been removed.
-                elif op in ('__delitem__', 'remove', 'pop'):
-                    if 'item' in change:
-                        self._item_removed(change['item'])
-                    if 'items' in change:
-                        for item in change['items']:
-                            self._item_removed(item)
-
-                # One item was replaced.
-                elif op in ('__setitem__'):
-                    old = change['olditem']
-                    if isinstance(old, list):
-                        for item in old:
-                            self._item_removed(item)
-                    else:
-                        self._item_removed(old)
-
-                    new = change['newitem']
-                    if isinstance(new, list):
-                        for item in new:
-                            self._item_added(item)
-                    else:
-                        self._item_added(new)
-
-            self._recompute_indexes()
-
-    def _item_added(self, item):
-        """ Fill in the attributes of a newly added item.
-
-        """
-        item.root = self.root
-        item.parent = self
-        item.observe('linkable_vars', self.root._update_linkable_vars)
-        if isinstance(item, BaseSequence):
-            item.observe('_last_index', self._item_last_index_updated)
-
-    def _item_removed(self, item):
-        """ Clear the attributes of a removed item.
-
-        """
-        item.unobserve('linkable_vars', self.root._update_linkable_vars)
-        with item.suppress_notifications():
-            del item.root
-            del item.parent
-            item.index = 0
-        if isinstance(item, BaseSequence):
-            item.unobserve('_last_index', self._item_last_index_updated)
 
     def _recompute_indexes(self, first_index=0, free_index=None):
         """ Recompute the item indexes and update the vars of the root_seq.
