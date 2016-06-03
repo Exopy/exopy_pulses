@@ -195,10 +195,10 @@ CONTEXTS_REQUEST_DESCRIPTION = \
 """ Request the infos associated to a list of contexts. """
 
 GET_SHAPES_INFOS_DESCRIPTION = \
-""" Request the infos associated to a list of shapes. """
+""" Request the infos associated to a list of shapes. TODO """
 
 GET_SHAPE_INFOS_DESCRIPTION = \
-""" Request the infos associated to a single shape. """
+""" Request the infos associated to a single shape. TODO """
 
 BUILD_SEQUENCE_DESCRIPTION = \
 """ Build a sequence from the one knwon to the plugin."""
@@ -247,18 +247,25 @@ more infos about how to declare a new config.
 """
 
 GET_SEQUENCES_INFOS_DESCRIPTION =\
-"""Retrieve the infos object associated with a sequence given the 
+"""Retrieve the infos object associated with a list of sequences given the 
 name of the sequence.
 
 Parameters
 ----------
-sequence_cls_name : unicode
-    Name of the sequence class name for which to retrieve the infos.
+sequences : list(unicode)
+    List of the names of the sequence class name for which to 
+    retrieve the infos.
 
 Returns
 -------
-infos : SequenceInfos|None
-    Infos for the requested sequence or None if no matching sequence was found.
+sequences : dict
+   The required sequences infos as a dict. For Python sequences the
+   entry will contain the class and the view ({name: (class, view)}).
+   For templates the entry will contain the path, the data as a
+   ConfigObj object and the doc ({name : (path, data, doc)})
+
+missings : list
+    List of the sequences which were not found.
 
 """
 
@@ -268,14 +275,62 @@ name of the sequence.
 
 Parameters
 ----------
-sequence_cls_name : unicode
-    Name of the sequence class name for which to retrieve the infos.
+sequence : unicode
+    Sequence of the names for which to retrieve the infos.
 
 Returns
 -------
 infos : SequenceInfos|None
     Infos for the requested sequence or None if no matching sequence was found.
 
+missing : str | None
+    Id of the sequence that was not found.
+
+
+"""
+
+GET_SEQUENCES_DESCRIPTION =\
+"""Retrieve the class and the view for a list of sequence names.
+
+Parameters
+----------
+sequences : unicode
+    List of the names of the sequence class name to find.
+
+Returns
+-------
+TODO
+
+"""
+
+GET_SEQUENCE_DESCRIPTION =\
+"""Retrieve the class and the view for a sequence name.
+
+Parameters
+----------
+sequence : unicode
+    Name of the sequence to retrieve.
+
+Returns
+-------
+TODO
+
+"""
+
+GET_ITEMS_INFOS_DESCRIPTION =\
+"""TODO
+"""
+
+GET_ITEM_INFOS_DESCRIPTION =\
+"""TODO
+"""
+
+GET_CONTEXTS_INFOS_DESCRIPTION =\
+"""TODO
+"""
+
+GET_CONTEXT_INFOS_DESCRIPTION =\
+"""TODO
 """
 
 # =============================================================================
@@ -549,7 +604,7 @@ enamldef PulsesManagerManifest(PluginManifest):
             handler = show_starting_errors
         Command:
             id = 'ecpy.pulses.get_sequences_infos'
-            description = GET_SEQUENCE_INFOS_DESCRIPTION
+            description = GET_SEQUENCES_INFOS_DESCRIPTION
             handler = make_handler(PLUGIN_ID, 'get_sequences_infos')
         Command:
             id = 'ecpy.pulses.get_sequence_infos'
@@ -557,27 +612,27 @@ enamldef PulsesManagerManifest(PluginManifest):
             handler = make_handler(PLUGIN_ID, 'get_sequence_infos')
         Command:
             id = 'ecpy.pulses.get_sequences'
-            description = GET_SEQUENCES_INFOS_DESCRIPTION
+            description = GET_SEQUENCES_DESCRIPTION
             handler = make_handler(PLUGIN_ID, 'get_sequences')
         Command:
             id = 'ecpy.pulses.get_sequence'
-            description = GET_SEQUENCE_INFOS_DESCRIPTION
+            description = GET_SEQUENCE_DESCRIPTION
             handler = make_handler(PLUGIN_ID, 'get_sequence')
         Command:
             id = 'ecpy.pulses.get_items_infos'
-            description = GET_SEQUENCE_INFOS_DESCRIPTION
+            description = GET_ITEMS_INFOS_DESCRIPTION
             handler = make_handler(PLUGIN_ID, 'get_items_infos')
         Command:
             id = 'ecpy.pulses.get_item_infos'
-            description = GET_SEQUENCE_INFOS_DESCRIPTION
+            description = GET_ITEM_INFOS_DESCRIPTION
             handler = make_handler(PLUGIN_ID, 'get_item_infos')
         Command:
             id = 'ecpy.pulses.get_contexts_infos'
-            description = "HELLO"
+            description = GET_CONTEXTS_INFOS_DESCRIPTION
             handler = make_handler(PLUGIN_ID, 'get_contexts_infos')
         Command:
             id = 'ecpy.pulses.get_context_infos'
-            description = "HELLO"
+            description = GET_CONTEXT_INFOS_DESCRIPTION
             handler = make_handler(PLUGIN_ID,'get_context_infos')
         Command:
             id = 'ecpy.pulses.get_shapes_infos'

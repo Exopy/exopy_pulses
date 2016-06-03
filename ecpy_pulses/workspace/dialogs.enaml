@@ -27,8 +27,7 @@ from enaml.widgets.api import (Dialog, Container, Stack, StackItem,
 
 from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor, 
                                             FieldFieldCompleterEditor)
-from ecpy.app.errors.widgets import (BasicErrorsDisplay, 
-                HierarchicalErrorsDisplay) # should delete one of the two
+from ecpy.app.errors.widgets import BasicErrorsDisplay
 from ..widgets.browsing import SequenceSelector
 
 

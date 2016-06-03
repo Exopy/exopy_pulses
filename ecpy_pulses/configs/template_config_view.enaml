@@ -15,12 +15,15 @@ from __future__ import (division, unicode_literals, print_function,
 
 from inspect import cleandoc
 from textwrap import fill
+
 from enaml.core.api import Conditional
 from enaml.widgets.api import (Container, MultilineField, Field, GroupBox,
                                Form, Label, CheckBox, RadioButton, PushButton)
 from enaml.layout.api import hbox, vbox, spacer
-from ..contexts.views.template_context_view import MappingEditor
+
 from .base_config_views import AbstractConfigView
+from ..contexts.views.template_context_view import MappingEditor
+
 
 enamldef TemplateConfigView(AbstractConfigView): main:
     """ View allowing the user to select how to insert the template.
@@ -48,7 +51,8 @@ enamldef TemplateConfigView(AbstractConfigView): main:
             enabled << bool(model.root.context)
             tool_tip << (fill(cleandoc('''Should the template be inserted as a
                 sequence and forget it is a template.''')) if enabled else 
-                fill(cleandoc('''To merge you should first select a context.''')))
+                fill(cleandoc('''To merge you should first select a 
+                                 context.''')))
         Conditional: con:
             condition << not bool(model.root.context)
             Label:
@@ -56,15 +60,11 @@ enamldef TemplateConfigView(AbstractConfigView): main:
             PushButton:
                 text = 'Select context'
                 clicked ::
-                    core = model.manager.workbench.get_plugin('enaml.workbench.core')
+                    core = model.manager.workbench.get_plugin(
+                                                        'enaml.workbench.core')
                     cmd = 'ecpy.pulses.build_context'
                     core.invoke_command(cmd, {'root': model.root,
                                               'parent_ui': self})
-
-
-
-
-
     Conditional:
         condition << model.merge
 

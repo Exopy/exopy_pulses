@@ -9,10 +9,9 @@
 """
 """
 from enaml.layout.api import hbox, align, spacer, vbox
-from enaml.widgets.api import (PushButton, Container, Label, Field,
-                               GroupBox, ScrollArea, Menu, Action, Stack,
-                               StackItem, Form, Notebook, Page, CheckBox,
-                               ObjectCombo, Splitter, SplitItem)
+from enaml.widgets.api import (Container, Label, ScrollArea, Action, Notebook,
+                               Page, CheckBox, ObjectCombo, Splitter, 
+                               SplitItem)
 from enaml.core.api import Conditional
 
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
@@ -22,8 +21,6 @@ from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
 from .abstract_sequence_view import AbstractSequenceView
 from .sequence_editor_view import (SequenceEditor, FoldableSequenceEditor)
 from ...utils.entry_eval import EVALUATER_TOOLTIP
-
-from .abstract_sequence_view import AbstractSequenceView
 
 enamldef ConditionalSequenceView(AbstractSequenceView): view:
     """ View for Sequence.

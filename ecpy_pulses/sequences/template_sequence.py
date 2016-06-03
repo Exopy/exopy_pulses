@@ -23,6 +23,7 @@ from ecpy.utils.atom_util import update_members_from_preferences
 from ..utils.entry_eval import eval_entry
 from .base_sequences import AbstractSequence, BaseSequence
 
+
 def context():
     from ..contexts.template_context import TemplateContext
     return TemplateContext

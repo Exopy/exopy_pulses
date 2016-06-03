@@ -17,9 +17,8 @@ from inspect import getdoc
 from atom.api import (Atom, Instance, Str, observe, ForwardTyped, Bool,
                       Value)
 from enaml.core.api import Include
-from enaml.core.object import Object
 from enaml.layout.api import hbox, spacer, vbox
-from enaml.widgets.api import (PushButton, Menu, Action, Container, Dialog,
+from enaml.widgets.api import (PushButton, Container, Dialog,
                                Label, MultilineField)
 
 from ecpy.utils.widgets.qt_list_str_widget import QtListStrWidget

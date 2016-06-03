@@ -25,8 +25,6 @@ from inspect import cleandoc
 from ecpy.utils.plugin_tools import (HasPreferencesPlugin, ExtensionsCollector,
                                      DeclaratorsCollector)
 from ecpy.utils.watchdog import SystematicFileUpdater
-from .sequences.template_sequence import TemplateSequence
-from .sequences.views.template_view import TemplateSequenceView
 from .pulse import Pulse
 from .filters.base_filters import ItemFilter
 from .utils.sequences_io import load_sequence_prefs
@@ -313,6 +311,9 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         return (_answer.cls, _answer.view)
 
     def get_items_infos(self, items):
+        """TODO
+
+        """
         _answer, _missing = self.get_sequences_infos(items)
 
         additional_items = {}
@@ -335,6 +336,9 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         return _answer, missing
 
     def get_item_infos(self, item):
+        """TODO
+
+        """
         _answer, _ = self.get_items_infos([item])
 
         try:
@@ -622,25 +626,11 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         self._template_sequences_infos = templates_infos
 
-
-
-
-
     def _update_filters(self, change):
         """ Place holder for a future filter discovery function
 
         """
         self.filters = list(change['value'].keys())
-
-#    def _refresh_config(self):
-#        """ Place holder for a future config discovery function
-#
-#        """
-#        mapping = {}
-#        for key, val in SEQUENCE_CONFIG.items():
-#            mapping[key] = (val, CONFIG_MAP_VIEW[val])
-#
-#        self._configs = mapping
 
     def _explore_package(self, pack, pack_path, failed, exceptions):
         """ Explore a package.
@@ -797,7 +787,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         """ Setup the observers for the plugin.
 
         """
-
         for folder in self.templates_folders:
             handler = SystematicFileUpdater(
                 self._refresh_template_sequences_data)

@@ -36,8 +36,8 @@ class AbstractSequence(Item):
     This class defines the basic of a sequence but with only a very limited
     child support : only construction is supported, indexing is not handled
     nor is child insertion, deletion or displacement (This is because
-    TemplateSequence inherits from AbstractSequence, while everything else inherits
-    from Sequence which supports insertion/deletion/displacement).
+    TemplateSequence inherits from AbstractSequence, while everything else
+    inherits from Sequence which supports insertion/deletion/displacement).
 
     """
     # --- Public API ----------------------------------------------------------

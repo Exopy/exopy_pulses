@@ -9,18 +9,7 @@
 """
 
 """
-from atom.api import Atom, Dict, Value
-from enaml.layout.api import hbox, align, spacer, vbox
-from enaml.widgets.api import (PushButton, Container, Label, Field,
-                               GroupBox, ScrollArea, Menu, Action, Stack,
-                               StackItem, Form, Notebook, Page, CheckBox,
-                               ObjectCombo, Splitter, SplitItem, HGroup)
-from enaml.core.api import Looper, Conditional, Include
-from enaml.workbench.core.core_plugin import CorePlugin
-
-from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
-                                            FieldFieldCompleterEditor)
-
+from enaml.widgets.api import GroupBox
 
 
 enamldef AbstractSequenceView(GroupBox):

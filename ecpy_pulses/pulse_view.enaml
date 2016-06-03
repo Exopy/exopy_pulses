@@ -141,7 +141,7 @@ enamldef PulseView(GroupBox): view:
             ObjectCombo: s_val:
                 items << pulse_state.shapes
                 # Assume ends in Shape
-                selected << item.shape.shape_id[:-5] if item.shape else ''
+                selected << item.shape.shape_id if item.shape else ''
                 selected ::
                     if change.get('oldvalue'):
                         a_d = view.add_displays[:]
