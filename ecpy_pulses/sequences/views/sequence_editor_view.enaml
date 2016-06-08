@@ -11,6 +11,9 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+from itertools import chain
+from functools import partial
+
 from atom.api import (Atom, Typed, Unicode, Constant, Bool, Value, Dict,
                       Subclass, set_default)
 from enaml.core.declarative import d_, d_func
@@ -21,20 +24,15 @@ from enaml.widgets.api import (PushButton, Container, Label, Field,
                                ObjectCombo, Splitter, SplitItem, HGroup)
 from enaml.core.api import Looper, Conditional, Include
 from enaml.workbench.core.core_plugin import CorePlugin
-
 from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
                                             FieldFieldCompleterEditor)
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
-from ...utils.entry_eval import EVALUATER_TOOLTIP
-# from ecpy.utils.widgets.list_editor import PopupListMenu
 from ecpy.utils.container_change import ContainerChange
+
+from ...utils.entry_eval import EVALUATER_TOOLTIP
 from ...pulse import Pulse
-
-from itertools import chain
-from functools import partial
-
-from ..base_sequences import AbstractSequence
 from ...infos import SequenceInfos, PulseInfos
+from ..base_sequences import AbstractSequence
 
 #: TODO A Nice thing wold be to make the stock ecpy popuplistmenu more flexible.
 #: For the time beeing, this will suffice.
@@ -341,8 +339,9 @@ class SequenceEditor(Container):
             # Next we repopulate the container.
             self._populate()
 
+
     def _remove_view(self, item):
-        """Remove the view associated with a task.
+        """Remove the view associated with a item.
 
         """
         button, view = self._children_buttons.pop(item)
@@ -393,14 +392,14 @@ class SequenceEditor(Container):
                 'move': move, 'remove': remove}
 
     def _default__empty_button(self):
-        """Button used to add the fist task.
+        """Button used to add the fist item.
         """
         return EmptyEditorButtons(editor=self)
 
     # =========================================================================
     # --- Old ViewManager -----------------------------------------------------
     # =========================================================================
-    #: Dict mapping Task names to their view.
+    #: Dict mapping item names to their view.
     views = Dict()
 
     def _setup_views(self, children):
@@ -408,7 +407,7 @@ class SequenceEditor(Container):
         self.get_views(t_classes)
 
     def _instantiate_view(self, item, attrs):
-        """ A helper function instantiating a task view.
+        """ A helper function instantiating a item view.
 
         Parameters
         ----------
@@ -448,20 +447,20 @@ class SequenceEditor(Container):
         self.views.update({k: v.view for k, v in items.items()})
 
 
-
-
 enamldef FoldableSequenceEditor(Container):
-    """Task editor which can be masked.
+    """Sequence editor which can be masked.
 
     """
-    #: Direct access to the task of the underlying editor.
+    #: Direct access to the sequence of the underlying editor.
     alias sequence: editor.sequence
 
-    #core
+    #: Reference to the editor's ecpy core plugin.
     alias core : editor.core
-    alias cache : editor.cache
-    #cache
 
+    #: Reference to the editor's ecpy cache dictionary.
+    alias cache : editor.cache
+
+    #: Reference to the dictionary with allowed operations.
     alias operations : editor.operations
 
     func refresh():

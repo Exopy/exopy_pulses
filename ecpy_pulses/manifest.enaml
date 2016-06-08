@@ -634,7 +634,6 @@ enamldef PulsesManagerManifest(PluginManifest):
         MenuItem:
             path = '/tools/pulses'
             label = 'Pulses'
-#            after = 'tasks'
             ItemGroup:
                 id = 'user'
 #        ActionItem:
@@ -645,7 +644,6 @@ enamldef PulsesManagerManifest(PluginManifest):
                 path = '/workspace/pulses'
                 label = 'Pulses'
                 shortcut = 'Ctrl+3'
-#                after = 'debug'
                 group = 'spaces'
                 command = 'enaml.workbench.ui.select_workspace'
                 parameters = {'workspace': 'ecpy.pulses.workspace'}

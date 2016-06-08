@@ -12,9 +12,8 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
-from atom.api import (Unicode, FloatRange)
 import numpy as np
+from atom.api import (Unicode, FloatRange)
 
 from ..utils.entry_eval import eval_entry
 

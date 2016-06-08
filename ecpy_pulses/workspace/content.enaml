@@ -12,7 +12,6 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
 from ast import literal_eval
 from enaml.widgets.api import (Container, DockArea, DockItem, Field,
                                PushButton, Menu, Action)
@@ -60,6 +59,7 @@ enamldef _KeyValEditor(Container):
         text << repr(model.value) if model.value else ''
         text :: model.value = literal_eval(text)
         validator = _VarValidator()
+
 
 enamldef VarEditorDockItem(DockItem):
     """ Panel used to edit the sequence external variables.

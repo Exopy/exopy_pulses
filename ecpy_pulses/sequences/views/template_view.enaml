@@ -8,16 +8,18 @@
 # -----------------------------------------------------------------------------
 """
 """
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+from enaml.core.api import Include
 from enaml.layout.api import hbox, align, spacer, vbox
 from enaml.widgets.api import (Container, Label, Form, Notebook, Page,
                                CheckBox, ObjectCombo, Splitter, SplitItem)
-from enaml.core.api import Include
-
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
-from ...utils.entry_eval import EVALUATER_TOOLTIP
 from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
                                             FieldFieldCompleterEditor)
 
+from ...utils.entry_eval import EVALUATER_TOOLTIP
 from .abstract_sequence_view import AbstractSequenceView
 from .base_sequence_view import instantiate_context_view
 

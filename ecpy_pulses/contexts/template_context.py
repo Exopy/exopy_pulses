@@ -6,7 +6,10 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Declaration for the Template Context.
+
+This context is used to provide channel mapping when saving a sequence as
+a Template.
 
 """
 from __future__ import (division, unicode_literals, print_function,

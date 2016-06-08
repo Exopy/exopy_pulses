@@ -33,8 +33,6 @@ class TemplateSequence(AbstractSequence):
     """ Sequence used to represent a template in a Sequence.
 
     """
-    # --- Public API ----------------------------------------------------------
-
     #: Id of the template on which this sequence relies.
     template_id = Unicode().tag(pref=True)
 
@@ -45,7 +43,7 @@ class TemplateSequence(AbstractSequence):
     docs = Unicode()
 
     #: Special context providing channel mapping.
-    context = ForwardTyped(context)
+    context = ForwardTyped(context).tag(pref=True)
 
     def compile_sequence(self, root_vars, sequence_locals, missings, errors):
         """
@@ -116,31 +114,6 @@ class TemplateSequence(AbstractSequence):
         else:
             return False, []
 
-    def preferences_from_members(self):
-        """ Get the members values as string to store them in .ini files.
-
-        Reimplemented here to save context.
-
-        """
-        pref = super(TemplateSequence, self).preferences_from_members()
-
-        pref['context'] = self.context.preferences_from_members()
-
-        return pref
-
-    def update_members_from_preferences(self, **parameters):
-        """ Use the string values given in the parameters to update the members
-
-        This function will call itself on any tagged HasPrefAtom member.
-        Reimplemented here to update context.
-
-        """
-        super(TemplateSequence,
-              self).update_members_from_preferences(**parameters)
-
-        para = parameters['context']
-        self.context.update_members_from_preferences(**para)
-
     @classmethod
     def build_from_config(cls, config, dependencies):
         """ Create a new instance using the provided infos for initialisation.
@@ -208,7 +181,7 @@ class TemplateSequence(AbstractSequence):
 
     # --- Private API ---------------------------------------------------------
 
-    def _observe_context(self, change):
+    def _post_setattr_context(self, change):
         """ Make sure the context has a ref to the sequence.
 
         """

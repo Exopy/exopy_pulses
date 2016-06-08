@@ -12,20 +12,20 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
 from inspect import getdoc
+
 from atom.api import (Atom, Instance, Str, observe, ForwardTyped, Bool,
                       Value)
 from enaml.core.api import Include
 from enaml.layout.api import hbox, spacer, vbox
 from enaml.widgets.api import (PushButton, Container, Dialog,
                                Label, MultilineField)
-
 from ecpy.utils.widgets.qt_list_str_widget import QtListStrWidget
+from ecpy.utils.transformers import ids_to_unique_names
+
+from ..utils.normalizers import normalize_context_name
 from .browsing import SequenceSelector
 
-from ecpy.utils.transformers import ids_to_unique_names
-from ..utils.normalizers import normalize_context_name
 
 # Circular import protections
 def pulse_manager():

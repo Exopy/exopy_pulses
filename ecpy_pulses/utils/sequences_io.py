@@ -12,7 +12,6 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
 from configobj import ConfigObj
 from textwrap import wrap
 
@@ -41,29 +40,6 @@ def load_sequence_prefs(path):
         doc = '\n'.join(doc_list)
 
     return config, doc
-
-
-def load_sequence_prefs_dict(path):
-    """ Load the preferences of a sequence stored in a file.
-
-    Parameters
-    ----------
-        path : unicode
-            Location of the template file.
-
-    Returns
-    -------
-        dict: {config:, doc:} where prefs is the data
-               needed to rebuild the task and doc
-               is the doc of the template
-    """
-    config = ConfigObj(path)
-    doc = ''
-    if config.initial_comment:
-        doc_list = [com[1:].strip() for com in config.initial_comment]
-        doc = '\n'.join(doc_list)
-
-    return {'config': config, 'doc': doc}
 
 
 def save_sequence_prefs(path, prefs, doc=''):

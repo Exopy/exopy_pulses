@@ -6,7 +6,7 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Plugin centralizing the collection and management of Items (Sequences, 
+"""Plugin centralizing the collection and management of Items (Sequences,
 Shapes...).
 
 """
@@ -16,8 +16,6 @@ from __future__ import (division, unicode_literals, print_function,
 import os
 import logging
 import enaml
-from inspect import cleandoc
-from importlib import import_module
 
 from watchdog.observers import Observer
 from atom.api import (Dict, List, Unicode, Typed, ForwardTyped)
@@ -652,8 +650,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._filters.observe('contributions', self._update_filters)
 
         self.observe('templates_folders', self._update_templates)
-        print(self.filters)
-        print(self._update_filters)
 
     def _unbind_observers(self):
         """ Remove the observers for the plugin.

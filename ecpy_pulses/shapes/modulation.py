@@ -27,6 +27,7 @@ FREQ_TIME_UNIT_MAP = {'s': {'Hz': 1, 'kHz': 1000, 'MHz': 1e6, 'GHz': 1e9},
 
 DEP_TYPE = 'ecpy.pulses.modulation'
 
+
 class Modulation(HasPrefAtom):
     """ Modulation to apply to the pulse.
 

@@ -17,7 +17,7 @@ from inspect import cleandoc
 from copy import deepcopy
 
 from atom.api import (Int, Instance, Unicode, Dict, Bool, List,
-                      Signal, set_default)
+                      Signal, set_default, Typed)
 from ecpy.utils.container_change import ContainerChange
 from ecpy.utils.atom_util import (tagged_members, member_to_pref,
                                   member_from_pref,
@@ -56,6 +56,9 @@ class AbstractSequence(Item):
 
     #: Evaluated entries by the eval_entries method
     evaluated_entries_cache = Dict(Unicode())
+
+    #: Cache is valid?
+    cache_valid = Bool(False)
 
     def cleanup_cache(self):
         """ Clear all internal caches after successfully compiling the sequence
@@ -250,6 +253,89 @@ class BaseSequence(AbstractSequence):
     #: start/stop/duration. In case it does not the associated values won't
     #: be computed.
     time_constrained = Bool().tag(pref=True)
+
+
+    def evaluate_sequence(self, root_vars, sequence_locals, missings, errors):
+        """ Evaluate the sequence vars and compile the list of pulses.
+
+        Parameters
+        ----------
+        root_vars : dict
+            Dictionary of global variables for the all items. This will
+            tipically contains the i_start/stop/duration and the root vars.
+            This dict must be updated with global new values but for
+            evaluation sequence_locals must be used.
+
+        sequence_locals : dict
+            Dictionary of variables whose scope is limited to this sequence
+            parent. This dict must be updated with global new values and
+            must be used to perform evaluation (It always contains all the
+            names defined in root_vars).
+
+        missings : set
+            Set of unfound local variables.
+
+        errors : dict
+            Dict of the errors which happened when performing the evaluation.
+
+        Returns
+        -------
+        flag : bool
+            Boolean indicating whether or not the evaluation succeeded.
+
+        pulses : list
+            List of pulses in which all the string entries have been evaluated.
+
+        """
+        prefix = '{}_'.format(self.index)
+
+        # Definition evaluation.
+        if self.time_constrained:
+            self.eval_entries(root_vars, sequence_locals, missings, errors)
+
+        # Local vars computation.
+        for name, formula in self.local_vars.items():
+            if name not in self._evaluated_vars:
+                try:
+                    val = eval_entry(formula, sequence_locals, missings)
+                    self._evaluated_vars[name] = val
+                except Exception as e:
+                    errors[prefix + name] = repr(e)
+
+        local_namespace = sequence_locals.copy()
+        local_namespace.update(self._evaluated_vars)
+
+        res, pulses = self._compile_items(root_vars, local_namespace,
+                                          missings, errors)
+
+        if res:
+            if self.time_constrained:
+                # Check if start, stop and duration of sequence are compatible.
+                start_err = [pulse for pulse in pulses
+                             if pulse.start < self.start]
+                stop_err = [pulse for pulse in pulses
+                            if pulse.stop > self.stop]
+
+                if start_err:
+                    mess = cleandoc('''The start time of the following items {}
+                        is before the start time of the sequence {}''')
+                    mess = mess.replace('\n', ' ')
+                    ind = [p.index for p in start_err]
+                    errors[self.name + '-start'] = mess.format(ind, self.index)
+                if stop_err:
+                    mess = cleandoc('''The stop time of the following items {}
+                        is after the stop time of the sequence {}''')
+                    mess = mess.replace('\n', ' ')
+                    ind = [p.index for p in stop_err]
+                    errors[self.name + '-stop'] = mess.format(ind, self.index)
+
+                if errors:
+                    return False, []
+
+            return True, pulses
+
+        else:
+            return False, []
 
     def compile_sequence(self, root_vars, sequence_locals, missings, errors):
         """ Evaluate the sequence vars and compile the list of pulses.
@@ -461,13 +547,16 @@ class BaseSequence(AbstractSequence):
     #: Last index used by the sequence.
     _last_index = Int()
 
-    def _observe_root(self, change):
-        """ Observer passing the root to all items.
+    def _post_setattr_root(self, old, new):
+        """If the root is modified, pass it to all sub-items.
 
         This allow to build a sequence without a root and parent it later.
 
         """
-        if change['value']:
+        #: Call the item post_setattr (will set has_root to true).
+        super(BaseSequence, self)._post_setattr_root(old, new)
+
+        if new:
             for item in self.items:
                 item.root = self.root
                 if isinstance(item, Item):
@@ -478,13 +567,14 @@ class BaseSequence(AbstractSequence):
             # root linkable vars attr.
 
         else:
+            print("The code is wrong")
             for item in self.items:
                 item.root = None
                 if isinstance(item, BaseSequence):
                     item.unobserve('_last_index',
                                    self._item_last_index_updated)
 
-    def _observe_time_constrained(self, change):
+    def _post_setattr_time_constrained(self, change):
         """
 
         """
@@ -505,6 +595,7 @@ class BaseSequence(AbstractSequence):
             Value of the first free index.
 
         """
+        print("Recompute indexes: ", self, first_index, free_index)
         if free_index is None:
             free_index = self.index + 1
 
@@ -516,6 +607,7 @@ class BaseSequence(AbstractSequence):
 
         for item in self.items[first_index:]:
 
+            print("free index for item:", item, item.index)
             item.index = free_index
             prefix = '{}_'.format(free_index)
             linkable_vars = [prefix + var for var in item.linkable_vars]
@@ -538,6 +630,7 @@ class BaseSequence(AbstractSequence):
         sequence is updated.
 
         """
+        print("_item_last_index_updated: ", self, change)
         index = self.items.index(change['object']) + 1
         free_index = change['value'] + 1
         self._recompute_indexes(index, free_index)
@@ -571,10 +664,12 @@ class RootSequence(BaseSequence):
     sequence_duration = Unicode().tag(pref=True)
 
     #: Reference to the executioner context of the sequence.
-    context = Instance(BaseContext)
+    context = Typed(BaseContext).tag(pref=True)
 
     index = set_default(0)
     name = set_default('Root')
+    #root = set_default(self)
+    #has_root = set_default(True)
 
     def __init__(self, **kwargs):
         """
@@ -661,31 +756,6 @@ class RootSequence(BaseSequence):
         return (self.linkable_vars + self.local_vars.keys() +
                 self.external_vars.keys())
 
-    def preferences_from_members(self):
-        """ Get the members values as string to store them in .ini files.
-
-        Reimplemented here to save context.
-
-        """
-        pref = super(RootSequence, self).preferences_from_members()
-
-        if self.context:
-            pref['context'] = self.context.preferences_from_members()
-
-        return pref
-
-    def update_members_from_preferences(self, **parameters):
-        """ Use the string values given in the parameters to update the members
-
-        This function will call itself on any tagged HasPrefAtom member.
-        Reimplemented here to update context.
-
-        """
-        super(RootSequence, self).update_members_from_preferences(**parameters)
-
-        para = parameters['context']
-        self.context.update_members_from_preferences(**para)
-
     @classmethod
     def build_from_config(cls, config, dependencies):
         """ Create a new instance using the provided infos for initialisation.
@@ -721,12 +791,12 @@ class RootSequence(BaseSequence):
         if 'context' in config:
             seq.context = context
 
-        seq._observe_root({'value':True})
+        seq._post_setattr_root(True, True)
         return seq
 
     # --- Private API ---------------------------------------------------------
 
-    def _observe_time_constrained(self, change):
+    def _post_setattr_time_constrained(self, change):
         """ Keep the linkable_vars list in sync with fix_sequence_duration.
 
         """
@@ -741,6 +811,7 @@ class RootSequence(BaseSequence):
 
     def _update_linkable_vars(self, change):
         """
+        TODO
         """
         # Don't want this to happen on member init.
         if change['type'] == 'update':

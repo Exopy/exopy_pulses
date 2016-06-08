@@ -52,7 +52,7 @@ class AbstractShape(HasPrefAtom):
             Flag indicating whether or not the evaluation succeeded.
 
         """
-        return True
+        raise NotImplementedError('')
 
     def compute(self, time, unit):
         """ Computes the shape of the pulse at a given time.
