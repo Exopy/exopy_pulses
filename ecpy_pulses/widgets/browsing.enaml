@@ -1,0 +1,91 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""
+
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+
+from atom.api import Atom, List, Unicode
+from enaml.core.api import Conditional
+from enaml.widgets.api import (ObjectCombo, Container)
+
+from ecpy.utils.widgets.qt_list_str_widget import QtListStrWidget
+from ecpy.utils.transformers import ids_to_unique_names
+from ..utils.normalizers import normalize_sequence_name
+
+
+# Circular import protection
+def pulses_manager():
+    from ..plugin import PulsesManagerPlugin
+    return PulsesManagerPlugin
+
+
+enamldef SequenceSelector(Container): sel:
+    """ Simple sequence selector supporting filtering.
+
+    """
+    #: Reference to the sequence manager (aka: the plugin)
+    attr manager
+
+    #: Flag indicating whether or not to display the filter selection dialog.
+    attr display_filters : bool = True
+
+    #: Currently selected filter.
+    attr selected_filter = 'All'
+    selected_filter ::
+        if selected_filter:
+            sequences = manager.list_sequences(selected_filter)
+            if sequences:
+                self.sequences = sequences
+            else:
+                self.sequences = ['']
+        else:
+            self.selected_filter = 'All'
+            self.sequences = manager.list_sequences('All')
+
+    #: List of all sequences
+    attr sequences = manager.list_sequences('All')
+
+    #: Mappping between user understandable names and ids.
+    attr _sequence_map << (ids_to_unique_names(sequences, 
+                                               normalize_sequence_name,
+                                               preformatter=
+                                                       normalize_sequence_name)
+                           if sequences else {})
+
+    #: Currently selected sequence.
+    attr selected_sequence = _sequence_map[sorted(_sequence_map)[0]]
+
+    initialized :: 
+        if self.selected_filter:
+            sequences = manager.list_sequences(selected_filter)
+            if sequences:
+                self.sequences = sequences
+            else:
+                self.sequences = ['']
+        else:
+            self.selected_filter = 'All'
+            self.sequences = manager.list_sequences('All')
+
+    #TODO Refactor as _refresh() and and calling it
+
+    Conditional:
+        condition << display_filters
+        ObjectCombo:
+            items << sorted(manager.filters)
+            selected := selected_filter
+
+    QtListStrWidget: s_select:
+        items << sorted(_sequence_map)
+        selected_item ::
+            new_seq = change['value']
+            if new_seq:
+                sel.selected_sequence = _sequence_map[new_seq]

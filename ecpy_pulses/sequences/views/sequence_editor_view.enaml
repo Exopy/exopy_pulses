@@ -1,0 +1,491 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+from itertools import chain
+from functools import partial
+
+from atom.api import (Atom, Typed, Unicode, Constant, Bool, Value, Dict,
+                      Subclass, set_default)
+from enaml.core.declarative import d_, d_func
+from enaml.layout.api import vbox, hbox, align, spacer
+from enaml.widgets.api import (PushButton, Container, Label, Field,
+                               GroupBox, ScrollArea, Menu, Action, Stack,
+                               StackItem, Form, Notebook, Page, CheckBox,
+                               ObjectCombo, Splitter, SplitItem, HGroup)
+from enaml.core.api import Looper, Conditional, Include
+from enaml.workbench.core.core_plugin import CorePlugin
+from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
+                                            FieldFieldCompleterEditor)
+from ecpy.utils.widgets.qt_completers import QtLineCompleter
+from ecpy.utils.container_change import ContainerChange
+
+from ...utils.entry_eval import EVALUATER_TOOLTIP
+from ...pulse import Pulse
+from ...infos import SequenceInfos, PulseInfos
+from ..base_sequences import AbstractSequence
+
+#: TODO A Nice thing wold be to make the stock ecpy popuplistmenu more flexible.
+#: For the time beeing, this will suffice.
+enamldef PopupListMenu(Menu):
+    """Popup menu used to alter add, delete or move elements in the list.
+
+    """
+    #: Reference to the list being edited.
+    attr model
+
+    #: Index of the element being edited.
+    attr index : int
+
+    #: Dict mapping operation to function to use to perform it.
+    #: Possible entries are:
+    #: - 'add' : function to add an entry, receive index and 'before'/'after'
+    #: - 'remove' : function to remove an entry, receive the index and new pos.
+    #: - 'move' : function move an element receive the index and the new index.
+    attr operations : dict
+
+    Conditional: 
+        condition = bool('addP' in operations or 'addS' in operations)
+        Menu:
+            title = 'Add before'
+            Action:
+                text = 'Pulse'
+                visible = 'addP' in operations
+                triggered ::
+                    operations['addP'](index, 'before')
+            Action:
+                text = 'Sequence'
+                visible = 'addS' in operations
+                triggered ::
+                    operations['addS'](index, 'before')
+        Menu:
+            title = 'Add after'
+            Action:
+                text = 'Pulse'
+                visible = 'addP' in operations
+                triggered ::
+                    operations['addP'](index, 'after')
+            Action:
+                text = 'Sequence'
+                visible = 'addS' in operations
+                triggered ::
+                    operations['addS'](index, 'after')
+        Action:
+            separator = True
+
+    Action:
+        visible = 'remove' in operations
+        text = 'Delete'
+        triggered :: operations['remove'](index)
+    Action:
+        separator = True
+
+    Action:
+        visible = 'move' in operations and index != 0
+        text = 'Move to top'
+        triggered ::
+            operations['move'](index, 0)
+    Action:
+        visible = 'move' in operations and index != 0
+        text = 'Move up'
+        triggered ::
+            operations['move'](index, index - 1)
+    Action:
+        visible = 'move' in operations and index != len(model)-1
+        text = 'Move down'
+        triggered ::
+            operations['move'](index, index + 1)
+    Action:
+        visible = 'move' in operations and index != len(model)-1
+        text = 'Move to bottom'
+        triggered ::
+            operations['move'](index, len(model))
+ 
+
+enamldef ItemEditorButton(PushButton):
+    """A push button displayed on the right of an item in the editor.
+
+    This button generates a popup menu which is used to add, move and remove
+    task directly from the editor.
+
+    """
+    #: Refrence to the task this button is linked to.
+    attr item
+
+    #: Reference to the editor.
+    attr editor
+
+    visible << bool(editor.operations)
+
+    clicked::
+        items = editor.sequence.items
+        if editor.operations:
+            popup = PopupListMenu(model=items, index=items.index(item),
+                                  operations=editor.operations)
+            popup.popup()
+
+    constraints = [width == 15, height == 20]
+    font = 'bold 12pt Consolas'
+    text = '>'
+
+
+enamldef EmptyEditorButtons(Container): view:
+    """Button displayed when the edited list of items is empty.
+
+    """
+    #: Reference to the SequenceEditor using this button
+    attr editor
+
+    constraints = [hbox(pul, seq), pul.width == seq.width]
+
+    PushButton: pul:
+        text = "Add Pulse"
+        clicked ::
+            editor.sequence.add_child_item(0, Pulse())
+
+    PushButton: seq:
+        text = 'Add Sequence'
+        clicked ::
+            obj = core.invoke_command('ecpy.pulses.build_sequence',
+                                      {'parent_ui': editor,
+                                       'mode': 'ui',
+                                       'root': editor.sequence.root},
+                                       view)
+            if obj:
+                editor.sequence.add_child_item(0, obj)
+
+
+class SequenceEditor(Container):
+    """ A custom container to edit the items of a sequence.
+
+    """
+    #: Reference to the sequence that we are editing
+    sequence = d_(Typed(AbstractSequence))
+
+    #: Dictionary of operations used by to alter the children member list.
+    operations = d_(Constant())
+
+    padding = set_default(2)
+
+    core = d_(Value())
+    cache = d_(Value())
+
+    @d_func
+    def refresh(self):
+        """Ensure that all child views are visible and correctly parented.
+
+        """
+        self._no_relayout = True
+        for _, view in self._children_buttons.values():
+            view.set_parent(self)
+            view.refresh()
+        self._no_relayout = False
+        if not self._no_relayout:
+            self.request_relayout()
+
+    @d_func
+    def layout_constraints(self):
+        """Build the constraints based on the children member order.
+
+        """
+        items = self.sequence.items
+        if items:
+            children = self._children_buttons
+            rows = [hbox(children[o][0], children[o][1])
+                    for o in items]
+            return [vbox(*rows)] + [align('top', *children[o]) for o in items]
+        elif 'addP' in self.operations:
+            return [vbox(self._empty_button)]
+        else:
+            return []
+
+    def initialize(self):
+        """Overridden initializer to setup member observers.
+
+        """
+        # Populate the container.
+        self._populate()
+        super(Container, self).initialize()
+        self._setup_views(self.sequence.items)
+        self.sequence.observe('items', self._update_views)
+        self.sequence.observe('items_changed', self._update_views)
+
+
+    def destroy(self):
+        """Overriden destroyer to remove observers.
+
+        """
+        self.sequence.unobserve('items', self._update_views)
+        self.sequence.unobserve('items_changed', self._update_views)
+        super(Container, self).destroy()
+
+    # =========================================================================
+    # --- Private API ---------------------------------------------------------
+    # =========================================================================
+
+    #: Dictionary mappping the tasks found in the children member to the pair
+    #: button view used to edit them.
+    _children_buttons = Dict()
+
+    #: Flag preventing relayout. Used to avoid multiple relayouts during
+    #: refreshing
+    _no_relayout = Bool()
+
+    #: Push button used when no item exists.
+    _empty_button = Typed(EmptyEditorButtons)
+
+    def _populate(self):
+        """Populate the container based on the children member.
+
+        """
+
+        items = self.sequence.items
+        if items:
+            for item in items:
+                button = ItemEditorButton(item=item, editor=self)
+                view = self._instantiate_view(item, {'root':
+                                                     self.sequence.root})
+                self._children_buttons[item] = (button, view)
+                button.set_parent(self)
+                view.set_parent(self)
+
+            self.insert_children(None, chain(*self._children_buttons.values()))
+
+        elif 'addP' in self.operations:
+            self._empty_button.set_parent(self)
+            self._empty_button.show()
+
+    def _post_setattr_sequence(self, old, new):
+        old.unobserve('items', self._update_views)
+        old.unobserve('items_changed', self._update_views)
+        self._update_views(None)
+        new.observe('items', self._update_views)
+        new.observe('items_changed', self._update_views)
+            
+    def _update_views(self, change, root=True):
+        """Handler updating as needed the views when the children member is
+        updated.
+
+        Parameters
+        ----------
+        change : dict or `ContainerChange`
+            Payload of the received notification.
+
+        root : bool, optional
+            Flag indicating whether or not this is the root call or a recursive
+            one.
+
+        """
+        if isinstance(change, ContainerChange):
+
+            obj = change.obj
+            name = change.name
+
+            if change.collapsed:
+                for ch in change.collapsed:
+                    self._update_views(ch, False)
+
+            elif change.added:
+
+                # Add all of the children that were added:
+                for index, child in change.added:
+                    button = ItemEditorButton(item=child, editor=self)
+                    view = self._instantiate_view(child, {'root':
+                                                    self.sequence.root})
+                    self._children_buttons[child] = (button, view)
+                    button.set_parent(self)
+                    view.set_parent(self)
+                    if self.operations:
+                        button.show()
+                    view.show()
+
+            elif change.removed:
+                # Remove all of the children that were deleted:
+                for _, item in change.removed:
+                    self._remove_view(item)
+
+            elif change.moved and root:
+                # Simply need to relayout.
+                self.request_relayout()
+
+            # Make sure the _empty_button is correctly parented.
+            if self._children_buttons:
+                self._empty_button.set_parent(None)
+            elif 'addP' in self.operations:
+                self._empty_button.set_parent(self)
+                self._empty_button.show()
+
+        else:
+            # The whole member was replaced so we can just forget about its
+            # previous state. This should be a rare event.
+
+            # First we destroy all the buttons and views (not worth optimizing
+            # more).
+            for b, w in self._children_buttons.values():
+                b.destroy()
+                w.destroy()
+
+            self._empty_button.set_parent(None)
+
+            # Next we repopulate the container.
+            self._populate()
+
+
+    def _remove_view(self, item):
+        """Remove the view associated with a item.
+
+        """
+        button, view = self._children_buttons.pop(item)
+        button.destroy()
+        view.destroy()
+
+    def _default_operations(self):
+        """Build the operations dictionary used by the popup menu.
+
+        """
+        def addP(index, position):
+            """Handler for the add entry of the menu.
+
+            """
+            pulse = Pulse()
+            if pulse:
+                if position == 'after':
+                    index += 1
+                self.sequence.add_child_item(index, pulse)
+
+        def addS(index, position):
+            """Handler for the add entry of the menu.
+
+            """
+            obj = self.core.invoke_command('ecpy.pulses.build_sequence',
+                                      {'parent_ui': self,
+                                       'mode': 'ui',
+                                       'root': self.sequence.root}, self)
+            if obj:
+                if obj:
+                    if position == 'after':
+                        index += 1
+                    self.sequence.add_child_item(index, obj)
+
+        def move(old, new):
+            """Handler for the move entries of the menu.
+
+            """
+            self.sequence.move_child_item(old, new)
+
+        def remove(index):
+            """Handler for the remove entry of the menu.
+
+            """
+            self.sequence.remove_child_item(index)
+
+        return {'addP': addP, 'addS': addS,
+                'move': move, 'remove': remove}
+
+    def _default__empty_button(self):
+        """Button used to add the fist item.
+        """
+        return EmptyEditorButtons(editor=self)
+
+    # =========================================================================
+    # --- Old ViewManager -----------------------------------------------------
+    # =========================================================================
+    #: Dict mapping item names to their view.
+    views = Dict()
+
+    def _setup_views(self, children):
+        t_classes = set([item.item_id for item in children])
+        self.get_views(t_classes)
+
+    def _instantiate_view(self, item, attrs):
+        """ A helper function instantiating a item view.
+
+        Parameters
+        ----------
+        item : Item
+            Item instance for which to create a view.
+
+        attrs : dict
+            Dict of additional object which should be passed to the view if it
+            defines the attribute.
+
+        Returns
+        -------
+        view :
+            Created item view.
+
+        """
+        it_id = item.item_id
+
+        views = self.views
+        if it_id not in views:
+            self.get_views([it_id])
+        view = views[it_id]
+        kwargs = {'item': item, 'core': self.core, 'cache': self.cache}
+        for key in attrs:
+            if hasattr(view, key):
+                kwargs[key] = attrs[key]
+
+        return view(**kwargs)
+
+    def get_views(self, item_id):
+        """ Helper method updating the known views with the ones associated
+        with the given item_id.
+
+        """
+        cmd = 'ecpy.pulses.get_items_infos'
+        items, _ = self.core.invoke_command(cmd, {'items': item_id})
+        self.views.update({k: v.view for k, v in items.items()})
+
+
+enamldef FoldableSequenceEditor(Container):
+    """Sequence editor which can be masked.
+
+    """
+    #: Direct access to the sequence of the underlying editor.
+    alias sequence: editor.sequence
+
+    #: Reference to the editor's ecpy core plugin.
+    alias core : editor.core
+
+    #: Reference to the editor's ecpy cache dictionary.
+    alias cache : editor.cache
+
+    #: Reference to the dictionary with allowed operations.
+    alias operations : editor.operations
+
+    func refresh():
+        if stack.index == 0:
+            editor.refresh()
+
+    padding = 0
+
+    PushButton:
+        text = '-'
+        constraints = [height == 10]
+        clicked ::
+            ind = int(not stack.index)
+            stack.index = ind
+            self.text = '+' if ind else '-'
+
+    Stack: stack:
+        size_hint_mode = 'current'
+
+        StackItem:
+            SequenceEditor: editor:
+                name = 'sequence_editor'
+
+        StackItem:
+            Container:
+                padding = 2
+                Label:
+                    text = 'Folded'

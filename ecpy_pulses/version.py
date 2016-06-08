@@ -11,6 +11,7 @@
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
+
 from collections import namedtuple
 
 # The major release number. Differences in the major number indicate

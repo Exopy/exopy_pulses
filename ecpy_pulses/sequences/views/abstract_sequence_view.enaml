@@ -6,20 +6,22 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Extension package for the Ecpy application.
+"""
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
-import enaml
+from enaml.widgets.api import GroupBox
 
 
-def list_manifests():
-    """List the manifest that should be regsitered when the main Ecpy app is
-    started.
+enamldef AbstractSequenceView(GroupBox):
+    """Parent class of all base sequences.
 
     """
-    with enaml.imports():
-        from .manifest import PulsesManagerManifest
-    return [PulsesManagerManifest]
+    #: Item (Actually sequence) that owns this view
+    attr item
+
+    #: Reference to the root view in which this object is displayed.
+    attr root
+
+    title << '{} {}'.format(item.index, item.name)
+    padding = 2
+

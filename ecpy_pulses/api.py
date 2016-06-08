@@ -6,20 +6,13 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Extension package for the Ecpy application.
+"""Ecpy Pulses Plugin public interface.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-import enaml
 
-
-def list_manifests():
-    """List the manifest that should be regsitered when the main Ecpy app is
-    started.
-
-    """
-    with enaml.imports():
-        from .manifest import PulsesManagerManifest
-    return [PulsesManagerManifest]
+from .sequences.base_sequences import BaseSequence, RootSequence
+from .pulse import Pulse
+from .item import Item
