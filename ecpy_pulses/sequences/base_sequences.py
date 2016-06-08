@@ -12,20 +12,19 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
-from atom.api import (Int, Instance, Unicode, Dict, Bool, List,
-                      Signal, set_default)
 from itertools import chain
 from inspect import cleandoc
 from copy import deepcopy
 
+from atom.api import (Int, Instance, Unicode, Dict, Bool, List,
+                      Signal, set_default)
+from ecpy.utils.container_change import ContainerChange
 from ecpy.utils.atom_util import (tagged_members, member_to_pref,
                                   member_from_pref,
                                   update_members_from_preferences)
 
 from ..contexts.base_context import BaseContext
 from ..utils.entry_eval import eval_entry
-from ecpy.utils.container_change import ContainerChange
 from ..item import Item
 from ..pulse import Pulse
 
@@ -40,7 +39,6 @@ class AbstractSequence(Item):
     inherits from Sequence which supports insertion/deletion/displacement).
 
     """
-    # --- Public API ----------------------------------------------------------
 
     #: Name of the sequence (help make a sequence more readable)
     name = Unicode().tag(pref=True)
@@ -50,14 +48,14 @@ class AbstractSequence(Item):
 
     #: Signal emitted when the list of items in this sequence changes. The
     #: payload will be a ContainerChange instance.
-    #:
-    #:
-    #:
     items_changed = Signal().tag(child_notifier='items')
 
     #: Dict of variables whose scope is limited to the sequence. Each key/value
     #: pair represents the name and definition of the variable.
     local_vars = Dict(Unicode()).tag(pref=True)
+
+    #: Evaluated entries by the eval_entries method
+    evaluated_entries_cache = Dict(Unicode())
 
     def cleanup_cache(self):
         """ Clear all internal caches after successfully compiling the sequence
@@ -305,7 +303,7 @@ class BaseSequence(AbstractSequence):
 
         res, pulses = self._compile_items(root_vars, local_namespace,
                                           missings, errors)
-      
+
         if res:
             if self.time_constrained:
                 # Check if start, stop and duration of sequence are compatible.
@@ -408,7 +406,6 @@ class BaseSequence(AbstractSequence):
         notification = ContainerChange(obj=self, name='items',
                                        added=[(index, child)])
         self.items_changed(notification)
-
 
     def move_child_item(self, old, new):
         """Move a child item.

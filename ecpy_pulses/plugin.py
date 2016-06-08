@@ -6,29 +6,28 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Plugin centralizing the collection and management of Items (Sequences, 
+Shapes...).
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
 import os
 import logging
 import enaml
+from inspect import cleandoc
 from importlib import import_module
-from atom.api import (Dict, List, Unicode, Typed, ForwardTyped)
 
 from watchdog.observers import Observer
-from inspect import cleandoc
-
+from atom.api import (Dict, List, Unicode, Typed, ForwardTyped)
 from ecpy.utils.plugin_tools import (HasPreferencesPlugin, ExtensionsCollector,
                                      DeclaratorsCollector)
 from ecpy.utils.watchdog import SystematicFileUpdater
+
 from .pulse import Pulse
 from .filters.base_filters import ItemFilter
 from .utils.sequences_io import load_sequence_prefs
-
 from .declarations import (Sequence, Sequences, SequenceConfig,
                            SequenceConfigs, Contexts, Context, Shapes, Shape)
 from .shapes.modulation import Modulation
@@ -61,6 +60,7 @@ def workspace():
 
 class PulsesManagerPlugin(HasPreferencesPlugin):
     """Plugin responsible for managing pulses.
+
     """
     #: Folders containings templates which should be loaded.
     templates_folders = List().tag(pref=True)
@@ -115,44 +115,37 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._filters = ExtensionsCollector(workbench=self.workbench,
                                             point=FILTERS_POINT,
                                             ext_class=ItemFilter)
-        self._filters.start()
 
         self._configs = DeclaratorsCollector(workbench=self.workbench,
                                              point=CONFIGS_POINT,
                                              ext_class=(SequenceConfig,
                                                         SequenceConfigs))
-        self._configs.start()
 
         self._sequences = DeclaratorsCollector(workbench=self.workbench,
                                                point=SEQUENCES_POINT,
                                                ext_class=(Sequences, Sequence))
-        self._sequences.start()
 
         self._contexts = DeclaratorsCollector(workbench=self.workbench,
                                               point=CONTEXTS_POINT,
                                               ext_class=(Contexts, Context))
-        self._contexts.start()
 
         self._shapes = DeclaratorsCollector(workbench=self.workbench,
                                             point=SHAPES_POINT,
                                             ext_class=(Shapes, Shape))
+        #: Bind the observers before strating the collectors so that they will
+        #: update thelists of known seq,configs, filters, contexts...
+        self._bind_observers()
+
+        self._sequences.start()
+        self._configs.start()
+        self._filters.start()
+        self._contexts.start()
         self._shapes.start()
-
-        self.contexts = list(self._contexts.contributions.keys())
-        self.filters = list(self._filters.contributions.keys())
-        self.shapes = list(self._shapes.contributions.keys())
-
-        #: Last step: refresh template sequences from the template folder
-        #: and start observing that folder so that we will refresh it again
-        #: if a file will be added.
-        self._refresh_template_sequences_data()
 
         #: Populate the Pulse Info Object
         self._pulse_info = PulseInfos()
         self._pulse_info.cls = Pulse
         self._pulse_info.view = PulseView
-
-        self._bind_observers()
 
         core.invoke_command('ecpy.app.errors.exit_error_gathering')
 
@@ -210,14 +203,12 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                        self._sequences.contributions.items()
                        if key in sequences})
 
-        # TODO Return InfoObject
         templ = {key: val for key, val in
                  self._template_sequences_infos.items()
                  if key in sequences}
 
-
         for t_name, t_info in templ.items():
-            #: Load Metadata if it was not alredy loaded
+            #: Load metadata if it was not alredy loaded
             if not t_info.metadata['loaded']:
                 config, doc = load_sequence_prefs(t_info.metadata['path'])
                 t_info.metadata['config'] = config
@@ -484,7 +475,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             conf_cls = config_infos.cls
             conf_view = config_infos.view
             t_config, t_doc = load_sequence_prefs(templates[sequence_id])
-            print(conf_cls)
             conf = conf_cls(manager=self,
                             template_config=t_config,
                             template_doc=t_doc,
@@ -542,12 +532,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                         " and returned zero elements.")
             return []
 
-    def report(self):
-        """ Give access to the failures which happened at startup.
-
-        """
-        return self._failed
-
     # --- Private API ---------------------------------------------------------
 
     #: Sequences implemented in Python
@@ -574,13 +558,10 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
     #: Configuration object used to insert new sequences in existing ones.
     _configs = Typed(DeclaratorsCollector)
 
-    # Dict holding the list of failures which happened during loading
-    _failed = Dict()
-
     # Watchdog observer
     _observer = Typed(Observer, ())
 
-    def _refresh_template_sequences_data(self):
+    def _refresh_known_template_sequences(self):
         """ Refresh the known template sequences.
 
         """
@@ -627,161 +608,32 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._template_sequences_infos = templates_infos
 
     def _update_filters(self, change):
-        """ Place holder for a future filter discovery function
+        """ Update the list of known filters.
 
         """
-        self.filters = list(change['value'].keys())
+        self.filters = list(self._filters.contributions.keys())
 
-    def _explore_package(self, pack, pack_path, failed, exceptions):
-        """ Explore a package.
-
-        Parameters
-        ----------
-        pack : str
-            The package name relative to the packages pulses.
-            (ex : sequences)
-
-        pack_path : unicode
-            Path of the package to explore
-
-        failed : dict
-            A dict in which failed imports will be stored.
-
-        exceptions: list
-            Names of the modules which should not be loaded.
-
-        Returns
-        -------
-        modules : list
-            List of string indicating modules which can be imported
-
-        v_modules : list
-            List of string indicating enaml modules which can be imported
+    def _update_known_contexts(self, change):
+        """ Update the list of known contexts.
 
         """
-        if not os.path.isdir(pack_path):
-            log = logging.getLogger(__name__)
-            mess = '{} is not a valid directory.({})'.format(pack,
-                                                             pack_path)
-            log.error(mess)
-            failed[pack] = mess
-            return [], []
+        self.contexts = list(self._contexts.contributions.keys())
 
-        modules = sorted(pack + '.' + m[:-3] for m in os.listdir(pack_path)
-                         if (os.path.isfile(os.path.join(pack_path, m)) and
-                             m.endswith('.py')))
-
-        try:
-            modules.remove(pack + '.__init__')
-        except ValueError:
-            log = logging.getLogger(__name__)
-            mess = cleandoc('''{} is not a valid Python package (miss
-                __init__.py).'''.format(pack))
-            log.error(mess)
-            failed[pack] = mess
-            return [], []
-
-        # Remove modules which should not be imported
-        for mod in modules[:]:
-            if mod in exceptions:
-                modules.remove(mod)
-
-        # Look for enaml definitions
-        v_path = os.path.join(pack_path, 'views')
-        if not os.path.isdir(v_path):
-            log = logging.getLogger(__name__)
-            mess = '{}.views is not a valid directory.({})'.format(pack,
-                                                                   v_path)
-            log.error(mess)
-            failed[pack] = mess
-            return [], []
-
-        v_modules = sorted(pack + '.views.' + m[:-6]
-                           for m in os.listdir(v_path)
-                           if (os.path.isfile(os.path.join(v_path, m)) and
-                               m.endswith('.enaml')))
-
-        if not os.path.isfile(os.path.join(pack_path, '__init__.py')):
-            log = logging.getLogger(__name__)
-            mess = cleandoc('''{} is not a valid Python package (miss
-                __init__.py).'''.format(pack + '.views'))
-            log.error(mess)
-            failed[pack] = mess
-            return [], []
-
-        for mod in v_modules[:]:
-            if mod in exceptions:
-                v_modules.remove(mod)
-
-        return modules, v_modules
-
-    def _explore_modules(self, modules, founds, mod_var, failed):
-        """ Explore a list of modules, looking for tasks.
-
-        Parameters
-        ----------
-        modules : list
-            The list of modules to explore
-
-        found : dict
-            A dict in which discovered objects will be stored.
-
-        mod_var : str
-            Name of the module variable to look for.
-
-        failed : list
-            A dict in which failed imports will be stored.
+    def _update_known_sequences(self, change):
+        """ Update the list of known sequences.
 
         """
-        for mod in modules:
-            try:
-                m = import_module('.' + mod, MODULE_ANCHOR)
-            except Exception as e:
-                log = logging.getLogger(__name__)
-                mess = 'Failed to import {} : {}'.format(mod, e)
-                log.error(mess)
-                failed[mod] = mess
-                continue
+        self.sequences = list(self._sequences.contributions.keys())
 
-            if hasattr(m, mod_var):
-                var = getattr(m, mod_var)
-                if isinstance(var, list):
-                    founds.update({self._normalise_name(found.__name__): found
-                                  for found in var})
-                else:
-                    founds.update(var)
+        #: Always refresh the list of known templates after refreshing
+        #: sequences, as we could have just added a template.
+        self._refresh_known_template_sequences()
 
-    def _explore_views(self, modules, views, mod_var, failed):
-        """ Explore a list of modules, looking for views.
-
-        Parameters
-        ----------
-        modules : list
-            The list of modules to explore
-
-        views : dict
-            A dict in which discovered views will be stored.
-
-        mod_var : str
-            Name of the module variable to look for.
-
-        failed : list
-            A list in which failed imports will be stored.
+    def _update_known_shapes(self, change):
+        """ Update the list of known shapes.
 
         """
-        for mod in modules:
-            try:
-                with enaml.imports():
-                    m = import_module('.' + mod, MODULE_ANCHOR)
-            except Exception as e:
-                log = logging.getLogger(__name__)
-                mess = 'Failed to import {} : {}'.format(mod, e)
-                log.error(mess)
-                failed[mod] = mess
-                continue
-
-            if hasattr(m, mod_var):
-                views.update(getattr(m, mod_var))
+        self.shapes = list(self._shapes.contributions.keys())
 
     def _bind_observers(self):
         """ Setup the observers for the plugin.
@@ -789,13 +641,19 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         """
         for folder in self.templates_folders:
             handler = SystematicFileUpdater(
-                self._refresh_template_sequences_data)
+                self._refresh_known_template_sequences)
             self._observer.schedule(handler, folder, recursive=True)
 
         self._observer.start()
 
-        self.observe('templates_folders', self._update_templates)
+        self._contexts.observe('contributions', self._update_known_contexts)
+        self._shapes.observe('contributions', self._update_known_shapes)
+        self._sequences.observe('contributions', self._update_known_sequences)
         self._filters.observe('contributions', self._update_filters)
+
+        self.observe('templates_folders', self._update_templates)
+        print(self.filters)
+        print(self._update_filters)
 
     def _unbind_observers(self):
         """ Remove the observers for the plugin.
@@ -816,6 +674,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         for folder in self.templates_folders:
             handler = SystematicFileUpdater(self._refresh_template_tasks)
             self._observer.schedule(handler, folder, recursive=True)
+
+        self._refresh_known_template_sequences()
 
     @staticmethod
     def _normalise_name(name):

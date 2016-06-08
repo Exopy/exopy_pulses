@@ -12,7 +12,6 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
 from atom.api import Unicode, set_default
 
 from .base_sequences import BaseSequence
@@ -23,8 +22,12 @@ class ConditionalSequence(BaseSequence):
     """ Sequence whose child items will be included only if a condition is met.
 
     """
+    #: Condition to be evaluated. If this evaluates to true then sub-items will
+    #: be executed
     condition = Unicode().tag(pref=True)
 
+    #: Vars that can be referenced in condition. Those are provided by other 
+    #: items in the sequence.
     linkable_vars = set_default(['condition'])
 
     def compile_sequence(self, root_vars, sequence_locals, missings, errors):

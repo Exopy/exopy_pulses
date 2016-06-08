@@ -12,7 +12,6 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
 from enaml.layout.api import hbox, vbox
 from enaml.widgets.api import (Label, ObjectCombo, Form)
 from enaml.core.api import Conditional, Include

@@ -12,7 +12,6 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
 from atom.api import Value, Subclass, Unicode, Property, set_default
 from enaml.core.api import d_func, d_
 
@@ -104,9 +103,10 @@ class MetadataItemFilter(ItemFilter):
     """ Filter keeping only the items with the right class attribute.
 
     """
-
+    #: Attribute name that the filter should have to be selected
     meta_key = d_(Unicode())
 
+    #: Value that the attribute should have to be selected
     meta_value = d_(Value())
 
     @d_func

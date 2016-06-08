@@ -28,11 +28,10 @@ from ecpy.app.preferences.api import Preferences
 from ecpy.app.states.api import State
 from ecpy.app.dependencies.api import BuildDependency, RuntimeDependencyAnalyser
 from ecpy.utils.plugin_tools import make_handler
-
 from ecpy.app.errors.widgets import (ErrorsDialog, BasicErrorsDisplay)
 from ecpy.measure.workspace.checks_display import ChecksDisplay
-from .utils.flatten_config import flatten_config
 
+from .utils.flatten_config import flatten_config
 from .widgets.building import BuilderView, ContextBuilderView
 from .utils.sequences_io import load_sequence_prefs
 from .sequences.base_sequences import (AbstractSequence, BaseSequence,
@@ -43,10 +42,8 @@ from .sequences.views.base_sequence_view import (BaseSequenceView,
 from .sequences.views.conditional_view import ConditionalSequenceView
 from .sequences.template_sequence import TemplateSequence
 from .sequences.views.template_view import TemplateSequenceView
-
 from .filters.base_filters import (ItemFilter, SequenceFilter, TemplateFilter,
                                    SubclassItemFilter, MetadataItemFilter)
-
 from .declarations import (Sequences, Sequence, SequenceConfigs, 
                            SequenceConfig, Contexts, Context, Shapes, Shape)
 
@@ -81,22 +78,6 @@ def workspace_factory(workbench):
 #    manager = event.workbench.get_plugin('ecpy')
 #    from .manager_view import TaskManagerView
 #    TaskManagerView(manager=manager).show()
-
-def show_starting_errors(event):
-    """ Handler for the 'ecpy.pulses.show_errors' command.
-
-    """
-    manager = event.workbench.get_plugin('ecpy.pulses')
-    ui = event.workbench.get_plugin('enaml.workbench.ui')
-    rep = manager.report()
-    if rep:
-        ChecksDisplay(ui.window, title='Pulses manager start up errors',
-                      errors=manager.report()).exec_()
-    else: #TODO ???? should be a dialog
-        #BasicErrorsDisplay(ui.window, #title='Pulses manager start up errors',
-        #              errors=manager.report()).exec_()
-        ChecksDisplay(ui.window, title='Pulses manager start up errors',
-                      errors=manager.report()).exec_()
 
 def build_sequence(event):
     """ Handler for the 'ecpy.pulses.build_sequence' command.
@@ -599,10 +580,6 @@ enamldef PulsesManagerManifest(PluginManifest):
 #            description = SHOW_MANAGER_DESCRIPTION
 #            handler = show_manager
         Command:
-            id = 'ecpy.pulses.show_starting_errors'
-            description = SHOW_ERRORS_DESCRIPTION
-            handler = show_starting_errors
-        Command:
             id = 'ecpy.pulses.get_sequences_infos'
             description = GET_SEQUENCES_INFOS_DESCRIPTION
             handler = make_handler(PLUGIN_ID, 'get_sequences_infos')
@@ -664,10 +641,6 @@ enamldef PulsesManagerManifest(PluginManifest):
 #            path = '/tasks/show_manager'
 #            label = 'Manager'
 #            command = 'ecpy.task_manager.show_manager'
-        ActionItem:
-            path = 'tools/pulses/show_errors'
-            label = 'Start up errors'
-            command = 'ecpy.pulses.show_starting_errors'
         ActionItem:
                 path = '/workspace/pulses'
                 label = 'Pulses'

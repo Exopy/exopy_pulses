@@ -13,14 +13,14 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 
+from future.utils import python_2_unicode_compatible
 from traceback import format_exc
 from inspect import cleandoc
 
-from future.utils import python_2_unicode_compatible
 from atom.api import Unicode, Dict, Property
 from enaml.core.api import d_, d_func
-from ecpy.utils.declarator import (Declarator, GroupDeclarator, import_and_get)
 
+from ecpy.utils.declarator import (Declarator, GroupDeclarator, import_and_get)
 from .infos import (SequenceInfos, ConfigInfos, ContextInfos, ShapeInfos)
 
 
@@ -38,7 +38,6 @@ class Sequence(Declarator):
     """Declarator used to contribute a Sequence
 
     """
-
     #: path of the sequence object. Paths should be dot separed and the class
     #: name preceded by ':'.
     #: The path to any parent GroupDeclarator will be prepended to it.

@@ -6,15 +6,18 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Root Config objects to be used by ecpy_pulses.
+
+Holds the AbstractConfig, which is the base class for all config objects in
+ecpy_pulses, and SequenceConfig, which is the base config object for all 
+sequences.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
-from atom.api import (Atom, Unicode, Bool, Subclass, ForwardTyped, Typed, Dict)
 from inspect import getdoc, cleandoc
+from atom.api import (Atom, Unicode, Bool, Subclass, ForwardTyped, Typed, Dict)
 
 from ..item import Item
 
@@ -26,10 +29,10 @@ def pulses_manager():
 
 
 class AbstractConfig(Atom):
-    """ Base class for pulse configurer.
+    """Root class for all config objects.
 
     """
-    #: Pulses manager, necessary to retrieve item(pulse/sequence)
+    #: Ecpy_pulses manager, necessary to retrieve item(pulse/sequence)
     #: implementations.
     manager = ForwardTyped(pulses_manager)
 
@@ -48,8 +51,8 @@ class AbstractConfig(Atom):
     def check_parameters(self, change):
         """Check if enough parameters have been provided to build the item.
 
-        This methodd should fire the ready event each time it is called
-        sending True if everything is allright, False otherwise.
+        This method should set the ready flag every time it is called, setting
+        it to True if everything is allright, False otherwise.
 
         """
         err_str = '''This method should be implemented by subclasses of
@@ -74,7 +77,7 @@ class AbstractConfig(Atom):
 
 
 class SequenceConfig(AbstractConfig):
-    """
+    """Root class for all Sequence Config Objects.
 
     """
 

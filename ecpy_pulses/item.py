@@ -14,16 +14,20 @@ from __future__ import (division, unicode_literals, print_function,
 
 
 from atom.api import (Int, Unicode, List, Bool, Float, Enum, ForwardTyped,
-                      Value, Constant)
-
+                      Value, Constant, Dict)
+from ecpy.utils.atom_util import HasPrefAtom
 from .utils.entry_eval import eval_entry
 
-from ecpy.utils.atom_util import HasPrefAtom
 
 
 def sequence():
     from .sequences.base_sequences import BaseSequence
     return BaseSequence
+
+
+def root_sequence():
+    from .sequences.base_sequences import RootSequence
+    return RootSequence
 
 
 #: Id used to identify dependencies type.
@@ -53,7 +57,7 @@ class Item(HasPrefAtom):
     parent = ForwardTyped(sequence)
 
     #: Reference to the root sequence.
-    root = Value()
+    root = ForwardTyped(root_sequence)
 
     #: Boolean representing whever this item has a root sequence or not
     has_root = Bool(False)
@@ -116,6 +120,9 @@ class Item(HasPrefAtom):
 
         """
         # Flag indicating good completion.
+
+        #: TODO Should only do this at the right and needed times
+
         success = True
 
         # Reference to the sequence context.
@@ -209,6 +216,7 @@ class Item(HasPrefAtom):
 
         """
         if new is None:
+            self.has_root = False
             return
 
         self.has_root = True

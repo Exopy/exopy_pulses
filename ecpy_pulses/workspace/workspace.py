@@ -98,17 +98,17 @@ class SequenceEditionSpace(Workspace):
             self.state = state
             plugin.workspace_state = state
 
-        # Add handler to the root logger to display messages in panel.
+        #: Add handler to the root logger to display messages in panel.
         core = self.workbench.get_plugin(u'enaml.workbench.core')
         cmd = u'ecpy.app.logging.add_handler'
         self.log_model = core.invoke_command(cmd,
                                              {'id': LOG_ID, 'mode': 'ui'},
                                              self)[0]
 
-        # Create content.
+        #: Create content.
         self.content = SequenceSpaceContent(workspace=self)
 
-        # Contribute menus.
+        #: Contribute menus.
         self.workbench.register(SequenceSpaceMenu())
 
     def stop(self):

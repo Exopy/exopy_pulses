@@ -6,19 +6,18 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Declaration for the view used by TemplateConfig.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
 from inspect import cleandoc
 from textwrap import fill
 
 from enaml.core.api import Conditional
-from enaml.widgets.api import (Container, MultilineField, Field, GroupBox,
-                               Form, Label, CheckBox, RadioButton, PushButton)
+from enaml.widgets.api import (MultilineField, Field, GroupBox, Form, Label,
+                               CheckBox, RadioButton, PushButton)
 from enaml.layout.api import hbox, vbox, spacer
 
 from .base_config_views import AbstractConfigView

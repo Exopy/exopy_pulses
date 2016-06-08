@@ -12,10 +12,10 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+from inspect import cleandoc
 
 from atom.api import (Enum, Unicode, Bool, Float, Property, Tuple, List,
                       Constant)
-from inspect import cleandoc
 
 from ecpy.utils.atom_util import HasPrefAtom
 

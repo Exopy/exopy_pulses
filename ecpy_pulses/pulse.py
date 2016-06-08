@@ -6,18 +6,17 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Definition of a pulse, the elementary building block of sequences.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
-from atom.api import (Instance, Unicode, Enum, Typed, Property, set_default)
 import numpy as np
-
+from atom.api import (Unicode, Enum, Typed, Property, set_default)
 from ecpy.utils.atom_util import (member_from_pref,
                                   update_members_from_preferences)
+
 from .shapes.base_shapes import AbstractShape
 from .shapes.modulation import Modulation
 from .item import Item
@@ -27,8 +26,6 @@ class Pulse(Item):
     """ Represent a pulse to perfom during a sequence.
 
     """
-    # --- Public API ----------------------------------------------------------
-
     #: The kind of pulse can be either logical or ananlogical.
     kind = Enum('Logical', 'Analogical').tag(pref=True)
 

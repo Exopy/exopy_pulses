@@ -6,17 +6,19 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Definition of the template config.
+
+Template config is used to gather required infomation to add a templateSequence
+to the sequence beeing edited.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
-from atom.api import (Unicode, Value, Bool, Typed)
 from copy import deepcopy
 from ast import literal_eval
 
+from atom.api import (Unicode, Value, Bool, Typed)
 from ecpy.utils.atom_util import update_members_from_preferences
 
 from .base_config import AbstractConfig
@@ -76,12 +78,11 @@ class TemplateConfig(AbstractConfig):
         """
         config = self.template_config
 
-        #: Here we set the item id of the "root" of the sequence (that
-        #: needed to collect the right dependency). If we NOT merging,
-        #: then the template will be added as a TemplateSequence (and
-        #: therefore we need a TemplateSequence as dependecy). If we
-        #: ARE merging, then the root is a BaseSequence holding every-
-        #: thing and we must collect it.
+        #: Here we set the item id of the "root" of the sequence (that needed
+        #: to collect the right dependency). If we are NOT merging, then the
+        #: template will be added as a TemplateSequence (and therefore we need
+        #: a TemplateSequence as dependecy). If we ARE merging , then the root
+        #: is a BaseSequence holding everything and we must collect it.
         if not self.merge:
             config['item_id'] = "ecpy_pulses.__template__"
         else:
@@ -136,13 +137,13 @@ class TemplateConfig(AbstractConfig):
 
             return seq
 
+    # --- Private API ---------------------------------------------------------
+
     def _post_setattr_template_name(self, old, new):
         """ Observer notifying that the configurer is ready to build.
 
         """
         self.ready = bool(new)
-
-    # --- Private API ---------------------------------------------------------
 
     def _apply_mapping(self, seq):
         """ Apply the user defined mapping of channels for the pulses.
