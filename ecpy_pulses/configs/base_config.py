@@ -6,11 +6,7 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Root Config objects to be used by ecpy_pulses.
-
-Holds the AbstractConfig, which is the base class for all config objects in
-ecpy_pulses, and SequenceConfig, which is the base config object for all 
-sequences.
+"""Base classes for sequence configurers.
 
 """
 from __future__ import (division, unicode_literals, print_function,
@@ -80,7 +76,6 @@ class SequenceConfig(AbstractConfig):
     """Root class for all Sequence Config Objects.
 
     """
-
     #: Name of the sequence used to make the sequence easier to read.
     sequence_name = Unicode()
 
@@ -92,6 +87,9 @@ class SequenceConfig(AbstractConfig):
         self.sequence_doc = getdoc(self.sequence_class).replace('\n', ' ')
 
     def build_sequence(self):
+        """Build the selected sequence.
+
+        """
         return self.sequence_class(name=self.sequence_name)
 
     def _post_setattr_sequence_name(self, old, new):

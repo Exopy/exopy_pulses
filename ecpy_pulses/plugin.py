@@ -518,8 +518,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             template_sequences_data = self._template_sequences_data.copy() #TODO To contribution
 
             try:
-                template_sequences_data.pop('Pulse')
-                template_sequences_data.pop('ecpy_pulses.RootSequence')
+                sequences.pop('ecpy_pulses.RootSequence')
             except KeyError:
                 pass
             return s_filter.filter_items(sequences,

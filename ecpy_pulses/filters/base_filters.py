@@ -35,19 +35,19 @@ class ItemFilter(Declarator):
 
         Parameters
         ----------
-            py_items : dict
-                Dictionary of known python items as name : class
+        py_items : dict
+            Dictionary of known python items as id : infos
 
-            template_sequences : dict
-                Dictionary of known templates as name : path
+        template_sequences : dict
+            Dictionary of known templates as id : path
 
         Returns
         -------
-            task_names : list(str)
-                List of the name of the task matching the filters criteria.
+        items_names : list(str)
+            List of the name of the items matching the filters criteria.
 
         """
-        items = list(py_sequences.keys()) + list(template_sequences.keys())
+        items = list(py_sequences) + list(template_sequences)
         return items
 
 
@@ -78,23 +78,18 @@ class SubclassItemFilter(ItemFilter):
 
     """
 
-    # Class attribute to which task will be compared.
+    #: Ancestor class of the item to keep.
     subclass = d_(Subclass(Item))
 
     @d_func
     def filter_items(self, py_sequences, template_sequences):
-        """
+        """Filter based on the specified item subclass.
+
         """
         sequences = []
         for name, t_class in py_sequences.items():
             if issubclass(t_class, self.subclass):
                 sequences.append(name)
-
-        try:
-            sequences.remove('Pulse')
-            sequences.remove('RootSequence')
-        except ValueError:
-            pass
 
         return sequences
 
@@ -103,36 +98,29 @@ class MetadataItemFilter(ItemFilter):
     """ Filter keeping only the items with the right class attribute.
 
     """
-    #: Attribute name that the filter should have to be selected
+    #: Metadata key on which the filtering is performed.
     meta_key = d_(Unicode())
 
-    #: Value that the attribute should have to be selected
+    #: Metadata value on which the filtering is performed.
     meta_value = d_(Value())
 
     @d_func
     def filter_items(self, py_sequences, template_sequences):
-        """
+        """Filter keeping only the items whose metadata fit the provided
+        key/value pair.
 
         """
         sequences = []
-        attr_name = self.meta_key
-        attr_val = self.meta_value
-        for name, t_class in py_sequences.items():
-            if (hasattr(t_class, attr_name) and
-                    getattr(t_class, attr_name) == attr_val):
+        for name, s_infos in py_sequences.items():
+            if (self.meta_key in s_infos.metadata and
+                    s_infos.metadat[self.meta_key] == self.meta_val):
                 sequences.append(name)
-
-        try:
-            sequences.remove('Pulse')
-            sequences.remove('RootSequence')
-        except ValueError:
-            pass
 
         return sequences
 
 
 class GroupItemFilter(MetadataItemFilter):
-    """Filter keeping only the items from the right groupm which is a
+    """Filter keeping only the items from the right group which is a
     metadata property of those items.
 
     """

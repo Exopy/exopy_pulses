@@ -6,21 +6,22 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Root declarations for the Config View.
+"""Base classes for Sequence configuration views.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+
+from enaml.layout.api import hbox, vbox
 from enaml.widgets.api import (Container, MultilineField, Field, GroupBox,
-                               Form, Label)
+                               Label)
 
 
-enamldef AbstractConfigView(Form):
+enamldef AbstractConfigView(Container):
     """Base View for a config from which any other config must inherit
 
     """
-
     #: Model whose properties are edited by this Config. This most likely will
     #: be a class subclass of Item.
     attr model
@@ -30,14 +31,17 @@ enamldef SequenceConfigView(AbstractConfigView): main:
     """Config View of a simple config
 
     """
-    Label:
+    constraints = [vbox(hbox(s_lab, s_val), doc)]
+
+    Label: s_lab:
         text = 'Sequence name'
-    Field:
+    Field: s_val:
         text >> model.sequence_name
         submit_triggers = ['lost_focus', 'return_pressed', 'auto_sync']
 
-    GroupBox:
+    GroupBox: doc:
         title = 'Description'
+        padding = 2
         MultilineField:
             hug_height = 'weak'
             read_only = True

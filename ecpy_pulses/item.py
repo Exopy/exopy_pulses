@@ -16,8 +16,8 @@ from __future__ import (division, unicode_literals, print_function,
 from atom.api import (Int, Unicode, List, Bool, Float, Enum, ForwardTyped,
                       Value, Constant, Dict)
 from ecpy.utils.atom_util import HasPrefAtom
-from .utils.entry_eval import eval_entry
 
+from .utils.entry_eval import eval_entry
 
 
 def sequence():
