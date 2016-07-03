@@ -12,4 +12,5 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-pytest_plugins = str('ecpy.testing.fixtures'),
+pytest_plugins = (str('ecpy.testing.fixtures'),
+                  str('ecpy_pulses.testing.fixtures'))

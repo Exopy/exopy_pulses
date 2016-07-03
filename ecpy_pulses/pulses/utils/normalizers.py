@@ -12,7 +12,7 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
+# XXXX should use the transformers from ecpy
 # TODO would be nicer with regex but I never managed to get the regex right.
 def normalize_sequence_name(name):
     """Normalize names.
@@ -21,7 +21,7 @@ def normalize_sequence_name(name):
     For templates, only the extension file is removed.
 
     """
-    if name.endswith('.sequence.ini'):
+    if name.endswith('.temp_pulse.ini'):
         name, _, _ = name.rsplit('.', 2)
         return name.capitalize()
 
@@ -68,10 +68,6 @@ def normalize_context_name(name):
     For templates, only the extension file is removed.
 
     """
-    if name.endswith('.context.ini'):
-        name, _, _ = name.rsplit('.', 2)
-        return name.capitalize()
-
     if name.endswith('Context'):
         name = name[:-7] + '\0'
 
@@ -92,7 +88,7 @@ def normalize_context_name(name):
                         aux += ' ' + char.lower()
                     else:
                         aux += ' ' + char
-                elif i +1 < len(name):
+                elif i + 1 < len(name):
                     if name[i+1].islower():
                         aux += ' ' + char.lower()
                     else:

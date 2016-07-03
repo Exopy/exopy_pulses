@@ -19,9 +19,7 @@ from copy import deepcopy
 from atom.api import (Int, Instance, Unicode, Dict, Bool, List,
                       Signal, set_default, Typed)
 from ecpy.utils.container_change import ContainerChange
-from ecpy.utils.atom_util import (tagged_members, member_to_pref,
-                                  member_from_pref,
-                                  update_members_from_preferences)
+from ecpy.utils.atom_util import (update_members_from_preferences)
 
 from ..contexts.base_context import BaseContext
 from ..utils.entry_eval import eval_entry
@@ -254,7 +252,6 @@ class BaseSequence(AbstractSequence):
     #: be computed.
     time_constrained = Bool().tag(pref=True)
 
-
     def evaluate_sequence(self, root_vars, sequence_locals, missings, errors):
         """ Evaluate the sequence vars and compile the list of pulses.
 
@@ -466,13 +463,6 @@ class BaseSequence(AbstractSequence):
         self.items.insert(index, child)
         child.parent = self
 
-        child.observe('linkable_vars', self.root._update_linkable_vars)
-        if isinstance(child, BaseSequence):
-            child.observe('_last_index', self._item_last_index_updated)
-
-        self._last_index += 1
-        child.index = self._last_index
-
         # In the absence of a root item do nothing else than inserting the
         # child.
         if self.has_root:
@@ -486,7 +476,7 @@ class BaseSequence(AbstractSequence):
             if isinstance(child, BaseSequence):
                 child.observe('_last_index', self._item_last_index_updated)
 
-        self._recompute_indexes()
+            self._recompute_indexes()
 
         #: Wrap it up and notify the rest of the world, if it is listening.
         notification = ContainerChange(obj=self, name='items',
@@ -508,7 +498,8 @@ class BaseSequence(AbstractSequence):
         child = self.items.pop(old)
         self.items.insert(new, child)
 
-        self._recompute_indexes()
+        if self.has_root:
+            self._recompute_indexes()
 
         notification = ContainerChange(obj=self, name='items',
                                        moved=[(old, new, child)])
@@ -525,18 +516,19 @@ class BaseSequence(AbstractSequence):
         """
         child = self.items.pop(index)
 
-        child.unobserve('linkable_vars', self.root._update_linkable_vars)
         with child.suppress_notifications():
             del child.root
             del child.parent
 
-            child.root = None
-            child.parent = None
             child.index = 0
-        if isinstance(child, BaseSequence):
-            child.unobserve('_last_index', self._item_last_index_updated)
 
-        self._recompute_indexes()
+        if self.has_root:
+            child.unobserve('linkable_vars', self.root._update_linkable_vars)
+
+            if isinstance(child, BaseSequence):
+                child.unobserve('_last_index', self._item_last_index_updated)
+
+            self._recompute_indexes()
 
         notification = ContainerChange(obj=self, name='items',
                                        removed=[(index, child)])
@@ -575,7 +567,7 @@ class BaseSequence(AbstractSequence):
                                    self._item_last_index_updated)
 
     def _post_setattr_time_constrained(self, change):
-        """
+        """Update the linkable vars when the sequence is time constrained.
 
         """
         if change['value']:
@@ -595,7 +587,6 @@ class BaseSequence(AbstractSequence):
             Value of the first free index.
 
         """
-        print("Recompute indexes: ", self, first_index, free_index)
         if free_index is None:
             free_index = self.index + 1
 
@@ -607,7 +598,6 @@ class BaseSequence(AbstractSequence):
 
         for item in self.items[first_index:]:
 
-            print("free index for item:", item, item.index)
             item.index = free_index
             prefix = '{}_'.format(free_index)
             linkable_vars = [prefix + var for var in item.linkable_vars]
@@ -630,7 +620,6 @@ class BaseSequence(AbstractSequence):
         sequence is updated.
 
         """
-        print("_item_last_index_updated: ", self, change)
         index = self.items.index(change['object']) + 1
         free_index = change['value'] + 1
         self._recompute_indexes(index, free_index)
@@ -668,13 +657,8 @@ class RootSequence(BaseSequence):
 
     index = set_default(0)
     name = set_default('Root')
-    #root = set_default(self)
-    #has_root = set_default(True)
 
     def __init__(self, **kwargs):
-        """
-
-        """
         super(RootSequence, self).__init__(**kwargs)
         self.root = self
 

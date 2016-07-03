@@ -6,7 +6,7 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Plugin handling the generation and compilation and of sequences of pulses, 
+"""Plugin handling the generation and compilation and of sequences of pulses,
 and defining some default pulse shapes.
 
 """
@@ -31,8 +31,7 @@ from ecpy.utils.plugin_tools import make_handler
 from ecpy.app.errors.widgets import (ErrorsDialog, BasicErrorsDisplay)
 from ecpy.measure.workspace.checks_display import ChecksDisplay
 
-from .utils.flatten_config import flatten_config
-from .widgets.building import BuilderView, ContextBuilderView
+from .utils.widgets.building import BuilderView, ContextBuilderView
 from .utils.sequences_io import load_sequence_prefs
 from .sequences.base_sequences import (AbstractSequence, BaseSequence,
                                        RootSequence)
@@ -42,9 +41,9 @@ from .sequences.views.base_sequence_view import (BaseSequenceView,
 from .sequences.views.conditional_view import ConditionalSequenceView
 from .sequences.template_sequence import TemplateSequence
 from .sequences.views.template_view import TemplateSequenceView
-from .filters.base_filters import (ItemFilter, SequenceFilter, TemplateFilter,
-                                   SubclassItemFilter, MetadataItemFilter)
-from .declarations import (Sequences, Sequence, SequenceConfigs, 
+from .filters import (ItemFilter, SequenceFilter, TemplateFilter,
+                      SubclassItemFilter, MetadataItemFilter)
+from .declarations import (Sequences, Sequence, SequenceConfigs,
                            SequenceConfig, Contexts, Context, Shapes, Shape)
 
 
@@ -132,7 +131,7 @@ def build_sequence(event):
         core = event.workbench.get_plugin('enaml.workbench.core')
         cmd = 'ecpy.app.dependencies.analyse'
 
-        cont = core.invoke_command(cmd, {'obj': prefs}) 
+        cont = core.invoke_command(cmd, {'obj': prefs})
         if cont.errors:
             raise RuntimeError('Failed to analyse dependencies :\n%s' %
                                cont.errors)
@@ -214,27 +213,27 @@ more details.
 CONFIGS_DESC =\
 """Configs are used when new sequences or pulses need to be inserted into a
 config hierarchy at runtime. They provide a way for the user to parametrize the
-config before inserting it into the hierarchy. See declarations.py for more 
+config before inserting it into the hierarchy. See declarations.py for more
 infos about how to declare a new config.
 
 """
 
 CONTEXTS_DESC =\
 """Configs are used when new sequences or pulses need to be inserted into a
-context hierarchy at runtime. They provide a way for the user to parametrize 
-the context before inserting it into the hierarchy. See declarations.py for 
+context hierarchy at runtime. They provide a way for the user to parametrize
+the context before inserting it into the hierarchy. See declarations.py for
 more infos about how to declare a new config.
 
 """
 
 GET_SEQUENCES_INFOS_DESCRIPTION =\
-"""Retrieve the infos object associated with a list of sequences given the 
+"""Retrieve the infos object associated with a list of sequences given the
 name of the sequence.
 
 Parameters
 ----------
 sequences : list(unicode)
-    List of the names of the sequence class name for which to 
+    List of the names of the sequence class name for which to
     retrieve the infos.
 
 Returns
@@ -251,7 +250,7 @@ missings : list
 """
 
 GET_SEQUENCE_INFOS_DESCRIPTION =\
-"""Retrieve the infos object associated with a sequence given the 
+"""Retrieve the infos object associated with a sequence given the
 name of the sequence.
 
 Parameters
@@ -341,7 +340,7 @@ enamldef PulsesManagerManifest(PluginManifest):
     # =========================================================================
     # --- Extension points ----------------------------------------------------
     # =========================================================================
-    
+
     ExtensionPoint:
         id = 'sequences'
         description = SEQUENCES_DESC

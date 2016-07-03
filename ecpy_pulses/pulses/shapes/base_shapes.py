@@ -6,7 +6,7 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Base class for all analogical pulses shapes.
 
 """
 from __future__ import (division, unicode_literals, print_function,
@@ -22,11 +22,13 @@ DEP_TYPE = 'ecpy.pulses.shapes'
 
 
 class AbstractShape(HasPrefAtom):
-    """
+    """Base class for all shapes.
+
     """
     #: Identifier for the build dependency collector
     dep_type = Constant(DEP_TYPE).tag(pref=True)
 
+    #: Id of the shape used to query it from the plugin.
     shape_id = Unicode().tag(pref=True)
 
     def eval_entries(self, sequence_locals, missing, errors, index):

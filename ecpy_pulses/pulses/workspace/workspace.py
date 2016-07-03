@@ -198,7 +198,7 @@ class SequenceEditionSpace(Workspace):
             if self.state.sequence_path:
                 path = os.path.dirname(self.state.sequence_path)
             save_path = factory(self.content, current_path=path,
-                                name_filters=['*.ini'])
+                                name_filters=['*.pulse.ini'])
 
             if save_path:
                 self._save_sequence_to_file(save_path)
@@ -242,7 +242,7 @@ class SequenceEditionSpace(Workspace):
             if self.state.sequence_path:
                 path = os.path.dirname(self.state.sequence_path)
             load_path = factory(self.content, current_path=path,
-                                name_filters=['*.ini'])
+                                name_filters=['*.pulse.ini'])
 
             if load_path:
                 seq = self._load_sequence_from_file(load_path)

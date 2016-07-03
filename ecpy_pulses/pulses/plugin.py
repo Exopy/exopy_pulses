@@ -24,7 +24,7 @@ from ecpy.utils.plugin_tools import (HasPreferencesPlugin, ExtensionsCollector,
 from ecpy.utils.watchdog import SystematicFileUpdater
 
 from .pulse import Pulse
-from .filters.base_filters import ItemFilter
+from .filters import ItemFilter
 from .utils.sequences_io import load_sequence_prefs
 from .declarations import (Sequence, Sequences, SequenceConfig,
                            SequenceConfigs, Contexts, Context, Shapes, Shape)
@@ -61,7 +61,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
     """
     #: Folders containings templates which should be loaded.
-    templates_folders = List().tag(pref=True)
+    templates_folders = List().tag(pref=True)  # XXX harcoded currently
 
     #: List of all known sequences and template-sequences.
     sequences = List(Unicode())
@@ -107,9 +107,9 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         self.templates_folders = [temp_dir]
 
-        #: Start the Declarators and Extensions collectors to collect
-        #: all elements of the plugin that are declared through enaml
-        #: declarations
+        # Start the Declarators and Extensions collectors to collect
+        # all elements of the plugin that are declared through enaml
+        # declarations
         self._filters = ExtensionsCollector(workbench=self.workbench,
                                             point=FILTERS_POINT,
                                             ext_class=ItemFilter)
@@ -130,8 +130,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._shapes = DeclaratorsCollector(workbench=self.workbench,
                                             point=SHAPES_POINT,
                                             ext_class=(Shapes, Shape))
-        #: Bind the observers before strating the collectors so that they will
-        #: update thelists of known seq,configs, filters, contexts...
+        # Bind the observers before strating the collectors so that they will
+        # update thelists of known seq,configs, filters, contexts...
         self._bind_observers()
 
         self._sequences.start()
@@ -140,7 +140,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._contexts.start()
         self._shapes.start()
 
-        #: Populate the Pulse Info Object
+        # Populate the Pulse Info Object
         self._pulse_info = PulseInfos()
         self._pulse_info.cls = Pulse
         self._pulse_info.view = PulseView
@@ -159,7 +159,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._template_sequences_data.clear()
         self._template_sequences_infos.clear()
 
-        #: Stop all Extension/DeclaratorCollectors
+        # Stop all Extension/DeclaratorCollectors
         self._filters.stop()
         self._configs.stop()
         self._sequences.stop()
@@ -206,11 +206,11 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                  if key in sequences}
 
         for t_name, t_info in templ.items():
-            #: Load metadata if it was not alredy loaded
-            if not t_info.metadata['loaded']:
+            # Load metadata if it was not alredy loaded
+            if not t_info.metadata.get('template_config'):
                 config, doc = load_sequence_prefs(t_info.metadata['path'])
-                t_info.metadata['config'] = config
-                t_info.metadata['doc'] = doc
+                t_info.metadata['template_config'] = config
+                t_info.metadata['template_doc'] = doc
 
         answer.update(templ)
 
@@ -274,6 +274,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
     def get_sequence(self, sequence):
         """Access a given sequence class.
 
+        This should not be used on a template sequence.
+
         Parameters
         ----------
         sequence : unicode
@@ -284,11 +286,11 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         Returns
         -------
-        task_cls : type or None
+        sequence_cls : type or None
             Class associated to the requested sequence or None if the sequence
             was not found.
 
-        task_view : EnamlDefMeta or None, optional
+        sequence_view : EnamlDefMeta or None, optional
             Associated view if requested.
 
         """
@@ -357,9 +359,6 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                              " - contexts should be a list")
 
         answer = {}
-
-        a = {val.cls.__name__: val for val in
-             self._contexts.contributions.values()}
 
         missing = [name for name in contexts
                    if name not in self._contexts.contributions.keys()]
@@ -565,9 +564,10 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         templates = {}
         for path in self.templates_folders:
             if os.path.isdir(path):
-                filenames = sorted(f for f in os.listdir(path)
-                                   if (os.path.isfile(os.path.join(path, f))
-                                       and f.endswith('.ini')))
+                filenames = [f for f in os.listdir(path)
+                             if (os.path.isfile(os.path.join(path, f)) and
+                                 f.endswith('.ini'))]
+                filenames.sort()
                 for filename in filenames:
                     template_name = self._normalise_name(filename)
                     template_path = os.path.join(path, filename)
@@ -672,15 +672,14 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         self._refresh_known_template_sequences()
 
+    # XXX refactor
     @staticmethod
     def _normalise_name(name):
         """Normalize names by replacing '_' by spaces, removing the extension,
         and adding spaces between 'aA' sequences.
 
         """
-        if name.endswith('.ini'):
-            name = name[:-4] + '\0'
-        elif name.endswith('Shape'):
+        if name.endswith('Shape'):
             name = name[:-5] + '\0'
         else:
             name += '\0'

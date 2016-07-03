@@ -25,10 +25,10 @@ from enaml.widgets.api import (Dialog, Container, Stack, StackItem,
                                Field, GroupBox, CheckBox, Label, Notebook,
                                Page)
 
-from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor, 
+from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
                                             FieldFieldCompleterEditor)
 from ecpy.app.errors.widgets import BasicErrorsDisplay
-from ..widgets.browsing import SequenceSelector
+from ..utils.widgets.browsing import SequenceSelector
 
 
 class _VarValidator(Validator):
@@ -39,6 +39,7 @@ class _VarValidator(Validator):
             return True
         except Exception:
             return False
+
 
 enamldef _ValEditor(Container):
     attr model
@@ -86,7 +87,7 @@ enamldef CompilationWidget(Container): main:
             DictEditor(_ValEditor): de:
                 de.mapping := workspace.state.sequence.external_vars
                 de.operations = ['move']
-                
+
 #            DictEditor(_ValEditor): ed:
 #                ed.model = workspace.state.sequence
 #                ed.iterable_name = 'external_vars'
@@ -133,6 +134,7 @@ sequence development easier and avoid duplicating standard sequences. The only
 accessible part of a template sequence are the template vars and the
 TemplateContext which specifies how to map the real channels to the one defined
 in the template.'''
+
 
 enamldef TypeSelectionDialog(Dialog): dial:
     """ Dialog allowing to choose how to save the edited sequence.
@@ -226,8 +228,8 @@ def _format_path(folder, filename):
     """ Simple formatter for template saving path.
 
     """
-    if not filename.endswith('.ini'):
-        filename += '.ini'
+    if not filename.endswith('.temp_pulse.ini'):
+        filename += '.pulse.ini'
     return os.path.join(folder, filename)
 
 
@@ -246,12 +248,20 @@ def _validate_context(context):
 
 
 enamldef TemplateSaveDialog(Dialog): dial:
+    """Dialog allowing to save a sequence as a template.
+
     """
-    """
+    #: Refrence to the workspace.
     attr workspace
+
+    #: Path to which save the template.
     attr path
+
+    #: Description of the template usage.
     attr doc = ''
+
     alias step : sta.index
+
     attr can_proceed : bool << sta.stack_items()[step].valid
 
 
