@@ -12,7 +12,7 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-from inspect import getdoc, cleandoc
+from inspect import getdoc
 from atom.api import (Atom, Unicode, Bool, Subclass, ForwardTyped, Typed, Dict)
 
 from ..item import Item
@@ -51,10 +51,7 @@ class AbstractConfig(Atom):
         it to True if everything is allright, False otherwise.
 
         """
-        err_str = '''This method should be implemented by subclasses of
-        AbstractConfig. This method is called each time a member is changed
-        to check if enough parameters has been provided to build the item.'''
-        raise NotImplementedError(cleandoc(err_str))
+        raise NotImplementedError()
 
     def build_sequence(self):
         """This method use the user parameters to build the item object
@@ -66,10 +63,7 @@ class AbstractConfig(Atom):
             inserted in a sequence.
 
         """
-        err_str = '''This method should be implemented by subclasses of
-        AbstractConfig. This method is called when the user validate its
-        choices and that the item must be built.'''
-        raise NotImplementedError(cleandoc(err_str))
+        raise NotImplementedError()
 
 
 class SequenceConfig(AbstractConfig):

@@ -17,7 +17,7 @@ from enaml.core.api import d_func, d_
 
 from ecpy.utils.declarator import Declarator
 
-from ..item import Item
+from .item import Item
 
 
 class ItemFilter(Declarator):

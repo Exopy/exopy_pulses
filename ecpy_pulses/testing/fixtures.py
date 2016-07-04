@@ -20,7 +20,7 @@ from pprint import pformat
 import enaml
 from enaml.workbench.api import Workbench
 
-from ..utils.sequences_io import save_sequence_prefs
+from ..pulses.utils.sequences_io import save_sequence_prefs
 
 with enaml.imports():
     from enaml.workbench.core.core_manifest import CoreManifest
@@ -31,7 +31,7 @@ with enaml.imports():
     from ecpy.app.states.manifest import StateManifest
     from ecpy.app.errors.manifest import ErrorsManifest
     from ecpy.app.errors.plugin import ErrorsPlugin
-    from ecpy_pulses.manifest import PulsesManagerManifest
+    from ecpy_pulses.pulses.manifest import PulsesManagerManifest
 
 
 pytests_plugin = str('ecpy.testing.fixtures'),
@@ -83,10 +83,11 @@ def template_sequence(pulses_plugin):
     """Create a template sequence and make sure the plugin pick it up.
 
     """
-    from ecpy_pulses.pulse import Pulse
-    from ecpy_pulses.sequences.base_sequences import RootSequence, BaseSequence
-    from ecpy_pulses.shapes.square_shape import SquareShape
-    from ecpy_pulses.contexts.template_context import TemplateContext
+    from ecpy_pulses.pulses.pulse import Pulse
+    from ecpy_pulses.pulses.sequences.base_sequences import (RootSequence,
+                                                             BaseSequence)
+    from ecpy_pulses.pulses.shapes.square_shape import SquareShape
+    from ecpy_pulses.pulses.contexts.template_context import TemplateContext
 
     root = RootSequence()
     context = TemplateContext(logical_channels=['A', 'B'],

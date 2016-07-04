@@ -23,7 +23,7 @@ from enaml.widgets.api import (PushButton, Container, Dialog,
 from ecpy.utils.widgets.qt_list_str_widget import QtListStrWidget
 from ecpy.utils.transformers import ids_to_unique_names
 
-from ..utils.normalizers import normalize_context_name
+from ..normalizers import normalize_context_name
 from .browsing import SequenceSelector
 
 
@@ -58,7 +58,7 @@ enamldef BuilderView(Dialog): dial:
             config, view = manager.get_config(selector.selected_sequence)
             if config is None:
                 dial.config = None
-                conf.objects = [Label(text=('No configuration view was'+ 
+                conf.objects = [Label(text=('No configuration view was'+
                                             'found for this task'))]
                 return
             dial.config = config
@@ -108,7 +108,7 @@ enamldef ContextBuilderView(Dialog): dial:
     attr contexts = manager.contexts
 
     #: Mapping from sanitized names to class names
-    attr _context_map << (ids_to_unique_names(contexts, 
+    attr _context_map << (ids_to_unique_names(contexts,
                                               normalize_context_name)
                           if contexts else {})
 
@@ -121,7 +121,7 @@ enamldef ContextBuilderView(Dialog): dial:
                 info = contexts_infos[sc]
                 dial.context = info.cls
 
-    initialized :: 
+    initialized ::
         _update()
 
     title = 'Select the context you want to use.'

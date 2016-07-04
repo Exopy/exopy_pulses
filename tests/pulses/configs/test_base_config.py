@@ -15,18 +15,18 @@ from __future__ import (division, unicode_literals, print_function,
 import enaml
 from ecpy.testing.util import show_widget, process_app_events
 
-from ecpy_pulses.api import BaseSequence
-from ecpy_pulses.configs.base_config import SequenceConfig
+from ecpy_pulses.pulses.api import BaseSequence
+from ecpy_pulses.pulses.configs.base_config import SequenceConfig
 
 with enaml.imports():
-    from ecpy_pulses.configs.base_config_views import SequenceConfigView
+    from ecpy_pulses.pulses.configs.base_config_views import SequenceConfigView
 
 
-def test_sequence_config():
+def test_sequence_config(pulses_plugin):
     """Test the base sequence config.
 
     """
-    conf = SequenceConfig(sequence_class=BaseSequence)
+    conf = SequenceConfig(sequence_class=BaseSequence, manager=pulses_plugin)
     conf.sequence_name = 'test'
     assert conf.ready
     conf.sequence_name = ''

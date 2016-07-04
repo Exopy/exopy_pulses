@@ -379,7 +379,7 @@ enamldef PulsesManagerManifest(PluginManifest):
         id = 'sequences'
         point = 'ecpy.pulses.sequences'
         Sequences:
-            path = 'ecpy_pulses.sequences'
+            path = 'ecpy_pulses.pulses.sequences'
             Sequence:
                 sequence = 'base_sequences:BaseSequence'
                 view = 'views.base_sequence_view:BaseSequenceView'
@@ -394,12 +394,12 @@ enamldef PulsesManagerManifest(PluginManifest):
         id = 'configs'
         point = 'ecpy.pulses.configs'
         SequenceConfigs:
-            path = 'ecpy_pulses.configs'
+            path = 'ecpy_pulses.pulses.configs'
             SequenceConfig:
                 config = 'base_config:SequenceConfig'
                 view = 'base_config_views:SequenceConfigView'
                 get_sequence_class => ():
-                    from ecpy_pulses.sequences.base_sequences import (
+                    from ecpy_pulses.pulses.sequences.base_sequences import (
                         BaseSequence)
                     return BaseSequence
             SequenceConfig:
@@ -412,7 +412,7 @@ enamldef PulsesManagerManifest(PluginManifest):
         id = 'contexts'
         point = 'ecpy.pulses.contexts'
         Contexts:
-            path = 'ecpy_pulses.contexts'
+            path = 'ecpy_pulses.pulses.contexts'
             Context:
                 context = 'awg_context:AWGContext'
                 view = 'views.awg_context_view:AWGContextView'
@@ -428,7 +428,7 @@ enamldef PulsesManagerManifest(PluginManifest):
         id = 'shapes'
         point = 'ecpy.pulses.shapes'
         Shapes:
-            path = 'ecpy_pulses.shapes'
+            path = 'ecpy_pulses.pulses.shapes'
             Shape:
                 shape = 'square_shape:SquareShape'
                 view = 'views.square_shape_view:SquareShapeView'

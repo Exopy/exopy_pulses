@@ -566,10 +566,10 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             if os.path.isdir(path):
                 filenames = [f for f in os.listdir(path)
                              if (os.path.isfile(os.path.join(path, f)) and
-                                 f.endswith('.ini'))]
+                                 f.endswith('.temp_pulse.ini'))]
                 filenames.sort()
                 for filename in filenames:
-                    template_name = self._normalise_name(filename)
+                    template_name = filename.rstrip('.temp_pulse.ini')
                     template_path = os.path.join(path, filename)
                     # Beware redundant names are overwrited
                     templates[template_name] = template_path
@@ -578,8 +578,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                 logger.warn('{} is not a valid directory'.format(path))
 
         self._template_sequences_data = templates
-        aux = (list(self._sequences.contributions.keys()) +
-               list(templates.keys()))
+        aux = (list(self._sequences.contributions) +
+               list(templates))
 
         self.sequences = aux
         self._refresh_template_sequences_infos()

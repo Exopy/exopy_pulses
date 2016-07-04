@@ -14,9 +14,9 @@ from __future__ import (division, unicode_literals, print_function,
 
 from ast import literal_eval
 
-from ecpy_pulses.api import RootSequence, Sequence
-from ecpy_pulses.sequences.template_sequence import TemplateSequence
-from ecpy_pulses.configs.template_config import TemplateConfig
+from ecpy_pulses.pulses.api import RootSequence, Sequence
+from ecpy_pulses.pulses.sequences.template_sequence import TemplateSequence
+from ecpy_pulses.pulses.configs.template_config import TemplateConfig
 
 
 def test_init(pulses_plugin, template_sequence):

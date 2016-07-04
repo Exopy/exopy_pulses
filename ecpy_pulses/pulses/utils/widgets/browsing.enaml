@@ -19,12 +19,12 @@ from enaml.widgets.api import (ObjectCombo, Container)
 
 from ecpy.utils.widgets.qt_list_str_widget import QtListStrWidget
 from ecpy.utils.transformers import ids_to_unique_names
-from ..utils.normalizers import normalize_sequence_name
+from ..normalizers import normalize_sequence_name
 
 
 # Circular import protection
 def pulses_manager():
-    from ..plugin import PulsesManagerPlugin
+    from ...plugin import PulsesManagerPlugin
     return PulsesManagerPlugin
 
 
@@ -55,7 +55,7 @@ enamldef SequenceSelector(Container): sel:
     attr sequences = manager.list_sequences('All')
 
     #: Mappping between user understandable names and ids.
-    attr _sequence_map << (ids_to_unique_names(sequences, 
+    attr _sequence_map << (ids_to_unique_names(sequences,
                                                normalize_sequence_name,
                                                preformatter=
                                                        normalize_sequence_name)
@@ -64,7 +64,7 @@ enamldef SequenceSelector(Container): sel:
     #: Currently selected sequence.
     attr selected_sequence = _sequence_map[sorted(_sequence_map)[0]]
 
-    initialized :: 
+    initialized ::
         if self.selected_filter:
             sequences = manager.list_sequences(selected_filter)
             if sequences:
