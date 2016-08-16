@@ -6,7 +6,7 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Views for the base sequences.
 
 """
 from atom.api import Atom, Dict, Value
@@ -114,7 +114,7 @@ enamldef BaseSequenceView(AbstractSequenceView): view:
                 de.mapping := item.local_vars
 #                de.operations = ['add','move','remove']
                 #Todo_Restore Add Back autocompletion!
-                
+
 
 enamldef RootSequenceView(AbstractSequenceView): view:
     """ View for root sequence.

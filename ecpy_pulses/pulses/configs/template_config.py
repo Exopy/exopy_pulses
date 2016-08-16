@@ -17,6 +17,7 @@ from __future__ import (division, unicode_literals, print_function,
 
 from copy import deepcopy
 from ast import literal_eval
+from pprint import pformat
 
 from atom.api import (Unicode, Value, Bool, Typed)
 from ecpy.utils.atom_util import update_members_from_preferences
@@ -26,12 +27,6 @@ from ..contexts.template_context import TemplateContext
 from ..sequences.base_sequences import BaseSequence
 from ..sequences.template_sequence import TemplateSequence
 from ..pulse import Pulse
-
-
-# Circular import protection
-def pulses_manager():
-    from ..plugin import PulsesManagerPlugin
-    return PulsesManagerPlugin
 
 
 class TemplateConfig(AbstractConfig):
@@ -69,14 +64,14 @@ class TemplateConfig(AbstractConfig):
 
     #: False template context used to determine the mapping between the
     #: template context channels and the ones from the root.
-    #:  Only used in merge mode.
+    #: Only used in merge mode.
     context = Typed(TemplateContext)
 
     def build_sequence(self):
         """ Build sequence using the selected template.
 
         """
-        config = self.template_config
+        config = deepcopy(self.template_config)
 
         #: Here we set the item id of the "root" of the sequence (that needed
         #: to collect the right dependency). If we are NOT merging, then the
@@ -96,24 +91,25 @@ class TemplateConfig(AbstractConfig):
         #: Collect Dependencies
         core = self.manager.workbench.get_plugin('enaml.workbench.core')
         cmd = 'ecpy.app.dependencies.analyse'
-        cont = core.invoke_command(cmd, {'obj': self.template_config})
+        cont = core.invoke_command(cmd, {'obj': config})
         if cont.errors:
-            raise RuntimeError('Failed to analyse dependencies :\n%s' %
-                               cont.errors)
+            msg = 'Failed to analyse dependencies :\n%s'
+            self.errors['dependencies'] = msg % pformat(cont.errors)
+            return None
 
         cmd = 'ecpy.app.dependencies.collect'
         cont = core.invoke_command(cmd, {'kind': 'build',
                                          'dependencies': cont.dependencies})
         if cont.errors:
-            raise RuntimeError('Failed to collect dependencies :\n%s' %
-                               cont.errors)
+            msg = 'Failed to collect dependencies :\n%s'
+            self.errors['dependencies'] = msg % pformat(cont.errors)
+            return None
 
         #: Shorthand
         build_dep = cont.dependencies
 
         if not self.merge:
-            seq = TemplateSequence.build_from_config(deepcopy(config),
-                                                     build_dep)
+            seq = TemplateSequence.build_from_config(config, build_dep)
             return seq
 
         else:

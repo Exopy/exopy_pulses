@@ -414,12 +414,6 @@ enamldef PulsesManagerManifest(PluginManifest):
         Contexts:
             path = 'ecpy_pulses.pulses.contexts'
             Context:
-                context = 'awg_context:AWGContext'
-                view = 'views.awg_context_view:AWGContextView'
-            Context:
-                context = 'tabor_context:TABORContext'
-                view = 'views.tabor_context_view:TaborContextView'
-            Context:
                 context = 'template_context:TemplateContext'
                 view = 'views.template_context_view:TemplateContextView'
 
@@ -456,7 +450,7 @@ enamldef PulsesManagerManifest(PluginManifest):
                 manager = workbench.get_plugin('ecpy.pulses')
 
                 i_id = getter(obj, 'item_id')
-                i_infos, _ = manager.get_item_infos(i_id)
+                i_infos = manager.get_item_infos(i_id)
 
                 if i_infos is None:
                     errors[i_id] = 'Unknown item.'
@@ -468,14 +462,14 @@ enamldef PulsesManagerManifest(PluginManifest):
             validate => (workbench, dependencies, errors):
                 manager = workbench.get_plugin('ecpy.pulses')
                 for i_id in dependencies:
-                    i_infos, _ = manager.get_item_infos(i_id)
+                    i_infos = manager.get_item_infos(i_id)
                     if i_infos is None:
                         errors[i_id] = 'Unknown item.'
 
             collect => (workbench, dependencies, errors):
                 manager = workbench.get_plugin('ecpy.pulses')
                 for i_id in dependencies:
-                    i_infos, _ = manager.get_item_infos(i_id)
+                    i_infos = manager.get_item_infos(i_id)
                     if i_infos is None:
                         errors[i_id] = 'Unknown item.'
                         continue
@@ -488,7 +482,7 @@ enamldef PulsesManagerManifest(PluginManifest):
                 manager = workbench.get_plugin('ecpy.pulses')
 
                 c_id = getter(obj, 'context_id')
-                c_infos, _ = manager.get_context_infos(c_id)
+                c_infos = manager.get_context_infos(c_id)
 
                 if c_infos is None:
                     errors[c_id] = 'Unknown context.'
@@ -507,7 +501,7 @@ enamldef PulsesManagerManifest(PluginManifest):
             collect => (workbench, dependencies, errors):
                 manager = workbench.get_plugin('ecpy.pulses')
                 for c_id in dependencies:
-                    c_infos, _ = manager.get_context_infos(c_id)
+                    c_infos = manager.get_context_infos(c_id)
                     if c_infos is None:
                         errors[c_id] = 'Unknown context.'
                         continue
@@ -520,7 +514,7 @@ enamldef PulsesManagerManifest(PluginManifest):
                 manager = workbench.get_plugin('ecpy.pulses')
 
                 s_id = getter(obj, 'shape_id')
-                s_infos, _ = manager.get_shape_infos(s_id)
+                s_infos = manager.get_shape_infos(s_id)
 
                 if s_infos is None:
                     errors[s_id] = 'Unknown shape.'
@@ -539,7 +533,7 @@ enamldef PulsesManagerManifest(PluginManifest):
             collect => (workbench, dependencies, errors):
                 manager = workbench.get_plugin('ecpy.pulses')
                 for s_id in dependencies:
-                    s_infos, _ = manager.get_shape_infos(s_id)
+                    s_infos = manager.get_shape_infos(s_id)
                     if s_infos is None:
                         errors[s_id] = 'Unknown shape.'
                         continue
@@ -562,9 +556,8 @@ enamldef PulsesManagerManifest(PluginManifest):
             collect => (workbench, dependencies, errors):
                 manager = workbench.get_plugin('ecpy.pulses')
                 for el in dependencies:
-                    cls = manager.get_modulation_class()
+                    cls = manager.get_modulation('ecpy_pulses.Modulation')
                     dependencies[el] = cls
-
 
     Extension:
         id = 'workspace'

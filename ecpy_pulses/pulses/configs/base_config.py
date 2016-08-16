@@ -54,13 +54,16 @@ class AbstractConfig(Atom):
         raise NotImplementedError()
 
     def build_sequence(self):
-        """This method use the user parameters to build the item object
+        """This method use the user parameters to build the item object.
+
+        This method should not raise any exceptions but populate the errors
+        dictionary.
 
         Returns
         -------
-        item : Item
+        item : Item | None
             Item object built using the user parameters. Ready to be
-            inserted in a sequence.
+            inserted in a sequence. None if errors occured.
 
         """
         raise NotImplementedError()

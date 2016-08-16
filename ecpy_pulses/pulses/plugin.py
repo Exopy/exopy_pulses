@@ -6,8 +6,8 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Plugin centralizing the collection and management of Items (Sequences,
-Shapes...).
+"""Plugin centralizing the collection and management pulse sequences related
+objects : sequences, shapes, configs, contexts
 
 """
 from __future__ import (division, unicode_literals, print_function,
@@ -61,7 +61,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
     """
     #: Folders containings templates which should be loaded.
-    templates_folders = List().tag(pref=True)  # XXX harcoded currently
+    templates_folders = List()  # .tag(pref=True)  # XXX harcoded currently
 
     #: List of all known sequences and template-sequences.
     sequences = List(Unicode())
@@ -130,8 +130,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._shapes = DeclaratorsCollector(workbench=self.workbench,
                                             point=SHAPES_POINT,
                                             ext_class=(Shapes, Shape))
-        # Bind the observers before strating the collectors so that they will
-        # update thelists of known seq,configs, filters, contexts...
+        # Bind the observers before starting the collectors so that they will
+        # update the lists of known seq, configs, filters, contexts...
         self._bind_observers()
 
         self._sequences.start()
@@ -166,289 +166,195 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._contexts.stop()
         self._shapes.stop()
 
-    def get_sequences_infos(self, sequences):
-        """ Give access to sequence infos.
+    def get_item_infos(self, item_id):
+        """Give access to an item infos.
+
+        NB : an item can be a sequence or a pulse.
 
         Parameters
         ----------
-        sequences : list(str)
-            The names of the requested sequences.
-        views : bool
-            When false views are not returned alongside the class.
+        item_id : unicode
+            The id of the requested item.
 
         Returns
         -------
-        sequences : dict
-            The required sequences infos as a dict. For Python sequences the
-            entry will contain the class and the view ({name: (class, view)}).
-            For templates the entry will contain the path, the data as a
-            ConfigObj object and the doc ({name : (path, data, doc)})
-
-        missings : list
-            List of the sequences which were not found.
+        item_infos : ItemInfos or None
+            The required item infos or None if it was not found.
 
         """
-        answer = {}
-        missing_py = set([name for name in sequences
-                          if name not in
-                          self._sequences.contributions.keys()])
-        missing_temp = set([name for name in sequences
-                            if name not in
-                            self._template_sequences_infos.keys()])
-        missing = list(set.intersection(missing_py, missing_temp))
-
-        answer.update({key: val for key, val in
-                       self._sequences.contributions.items()
-                       if key in sequences})
-
-        templ = {key: val for key, val in
-                 self._template_sequences_infos.items()
-                 if key in sequences}
-
-        for t_name, t_info in templ.items():
-            # Load metadata if it was not alredy loaded
-            if not t_info.metadata.get('template_config'):
+        if item_id == "ecpy_pulses.Pulse":
+            return self._pulse_info
+        if item_id in self._sequences.contributions:
+            return self._sequences.contributions[item_id]
+        elif item_id in self._template_sequences_infos:
+            t_info = self._template_sequences_infos[item_id]
+            if not t_info.metadata['loaded']:
                 config, doc = load_sequence_prefs(t_info.metadata['path'])
                 t_info.metadata['template_config'] = config
                 t_info.metadata['template_doc'] = doc
+                t_info.metadata['loaded'] = True
+            return t_info
+        elif item_id == "ecpy_pulses.__template__":
+            infos = SequenceInfos()
+            infos.cls = TemplateSequence
+            infos.view = TemplateSequenceView
+            return infos
+        else:
+            return None
 
-        answer.update(templ)
-
-        return answer, missing
-
-    def get_sequence_infos(self, sequence):
-        """Access a given sequence infos.
-
-        Parameters
-        ----------
-        sequence : unicode
-            Id of the sequence class for which to return the actual class.
-
-        Returns
-        -------
-        infos : SequenceInfos or None
-            Object containing all the infos about the requested sequence.
-            This object should never be manipulated directly by user code.
-
-        """
-        sequences = [sequence]
-        _answer, _ = self.get_sequences_infos(sequences)
-
-        try:
-            answer = _answer[sequence]
-            missing = None
-        except KeyError:
-            answer = None
-            missing = [sequence]
-        return answer, missing
-
-    def get_sequences(self, sequences):
-        """Access a given sequence class.
+    def get_item(self, item_id, view=False):
+        """Access a given item class.
 
         Parameters
         ----------
-        sequence : unicode
-            Id of the sequence class for which to return the actual class.
+        item_id : unicode
+            Id of the item for which to return the actual class.
 
         view : bool, optional
-            Whether or not to return the view assoicated with the sequence.
+            Whether or not to return the view assoicated with the item.
 
         Returns
         -------
-        task_cls : type or None
-            Class associated to the requested sequence or None if the sequence
-            was not found.
+        item_cls : type or None
+            Class associated to the requested item or None if the item was not
+            found.
 
-        task_view : EnamlDefMeta or None, optional
+        item_view : EnamlDefMeta or None, optional
             Associated view if requested.
 
         """
-        _answer, _missing = self.get_sequences_infos(sequences)
-        answer = {key: (val.cls, val.view) for key, val in _answer}
+        infos = self.get_item_infos(item_id)
+        if not infos:
+            return None if not view else (None, None)
+        else:
+            return infos.cls if not view else (infos.cls, infos.view)
 
-        for key, val in _answer:
-            answer = {key, val}
-
-        return answer, _missing
-
-    def get_sequence(self, sequence):
-        """Access a given sequence class.
-
-        This should not be used on a template sequence.
+    def get_items(self, item_ids):
+        """Access the classes associated to a set of items.
 
         Parameters
         ----------
-        sequence : unicode
-            Id of the sequence class for which to return the actual class.
-
-        view : bool, optional
-            Whether or not to return the view assoicated with the sequence.
+        item_ids : list(unicode)
+            Ids of the item for which to return the actual class.
 
         Returns
         -------
-        sequence_cls : type or None
-            Class associated to the requested sequence or None if the sequence
-            was not found.
+        items_cls : dict
+            Dictionary mapping the requested items to the actual classes.
 
-        sequence_view : EnamlDefMeta or None, optional
-            Associated view if requested.
-
-        """
-        _answer, _ = self.get_sequence_infos(sequence)
-
-        if _answer is None:
-            return (None, None)
-
-        return (_answer.cls, _answer.view)
-
-    def get_items_infos(self, items):
-        """TODO
+        missing : list
+            List of items that were not found.
 
         """
-        _answer, _missing = self.get_sequences_infos(items)
-
-        additional_items = {}
-
+        items_cls = {}
         missing = []
-
-        for el in _missing:
-            if el == "ecpy_pulses.Pulse":
-                additional_items[el] = self._pulse_info
-            elif el == "ecpy_pulses.__template__":
-                infos = SequenceInfos()
-                infos.cls = TemplateSequence
-                infos.view = TemplateSequenceView
-                additional_items[el] = infos
+        for t in item_ids:
+            res = self.get_task(t)
+            if res:
+                items_cls[t] = res
             else:
-                missing.append(el)
+                missing.append(t)
 
-        _answer.update(additional_items)
+        return items_cls, missing
 
-        return _answer, missing
-
-    def get_item_infos(self, item):
-        """TODO
-
-        """
-        _answer, _ = self.get_items_infos([item])
-
-        try:
-            answer = _answer[item]
-            missing = None
-        except KeyError:
-            answer = None
-            missing = [item]
-        return answer, missing
-
-    def get_contexts_infos(self, contexts):
-        """ Give access to context infos.
+    def get_context_infos(self, context_id):
+        """Give access to a context infos.
 
         Parameters
         ----------
-        contexts : list(str)
-            The names of the requested contexts.
+        context_id : unicode
+            Id of the requested context.
 
         Returns
         -------
-        contexts : dict
-            The required contexts infos as a dict {name: (class, view)}.
+        context_infos : ContextInfos or None
+            Infos for the requested context or None if the context was not
+            found.
 
         """
-        if not isinstance(contexts, list):
-            raise ValueError("plugin.py:get_contexts_infos" +
-                             " - contexts should be a list")
+        return self._contexts.contributions.get(context_id)
 
-        answer = {}
-
-        missing = [name for name in contexts
-                   if name not in self._contexts.contributions.keys()]
-        answer.update({key: val for key, val in
-                       self._contexts.contributions.items()
-                       if key in contexts})
-
-        return answer, missing
-
-    def get_context_infos(self, context):
-        """ Give access to context infos.
+    def get_context(self, context_id, view=False):
+        """Access the class associated with a context.
 
         Parameters
         ----------
-        contexts : list(str)
-            The names of the requested contexts.
+        context_id : unicode
+            Id of the context for which to return the class
+
+        view : bool, optional
+            Whether or not to return the view associated with context.
 
         Returns
         -------
-        contexts : dict
-            The required contexts infos as a dict {name: (class, view)}.
+        context_cls : type or None
+            Class associated to the requested context or None if the context
+            was not found.
+
+        item_view : EnamlDefMeta or None, optional
+            Associated view if requested.
 
         """
-        contexts = [context]
-        _answer, _ = self.get_contexts_infos(contexts)
+        infos = self.get_item_infos(context_id)
+        if not infos:
+            return None if not view else (None, None)
+        else:
+            return infos.cls if not view else (infos.cls, infos.view)
 
-        try:
-            answer = _answer[context]
-            missing = None
-        except KeyError:
-            answer = None
-            missing = context
-        return answer, missing
-
-    def get_shapes_infos(self, shapes):
-        """ Give access to shape infos.
+    def get_shape_infos(self, shape_id):
+        """ Give access to a shape infos.
 
         Parameters
         ----------
-        shapes : list(str)
-            The names of the requested shapes.
-        views : bool
-            When flase views are not returned alongside the class.
+        shape : unicode
+            Id of the requested shapes.
+        view : bool
+            When false, the view is not returned alongside the class.
 
         Returns
         -------
-        shapes : dict
-            The required shapes infos as a dict {name: (class, view)}.
+        shape_infos : ShapeInfos or None
+            The required shape infos or None if the shape was not found.
 
         """
-        answer = {}
+        return self._shapes.contributions.get(shape_id)
 
-        missing = [name for name in shapes
-                   if name not in self._shapes.contributions.keys()]
-
-        answer.update({key: val for key, val
-                       in self._shapes.contributions.items()
-                       if key in shapes})
-
-        return answer, missing
-
-    def get_shape_infos(self, shape):
-        """ Give access to a single shape infos.
+    def get_shape(self, shape_id, view=False):
+        """Access the class associated with a context.
 
         Parameters
         ----------
-        shapes : list(str)
-            The names of the requested shapes.
-        views : bool
-            When flase views are not returned alongside the class.
+        shape_id : unicode
+            Id of the shape for which to return the class
+
+        view : bool, optional
+            Whether or not to return the view associated with context.
 
         Returns
         -------
-        shapes : ShapeInfo
-            The required shapes infos .
+        context_cls : type or None
+            Class associated to the requested shape or None if the shape
+            was not found.
+
+        item_view : EnamlDefMeta or None, optional
+            Associated view if requested.
 
         """
-        shapes = [shape]
-        _answer, _ = self.get_shapes_infos(shapes)
+        infos = self.get_item_infos(shape_id)
+        if not infos:
+            return None if not view else (None, None)
+        else:
+            return infos.cls if not view else (infos.cls, infos.view)
 
-        try:
-            answer = _answer[shape]
-            missing = None
-        except KeyError:
-            answer = None
-            missing = shape
+    # TODO for future easiness of extension
+    def get_modulation_infos(self, modulation_id):
+        """
+        """
+        pass
 
-        return answer, missing
-
-    def get_modulation_class(self):
+    def get_modulation(self, modulation_id, view=False):
+        """
+        """
         return Modulation
 
     def get_config(self, sequence_id):
@@ -514,7 +420,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         if s_filter:
             # Remove items that should not be shown in the list
             sequences = self._sequences.contributions.copy()
-            template_sequences_data = self._template_sequences_data.copy() #TODO To contribution
+            template_sequences_data = self._template_sequences_data.copy()
 
             try:
                 sequences.pop('ecpy_pulses.RootSequence')
@@ -569,8 +475,9 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                                  f.endswith('.temp_pulse.ini'))]
                 filenames.sort()
                 for filename in filenames:
-                    template_name = filename.rstrip('.temp_pulse.ini')
+                    template_name = filename[:-len('.temp_pulse.ini')]
                     template_path = os.path.join(path, filename)
+
                     # Beware redundant names are overwrited
                     templates[template_name] = template_path
             else:
@@ -671,39 +578,3 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             self._observer.schedule(handler, folder, recursive=True)
 
         self._refresh_known_template_sequences()
-
-    # XXX refactor
-    @staticmethod
-    def _normalise_name(name):
-        """Normalize names by replacing '_' by spaces, removing the extension,
-        and adding spaces between 'aA' sequences.
-
-        """
-        if name.endswith('Shape'):
-            name = name[:-5] + '\0'
-        else:
-            name += '\0'
-        aux = ''
-        for i, char in enumerate(name):
-            if char == '_':
-                aux += ' '
-                continue
-
-            if char != '\0':
-                if char.isupper() and i != 0:
-                    if name[i - 1].islower():
-                        if name[i + 1].islower():
-                            aux += ' ' + char.lower()
-                        else:
-                            aux += ' ' + char
-                    else:
-                        if name[i + 1].islower():
-                            aux += ' ' + char.lower()
-                        else:
-                            aux += char
-                else:
-                    if i == 0:
-                        aux += char.upper()
-                    else:
-                        aux += char
-        return aux

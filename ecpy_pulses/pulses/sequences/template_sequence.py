@@ -181,10 +181,9 @@ class TemplateSequence(AbstractSequence):
 
     # --- Private API ---------------------------------------------------------
 
-    def _post_setattr_context(self, change):
+    def _post_setattr_context(self, old, new):
         """ Make sure the context has a ref to the sequence.
 
         """
-        c = change['value']
-        if c:
-            c.template_sequence = self
+        if new:
+            new.template_sequence = self

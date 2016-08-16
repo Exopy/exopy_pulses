@@ -6,7 +6,8 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Sequence editor similar to the task editor used to add/move/remove items.
+
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
@@ -53,7 +54,7 @@ enamldef PopupListMenu(Menu):
     #: - 'move' : function move an element receive the index and the new index.
     attr operations : dict
 
-    Conditional: 
+    Conditional:
         condition = bool('addP' in operations or 'addS' in operations)
         Menu:
             title = 'Add before'
@@ -109,7 +110,7 @@ enamldef PopupListMenu(Menu):
         text = 'Move to bottom'
         triggered ::
             operations['move'](index, len(model))
- 
+
 
 enamldef ItemEditorButton(PushButton):
     """A push button displayed on the right of an item in the editor.
@@ -164,6 +165,7 @@ enamldef EmptyEditorButtons(Container): view:
                 editor.sequence.add_child_item(0, obj)
 
 
+# XXX reorder methods
 class SequenceEditor(Container):
     """ A custom container to edit the items of a sequence.
 
@@ -270,7 +272,7 @@ class SequenceEditor(Container):
         self._update_views(None)
         new.observe('items', self._update_views)
         new.observe('items_changed', self._update_views)
-            
+
     def _update_views(self, change, root=True):
         """Handler updating as needed the views when the children member is
         updated.

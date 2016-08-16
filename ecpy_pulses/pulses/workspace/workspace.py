@@ -226,6 +226,7 @@ class SequenceEditionSpace(Workspace):
                             values are 'default', 'file' and 'template'.''')
             raise ValueError(mess.format(mode))
 
+    # XXX catch errors to avoid crashing the app
     def load_sequence(self, mode='file'):
         """ Load an existing sequence to edit it.
 
