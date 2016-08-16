@@ -6,11 +6,13 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Most basic shape for an analogical pulse.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
+
+from traceback import format_exc
 
 import numpy as np
 from atom.api import (Unicode, FloatRange)
@@ -56,14 +58,16 @@ class SquareShape(AbstractShape):
         amp = None
         try:
             amp = eval_entry(self.amplitude, sequence_locals, missing)
-        except Exception as e:
-            errors[prefix + 'amplitude'] = repr(e)
+        except Exception:
+            errors[prefix + 'amplitude'] = format_exc()
 
         if amp is not None:
             self._amplitude = amp
             return True
 
         else:
+            msg = 'Failed to format amplitude : {}'.format(self.amplitude)
+            errors[prefix + 'amplitude'] = msg
             return False
 
     def compute(self, time, unit):

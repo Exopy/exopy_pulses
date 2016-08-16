@@ -14,7 +14,7 @@ from __future__ import (division, unicode_literals, print_function,
 
 
 from atom.api import (Int, Unicode, List, Bool, Float, Enum, ForwardTyped,
-                      Value, Constant, Dict)
+                      Constant, Dict, Value)
 from ecpy.utils.atom_util import HasPrefAtom
 
 from .utils.entry_eval import eval_entry
@@ -23,12 +23,6 @@ from .utils.entry_eval import eval_entry
 def sequence():
     from .sequences.base_sequences import BaseSequence
     return BaseSequence
-
-
-def root_sequence():
-    from .sequences.base_sequences import RootSequence
-    return RootSequence
-
 
 #: Id used to identify dependencies type.
 DEP_TYPE = 'ecpy.pulses.items'
@@ -57,7 +51,10 @@ class Item(HasPrefAtom):
     parent = ForwardTyped(sequence)
 
     #: Reference to the root sequence.
-    root = ForwardTyped(root_sequence)
+    #: Not type checking is performed to allow templates to remplace the real
+    #: root.
+    # TODO use an ABC for sequences (will need a name : AbstratRootSequence)
+    root = Value()
 
     #: Boolean representing whever this item has a root sequence or not
     has_root = Bool(False)
@@ -167,7 +164,8 @@ class Item(HasPrefAtom):
             errors[prefix + par2] = repr(e)
 
         # Check the value makes sense as a duration or stop time.
-        if d2 is not None and d2 > 0 and (par2 == 'duration' or d2 > d1):
+        if d2 is not None and d2 > 0 and (par2 == 'duration' or d1 is None or
+                                          d2 > d1):
             setattr(self, par2, d2)
             root_vars[prefix + par2] = d2
             sequence_locals[prefix + par2] = d2

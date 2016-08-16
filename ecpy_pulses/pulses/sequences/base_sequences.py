@@ -559,18 +559,17 @@ class BaseSequence(AbstractSequence):
             # root linkable vars attr.
 
         else:
-            print("The code is wrong")
             for item in self.items:
                 item.root = None
                 if isinstance(item, BaseSequence):
                     item.unobserve('_last_index',
                                    self._item_last_index_updated)
 
-    def _post_setattr_time_constrained(self, change):
+    def _post_setattr_time_constrained(self, old, new):
         """Update the linkable vars when the sequence is time constrained.
 
         """
-        if change['value']:
+        if new:
             self.linkable_vars = ['start', 'stop', 'duration']
         else:
             self.linkable_vars = []
@@ -780,11 +779,11 @@ class RootSequence(BaseSequence):
 
     # --- Private API ---------------------------------------------------------
 
-    def _post_setattr_time_constrained(self, change):
+    def _post_setattr_time_constrained(self, old, new):
         """ Keep the linkable_vars list in sync with fix_sequence_duration.
 
         """
-        if change['value']:
+        if new:
             link_vars = self.linkable_vars[:]
             link_vars.insert(0, 'sequence_end')
             self.linkable_vars = link_vars

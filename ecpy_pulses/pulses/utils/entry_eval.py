@@ -30,7 +30,7 @@ EVALUATER_TOOLTIP = '\n'.join([
 
 
 def eval_entry(string, seq_locals, missing_locals):
-    """
+    """Evaluate a formula found in pulse sequence using the provided variables
 
     """
     aux_strings = string.split('{')
@@ -44,7 +44,7 @@ def eval_entry(string, seq_locals, missing_locals):
             return None
 
         replacement_token = ['_a{}'.format(i)
-                             for i in xrange(len(elements[1::2]))]
+                             for i in range(len(elements[1::2]))]
         replacement_values = {'_a{}'.format(i): seq_locals[key]
                               for i, key in enumerate(elements[1::2])}
 

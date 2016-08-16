@@ -6,25 +6,15 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Sequence context used for testing.
+"""Test importing from the api
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-from atom.api import Float, set_default
-from ecpy_pulses.pulses.contexts.base_context import BaseContext
 
-
-class TestContext(BaseContext):
-    """Context limited to testing purposes.
+def test_ecpy_pulses_api():
+    """Test importing from the api.
 
     """
-    logical_channels = set_default(('Ch1_L', 'Ch2_L'))
-
-    analogical_channels = set_default(('Ch1_A', 'Ch2_A'))
-
-    sampling = Float(1.0)
-
-    def _get_sampling_time(self):
-        return self.sampling
+    from ecpy_pulses.pulses.api import *

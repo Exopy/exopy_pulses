@@ -12,10 +12,11 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
-from atom.api import (Unicode, Enum, Float, Bool, Constant)
 from math import pi as Pi
+from traceback import format_exc
+
 import numpy as np
+from atom.api import (Unicode, Enum, Float, Bool, Constant)
 
 from ecpy.utils.atom_util import HasPrefAtom
 from ..utils.entry_eval import eval_entry
@@ -90,9 +91,9 @@ class Modulation(HasPrefAtom):
         freq = None
         try:
             freq = eval_entry(self.frequency, sequence_locals, missing)
-        except Exception as e:
+        except Exception:
             eval_success = False
-            errors[prefix + 'frequency'] = repr(e)
+            errors[prefix + 'frequency'] = format_exc()
 
         if freq is not None:
             self._frequency = freq
@@ -107,9 +108,9 @@ class Modulation(HasPrefAtom):
         try:
             phase = eval_entry(self.phase, sequence_locals, missing)
             self._phase = phase
-        except Exception as e:
+        except Exception:
             eval_success = False
-            errors[prefix + 'phase'] = repr(e)
+            errors[prefix + 'phase'] = format_exc()
 
         if phase is not None:
             self._phase = phase
