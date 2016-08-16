@@ -15,7 +15,16 @@ from __future__ import (division, unicode_literals, print_function,
 from ecpy_pulses.pulses.pulse import Pulse
 from ecpy_pulses.pulses.sequences.base_sequences\
     import RootSequence, BaseSequence
+from ecpy_pulses.pulses.shapes.square_shape import SquareShape
 from ecpy_pulses.testing.context import TestContext
+
+
+def add_children(seq, children):
+    """Add a sequence of item to a BaseSequence.
+
+    """
+    for i, c in enumerate(children):
+        seq.add_child_item(i, c)
 
 
 def test_sequence_time_constaints_observation():
@@ -180,3 +189,79 @@ def test_sequence_indexing2():
 
     # Check the observer was properly removed
     assert sequence1.index == 200
+
+
+def test_traverse_sequence():
+    """Test traversing a pulse sequence.
+
+    """
+    root = RootSequence()
+    context = TestContext()
+    root.context = context
+    root.external_vars = {'a': 1.5}
+
+    pulse1 = Pulse(def_1='1.0', def_2='{a}')
+    pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
+    pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='10',
+                   kind='Analogical', shape=SquareShape())
+    pulse4 = Pulse(def_1='{2_stop} + 0.5', def_2='10',
+                   kind='Analogical', shape=SquareShape())
+    seq = BaseSequence()
+    add_children(root, [pulse1, pulse2, pulse3, seq])
+    add_children(seq, [pulse4])
+
+    items = root.traverse()
+    assert len(list(items)) == 10
+
+    assert list(root.traverse(0)) == [root, pulse1, pulse2, pulse3, seq]
+
+
+def test_build_from_config():
+    """Test building a pulse sequence.
+
+    """
+    root = RootSequence()
+    context = TestContext()
+    root.context = context
+    root.external_vars = {'a': 1.5}
+
+    pulse1 = Pulse(def_1='1.0', def_2='{a}')
+    pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
+    pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='10',
+                   kind='Analogical', shape=SquareShape())
+    pulse4 = Pulse(def_1='{2_stop} + 0.5', def_2='10',
+                   kind='Analogical', shape=SquareShape())
+    seq = BaseSequence()
+    add_children(root, [pulse1, pulse2, pulse3, seq])
+    add_children(seq, [pulse4])
+
+    pref = root.preferences_from_members()
+    dependecies = {'ecpy.pulses.items':
+                   {'ecpy_pulses.BaseSequence': BaseSequence,
+                    'ecpy_pulses.Pulse': Pulse},
+                   'ecpy.pulses.shapes':
+                   {'ecpy_pulses.SquareShape': SquareShape},
+                   'ecpy.pulses.contexts':
+                   {'ecpy_pulses.TestContext': TestContext}}
+
+    aux = RootSequence.build_from_config(pref, dependecies)
+    assert aux.external_vars == {'a': 1.5}
+    assert len(aux.items) == 4
+    assert isinstance(aux.context, TestContext)
+
+    pulse1 = aux.items[0]
+    assert pulse1.def_1 == '1.0'
+    assert pulse1.def_2 == '{a}'
+
+    pulse2 = aux.items[1]
+    assert pulse2.def_1 == '{a} + 1.0'
+    assert pulse2.def_2 == '3.0'
+
+    pulse3 = aux.items[2]
+    assert pulse3.def_1 == '{2_stop} + 0.5'
+    assert pulse3.def_2 == '10'
+    assert pulse3.kind == 'Analogical'
+    assert isinstance(pulse3.shape, SquareShape)
+
+    seq = aux.items[3]
+    assert len(seq.items) == 1

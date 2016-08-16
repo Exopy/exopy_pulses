@@ -534,6 +534,24 @@ class BaseSequence(AbstractSequence):
                                        removed=[(index, child)])
         self.items_changed(notification)
 
+    def traverse(self, depth=-1):
+        """Reimplemented to yield all child task.
+
+        """
+        for i in super(BaseSequence, self).traverse(depth=depth):
+            yield i
+
+        if depth == 0:
+            for c in self.items:
+                if c:
+                    yield c
+
+        else:
+            for c in self.items:
+                if c:
+                    for subc in c.traverse(depth - 1):
+                        yield subc
+
     # --- Private API ---------------------------------------------------------
 
     #: Last index used by the sequence.

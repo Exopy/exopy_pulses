@@ -121,6 +121,29 @@ class Pulse(Item):
 
         return pulse
 
+    def traverse(self, depth=-1):
+        """Yield a task and all of its components.
+
+        The base implementation simply yields the task itself.
+
+        Parameters
+        ----------
+        depth : int
+            How deep should we explore the tree of tasks. When this number
+            reaches zero deeper children should not be explored but simply
+            yielded.
+
+        """
+        for i in super(Pulse, self).traverse(depth=depth):
+            yield i
+
+        if self.kind == 'Analogical':
+
+            yield self.modulation
+
+            if self.shape:
+                yield self.shape
+
     # --- Private API ---------------------------------------------------------
 
     def _get_waveform(self):

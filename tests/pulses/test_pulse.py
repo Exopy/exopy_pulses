@@ -483,3 +483,16 @@ def test_eval_pulse18(pulse):
 
     assert missing == set()
     assert'0_shape_amplitude' in errors
+
+
+def test_traversing_pulse(pulse):
+    """Test traversing a pulse.
+
+    """
+    assert list(pulse.traverse()) == [pulse]
+
+    pulse.kind = 'Analogical'
+    assert list(pulse.traverse()) == [pulse, pulse.modulation]
+
+    pulse.shape = SquareShape()
+    assert list(pulse.traverse()) == [pulse, pulse.modulation, pulse.shape]

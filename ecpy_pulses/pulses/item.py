@@ -199,6 +199,21 @@ class Item(HasPrefAtom):
 
         return success
 
+    def traverse(self, depth=-1):
+        """Yield an item and all of its components.
+
+        The base implementation simply yields the item itself.
+
+        Parameters
+        ----------
+        depth : int
+            How deep should we explore the tree of items. When this number
+            reaches zero deeper children should not be explored but simply
+            yielded. Negative values should be considered valid.
+
+        """
+        yield self
+
     # --- Private API ---------------------------------------------------------
 
     def _default_item_id(self):
