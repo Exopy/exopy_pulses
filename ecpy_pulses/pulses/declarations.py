@@ -73,7 +73,9 @@ class Sequence(Declarator):
                 return
 
             infos = collector.contributions[sequence_id]
-            # TODO Check or Update something?
+            infos.metadata.update(self.metadata)
+            self.is_registered = True
+            return
 
         # Determine the path of sequence and view
         path = self.get_path()
@@ -143,23 +145,17 @@ class Sequence(Declarator):
 
         """
         if self.is_registered:
-            # Unregister children.
-            for i in self.children:
-                i.unregister(collector)
-
-            # If we were just extending the sequence, clean instruments.
+            print(collector.contributions, self.id)
+            # If we were just extending the sequence, clean the metadata.
             if ':' not in self.sequence:
-                if self.sequence in collector.contributions:
-                    infos = collector.contributions[self.sequence]
+                if self.id in collector.contributions:
+                    infos = collector.contributions[self.id]
+                    for k in self.metadata:
+                        del infos.metadata[k]
                 return
 
             # Remove infos.
             try:
-                # Unparent remaining interfaces
-                infos = collector.contributions[self.id]
-                for i in infos.interfaces.values():
-                    i.parent = None
-
                 del collector.contributions[self.id]
             except KeyError:
                 pass
@@ -233,7 +229,7 @@ class SequenceConfig(Declarator):
         contributions member under the supported task name.
 
         """
-        # Determine the path of sequence and view
+        # Determine the path to the config and view.
         path = self.get_path()
         try:
             c_path, config = (path + '.' + self.config
@@ -242,10 +238,12 @@ class SequenceConfig(Declarator):
                             if path else self.view).split(':')
         except ValueError:
             msg = 'Incorrect %s (%s), path must be of the form a.b.c:Class'
-            err_id = c_path.split('.', 1)[0] + '.' + config
-            msg = msg % ('view', self.view)
+            if ':' in self.config:
+                msg = msg % ('view', self.view)
+            else:
+                msg = msg % ('config', self.config)
 
-            traceback[err_id] = msg
+            traceback[self.id] = msg
             return
 
         try:
@@ -259,7 +257,7 @@ class SequenceConfig(Declarator):
         if self.id in traceback:
             i = 1
             while True:
-                err_id = '%s_duplicate%d' % (config, i)
+                err_id = '%s_duplicate%d' % (self.id, i)
                 if err_id not in traceback:
                     break
 
@@ -354,8 +352,7 @@ class Context(Declarator):
     """Declarator used to contribute a Context
 
     """
-
-    #: path of the context object. Paths should be dot separed and the class
+    #: Path of the context object. Paths should be dot separed and the class
     #: name preceded by ':'.
     #: The path to any parent GroupDeclarator will be prepended to it.
     context = d_(Unicode())
@@ -390,7 +387,9 @@ class Context(Declarator):
                 return
 
             infos = collector.contributions[context_id]
-            # TODO Check or Update something?
+            infos.metadata.update(self.metadata)
+            self.is_registered = True
+            return
 
         # Determine the path of context and view
         path = self.get_path()
@@ -460,23 +459,16 @@ class Context(Declarator):
 
         """
         if self.is_registered:
-            # Unregister children.
-            for i in self.children:
-                i.unregister(collector)
-
-            # If we were just extending the context, clean instruments.
+            # If we were just extending the context, clean the metadata.
             if ':' not in self.context:
-                if self.context in collector.contributions:
-                    infos = collector.contributions[self.context]
+                if self.id in collector.contributions:
+                    infos = collector.contributions[self.id]
+                    for k in self.metadata:
+                        del infos.metadata[k]
                 return
 
             # Remove infos.
             try:
-                # Unparent remaining interfaces
-                infos = collector.contributions[self.id]
-                for i in infos.interfaces.values():
-                    i.parent = None
-
                 del collector.contributions[self.id]
             except KeyError:
                 pass
@@ -562,7 +554,9 @@ class Shape(Declarator):
                 return
 
             infos = collector.contributions[shape_id]
-            # TODO Check or Update something?
+            infos.metadata.update(self.metadata)
+            self.is_registered = True
+            return
 
         # Determine the path of shape and view
         path = self.get_path()
@@ -632,23 +626,16 @@ class Shape(Declarator):
 
         """
         if self.is_registered:
-            # Unregister children.
-            for i in self.children:
-                i.unregister(collector)
-
-            # If we were just extending the shape, clean instruments.
+            # If we were just extending the shape, clean the metadata.
             if ':' not in self.shape:
-                if self.shape in collector.contributions:
-                    infos = collector.contributions[self.shape]
+                if self.id in collector.contributions:
+                    infos = collector.contributions[self.id]
+                    for k in self.metadata:
+                        del infos.metadata[k]
                 return
 
             # Remove infos.
             try:
-                # Unparent remaining interfaces
-                infos = collector.contributions[self.id]
-                for i in infos.interfaces.values():
-                    i.parent = None
-
                 del collector.contributions[self.id]
             except KeyError:
                 pass

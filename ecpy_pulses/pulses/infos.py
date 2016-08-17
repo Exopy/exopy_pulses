@@ -29,11 +29,13 @@ with enaml.imports():
     from .pulse_view import PulseView
 
 
+# HINT : the notion of dependencies is currently unused but there in case
+# we need it
+
 class ObjectDependentInfos(Atom):
     """ Base info object for everything with dependencies.
 
     """
-
     #: Runtime dependencies ids of this object.
     dependencies = Coerced(set, ())
 
@@ -54,7 +56,7 @@ class SequenceInfos(ObjectDependentInfos):
 
 
 class PulseInfos(ObjectDependentInfos):
-    """An object used to store the informations about a sequence.
+    """An object used to store the informations about a pulse.
 
     """
     #: Class representing this pulse.

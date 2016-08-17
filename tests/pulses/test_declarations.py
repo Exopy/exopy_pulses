@@ -6,7 +6,7 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Test of the functionality of task and interfaces declarators.
+"""Test of the functionality of items, shapes and contexts declarators.
 
 """
 from __future__ import (division, unicode_literals, print_function,
@@ -16,8 +16,13 @@ import pytest
 import enaml
 from atom.api import Atom, Dict, List
 
-from ecpy.tasks.infos import TaskInfos, InterfaceInfos
-from ecpy.tasks.declarations import Task, Tasks, Interface, TaskConfig
+from ecpy_pulses.pulses.infos import (SequenceInfos, ShapeInfos,
+                                      ConfigInfos, ContextInfos,
+                                      PulseInfos)
+from ecpy_pulses.pulses.declarations import (Sequences, Sequence,
+                                             Shapes, Shape,
+                                             SequenceConfigs, SequenceConfig,
+                                             Contexts, Context)
 
 
 class _DummyCollector(Atom):
@@ -33,69 +38,57 @@ def collector():
 
 
 # =============================================================================
-# --- Test tasks --------------------------------------------------------------
+# --- Test sequences ----------------------------------------------------------
 # =============================================================================
 
 @pytest.fixture
-def task_decl():
-    return Task(task='ecpy.tasks.tasks.base_tasks:RootTask',
-                view='ecpy.tasks.tasks.base_views:RootTaskView')
+def sequence_decl():
+    root = 'ecpy_pulses.pulses.sequences.'
+    return Sequence(sequence=root + 'base_sequences:BaseSequence',
+                    view=root + 'views.base_sequence_view:BaseSequenceView')
 
 
-def test_register_task_decl1(collector, task_decl):
-    """Test registering the root task.
+def test_register_sequence_decl1(collector, sequence_decl):
+    """Test registering the base sequence.
 
     """
-    parent = Tasks(group='test', path='ecpy.tasks.tasks')
-    parent.insert_children(None, [task_decl])
-    task_decl.task = 'base_tasks:RootTask'
-    task_decl.view = 'base_views:RootTaskView'
+    parent = Sequences(group='test', path='ecpy_pulses.pulses.sequences')
+    parent.insert_children(None, [sequence_decl])
+    sequence_decl.sequence = 'base_sequences:BaseSequence'
+    sequence_decl.view = 'views.base_sequence_view:BaseSequenceView'
     parent.register(collector, {})
-    infos = collector.contributions['ecpy.RootTask']
-    from ecpy.tasks.tasks.base_tasks import RootTask
+    infos = collector.contributions['ecpy_pulses.BaseSequence']
+    from ecpy_pulses.pulses.sequences.base_sequences import BaseSequence
     with enaml.imports():
-        from ecpy.tasks.tasks.base_views import RootTaskView
-    assert infos.cls is RootTask
-    assert infos.view is RootTaskView
+        from ecpy_pulses.pulses.sequences.views.base_sequence_view\
+            import BaseSequenceView
+    assert infos.cls is BaseSequence
+    assert infos.view is BaseSequenceView
     assert infos.metadata['group'] == 'test'
 
 
-def test_register_task_decl_extend1(collector, task_decl):
-    """Test extending a task.
+def test_register_sequence_decl_extend1(collector, sequence_decl):
+    """Test extending a sequence.
 
     """
-    collector.contributions['ecpy.Task'] = TaskInfos()
-    task_decl.task = 'ecpy.Task'
-    task_decl.instruments = ['test']
-    task_decl.dependencies = ['dep']
-    task_decl.register(collector, {})
-    infos = collector.contributions['ecpy.Task']
-    assert infos.instruments == set(['test'])
-    assert infos.dependencies == set(['dep'])
+    collector.contributions['ecpy_pulses.Sequence'] = SequenceInfos()
+    sequence_decl.sequence = 'ecpy_pulses.Sequence'
+    sequence_decl.metadata = {'test': True}
+    sequence_decl.register(collector, {})
+    infos = collector.contributions['ecpy_pulses.Sequence']
+    assert 'test' in infos.metadata
 
 
-def test_register_task_decl_extend2(collector, task_decl):
-    """Test extending a yet to be defined task.
+def test_register_sequence_decl_extend2(collector, sequence_decl):
+    """Test extending a yet to be defined sequence.
 
     """
-    task_decl.task = 'ecpy.Task'
-    task_decl.register(collector, {})
-    assert collector._delayed == [task_decl]
+    sequence_decl.sequence = 'ecpy_pulses.Sequence'
+    sequence_decl.register(collector, {})
+    assert collector._delayed == [sequence_decl]
 
 
-def test_register_task_decl_extend3(collector, task_decl):
-    """Test extending a task using wrong children.
-
-    """
-    tb = {}
-    collector.contributions['ecpy.Task'] = TaskInfos()
-    task_decl.task = 'ecpy.Task'
-    task_decl.insert_children(None, [Task()])
-    task_decl.register(collector, tb)
-    assert 'ecpy.Task' in tb
-
-
-def test_register_task_decl_path_1(collector, task_decl):
+def test_register_sequence_decl_path_1(collector, sequence_decl):
     """Test handling wrong path : missing ':'.
 
     Such an errors can't be detected till the pass on the delayed and the
@@ -103,580 +96,605 @@ def test_register_task_decl_path_1(collector, task_decl):
 
     """
     tb = {}
-    task_decl.task = 'ecpy.tasks'
-    task_decl.register(collector, tb)
-    assert task_decl in collector._delayed
+    sequence_decl.sequence = 'ecpy_pulses.sequence'
+    sequence_decl.register(collector, tb)
+    assert sequence_decl in collector._delayed
 
 
-def test_register_task_decl_path2(collector, task_decl):
+def test_register_sequence_decl_path2(collector, sequence_decl):
     """Test handling wrong path : too many ':'.
 
     """
     tb = {}
-    task_decl.view = 'ecpy.tasks:tasks:Task'
-    task_decl.register(collector, tb)
-    assert 'ecpy.RootTask' in tb
+    sequence_decl.view = 'ecpy_pulses.sequences:sequences:Sequence'
+    sequence_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseSequence' in tb
 
 
-def test_register_task_decl_duplicate1(collector, task_decl):
+def test_register_sequence_decl_duplicate1(collector, sequence_decl):
     """Test handling duplicate : in collector.
 
     """
-    collector.contributions['ecpy.Task'] = None
+    collector.contributions['ecpy_pulses.BaseSequence'] = None
     tb = {}
-    task_decl.task = 'ecpy.tasks:Task'
-    task_decl.register(collector, tb)
-    assert 'ecpy.Task_duplicate1' in tb
+    sequence_decl.sequence = 'ecpy_pulses.pulses:BaseSequence'
+    sequence_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseSequence_duplicate1' in tb
 
 
-def test_register_task_decl_duplicate2(collector, task_decl):
+def test_register_sequence_decl_duplicate2(collector, sequence_decl):
     """Test handling duplicate : in traceback.
 
     """
-    tb = {'ecpy.Task': 'rr'}
-    task_decl.task = 'ecpy.tasks:Task'
-    task_decl.register(collector, tb)
-    assert 'ecpy.Task_duplicate1' in tb
+    tb = {'ecpy_pulses.BaseSequence': 'rr'}
+    sequence_decl.sequence = 'ecpy_pulses.pulses:BaseSequence'
+    sequence_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseSequence_duplicate1' in tb
 
 
-def test_register_task_decl_taskcls1(collector, task_decl):
-    """Test handling task class issues : failed import no such module.
-
-    """
-    tb = {}
-    task_decl.task = 'ecpy.tasks.foo:Task'
-    task_decl.register(collector, tb)
-    assert 'ecpy.Task' in tb and 'import' in tb['ecpy.Task']
-
-
-def test_register_task_decl_taskcls1_bis(collector, task_decl):
-    """Test handling task class issues : failed import error while importing.
+def test_register_sequence_decl_cls1(collector, sequence_decl):
+    """Test handling sequence class issues : failed import no such module.
 
     """
     tb = {}
-    task_decl.task = 'ecpy.testing.broken_module:Task'
-    task_decl.register(collector, tb)
-    assert 'ecpy.Task' in tb and 'NameError' in tb['ecpy.Task']
+    sequence_decl.sequence = 'ecpy_pulses.foo:BaseSequence'
+    sequence_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseSequence' in tb
+    assert 'import' in tb['ecpy_pulses.BaseSequence']
 
 
-def test_register_task_decl_taskcls2(collector, task_decl):
-    """Test handling task class issues : undefined in module.
-
-    """
-    tb = {}
-    task_decl.task = 'ecpy.tasks.tasks.base_tasks:Task'
-    task_decl.register(collector, tb)
-    assert 'ecpy.Task' in tb and 'attribute' in tb['ecpy.Task']
-
-
-def test_register_task_decl_taskcls3(collector, task_decl):
-    """Test handling task class issues : wrong type.
+def test_register_sequence_decl_cls1_bis(collector, sequence_decl):
+    """Test handling sequence class issues : failed import error while
+    importing.
 
     """
     tb = {}
-    task_decl.task = 'ecpy.tasks.tasks.database:TaskDatabase'
-    task_decl.register(collector, tb)
+    sequence_decl.sequence = 'ecpy.testing.broken_module:Sequence'
+    sequence_decl.register(collector, tb)
+    assert 'ecpy.Sequence' in tb and 'NameError' in tb['ecpy.Sequence']
+
+
+def test_register_sequence_decl_cls2(collector, sequence_decl):
+    """Test handling sequence class issues : undefined in module.
+
+    """
+    tb = {}
+    sequence_decl.sequence = 'ecpy_pulses.pulses.sequences.base_sequences:Task'
+    sequence_decl.register(collector, tb)
+    assert 'ecpy_pulses.Task' in tb and 'attribute' in tb['ecpy_pulses.Task']
+
+
+def test_register_sequence_decl_cls3(collector, sequence_decl):
+    """Test handling sequence class issues : wrong type.
+
+    """
+    tb = {}
+    sequence_decl.sequence = 'ecpy.tasks.tasks.database:TaskDatabase'
+    sequence_decl.register(collector, tb)
     assert 'ecpy.TaskDatabase' in tb and 'subclass' in tb['ecpy.TaskDatabase']
 
 
-def test_register_task_decl_view1(collector, task_decl):
+def test_register_sequence_decl_view1(collector, sequence_decl):
     """Test handling view issues : failed import no such module.
 
     """
     tb = {}
-    task_decl.view = 'ecpy.tasks.foo:Task'
-    task_decl.register(collector, tb)
-    assert 'ecpy.RootTask' in tb and 'import' in tb['ecpy.RootTask']
+    sequence_decl.view = 'ecpy.tasks.foo:Task'
+    sequence_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseSequence' in tb
+    assert'import' in tb['ecpy_pulses.BaseSequence']
 
 
-def test_register_task_decl_view1_bis(collector, task_decl):
+def test_register_sequence_decl_view1_bis(collector, sequence_decl):
     """Test handling view issues : failed import error while importing.
 
     """
     tb = {}
-    task_decl.view = 'ecpy.testing.broken_enaml:Task'
-    task_decl.register(collector, tb)
-    assert 'ecpy.RootTask' in tb
-    assert ('AttributeError' in tb['ecpy.RootTask'] or
-            'NameError' in tb['ecpy.RootTask'])
+    sequence_decl.view = 'ecpy.testing.broken_enaml:Task'
+    sequence_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseSequence' in tb
+    assert ('AttributeError' in tb['ecpy_pulses.BaseSequence'] or
+            'NameError' in tb['ecpy_pulses.BaseSequence'])
 
 
-def test_register_task_decl_view2(collector, task_decl):
+def test_register_sequence_decl_view2(collector, sequence_decl):
     """Test handling view issues : undefined in module.
 
     """
     tb = {}
-    task_decl.view = 'ecpy.tasks.tasks.base_views:Task'
-    task_decl.register(collector, tb)
-    assert 'ecpy.RootTask' in tb and 'import' in tb['ecpy.RootTask']
+    sequence_decl.view = 'ecpy.tasks.tasks.base_views:Task'
+    sequence_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseSequence' in tb
+    assert 'import' in tb['ecpy_pulses.BaseSequence']
 
 
-def test_register_task_decl_view3(collector, task_decl):
+def test_register_sequence_decl_view3(collector, sequence_decl):
     """Test handling view issues : wrong type.
 
     """
     tb = {}
-    task_decl.view = 'ecpy.tasks.tasks.database:TaskDatabase'
-    task_decl.register(collector, tb)
-    assert 'ecpy.RootTask' in tb and 'subclass' in tb['ecpy.RootTask']
+    sequence_decl.view = 'ecpy.tasks.tasks.database:TaskDatabase'
+    sequence_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseSequence' in tb
+    assert 'subclass' in tb['ecpy_pulses.BaseSequence']
 
 
-def test_register_task_decl_children(collector, task_decl):
-    """Test handling child type issue.
-
-    """
-    tb = {}
-    task_decl.insert_children(0, [Task()])
-    task_decl.register(collector, tb)
-    assert 'ecpy.RootTask' in tb and 'Interface' in tb['ecpy.RootTask']
-
-
-def test_unregister_task_decl1(collector, task_decl):
-    """Test unregistering a task.
+def test_unregister_sequence_decl1(collector, sequence_decl):
+    """Test unregistering a sequence.
 
     """
-    task_decl.register(collector, {})
-    task_decl.unregister(collector)
+    sequence_decl.register(collector, {})
+    sequence_decl.unregister(collector)
     assert not collector.contributions
 
 
-def test_unregister_task_decl2(collector, task_decl):
-    """Test unregistering a task which already disappeared.
+def test_unregister_sequence_decl2(collector, sequence_decl):
+    """Test unregistering a sequence which already disappeared.
 
     """
-    task_decl.register(collector, {})
+    sequence_decl.register(collector, {})
     collector.contributions = {}
-    task_decl.unregister(collector)
+    sequence_decl.unregister(collector)
     # Would raise an error if the error was not properly catched.
 
 
-def test_unregister_task_decl3(collector, task_decl):
-    """Test unregistering a task simply contributing instruments.
+def test_unregister_sequence_decl3(collector, sequence_decl):
+    """Test unregistering a sequence extending an existing one.
 
     """
-    collector.contributions['ecpy.Task'] = TaskInfos()
-    task_decl.task = 'Task'
-    task_decl.instruments = ['test']
-    task_decl.dependencies = ['dep']
-    task_decl.register(collector, {})
-    task_decl.unregister(collector)
-    assert not collector.contributions['ecpy.Task'].instruments
-    assert not collector.contributions['ecpy.Task'].dependencies
+    collector.contributions['ecpy_pulses.BaseSequence'] = SequenceInfos()
+    sequence_decl.sequence = 'ecpy_pulses.BaseSequence'
+    sequence_decl.metadata = {'test': True}
+    sequence_decl.register(collector, {})
+    sequence_decl.unregister(collector)
+    assert not collector.contributions['ecpy_pulses.BaseSequence'].metadata
 
 
-def test_unregister_task_decl4(collector, task_decl):
-    """Test unregistering a task which still have declared interfaces.
-
-    """
-    task_decl.register(collector, {})
-    infos = collector.contributions['ecpy.RootTask']
-    i = InterfaceInfos(parent=infos)
-    infos.interfaces['i'] = i
-    task_decl.unregister(collector)
-    assert not collector.contributions
-    assert not i.parent
-
-
-def test_str_task(task_decl):
+def test_str_sequence(sequence_decl):
     """Test string representation.
 
     """
-    str(task_decl)
+    str(sequence_decl)
 
 
 # =============================================================================
-# --- Test interfaces ---------------------------------------------------------
+# --- Test shapes ------------------------------------------------------------
 # =============================================================================
 
 @pytest.fixture
-def int_decl():
-    tasks = Tasks(path='ecpy.tasks.tasks.logic')
-    task = Task(task='loop_task:LoopTask', view='views.loop_view:LoopView')
-    tasks.insert_children(None, [task])
-    i = Interface(interface='loop_iterable_interface:IterableLoopInterface',
-                  views=['views.loop_iterable_view:IterableLoopLabel'])
-    task.insert_children(None, [i])
-    return task, i
+def shape_decl():
+    root = 'ecpy_pulses.pulses.shapes.'
+    return Shape(shape=root + 'square_shape:SquareShape',
+                 view=root + 'views.square_shape_view:SquareShapeView')
 
 
-def test_interface_decl1(int_decl, collector):
-    """Test registering an interface with a single view.
+def test_register_shape_decl1(collector, shape_decl):
+    """Test registering the base sequence.
 
     """
-    task, interface = int_decl
-    task.register(collector, {})
-
-    task_infos = list(collector.contributions.values())[0]
-    assert len(task_infos.interfaces) == 1
-    assert list(task_infos.interfaces.values())[0].parent is task_infos
-
-
-def test_interface_decl2(int_decl, collector):
-    """Test registering an interface with multiple views.
-
-    """
-    task, interface = int_decl
-    interface.views = ['views.loop_iterable_view:IterableLoopLabel',
-                       'views.loop_iterable_view:IterableLoopField']
-    task.register(collector, {})
-    contribs = list(collector.contributions.values())
-    interfaces = list(contribs[0].interfaces.values())
-    assert len(interfaces[0].views) == 2
+    parent = Shapes(group='test', path='ecpy_pulses.pulses.shapes')
+    parent.insert_children(None, [shape_decl])
+    shape_decl.shape = 'square_shape:SquareShape'
+    shape_decl.view = 'views.square_shape_view:SquareShapeView'
+    parent.register(collector, {})
+    infos = collector.contributions['ecpy_pulses.SquareShape']
+    from ecpy_pulses.pulses.shapes.square_shape import SquareShape
+    with enaml.imports():
+        from ecpy_pulses.pulses.shapes.views.square_shape_view\
+            import SquareShapeView
+    assert infos.cls is SquareShape
+    assert infos.view is SquareShapeView
+    assert infos.metadata['group'] == 'test'
 
 
-def test_interface_decl3(collector, int_decl):
-    """Test handling not yet registered task.
+def test_register_shape_decl_extend1(collector, shape_decl):
+    """Test extending a sequence.
 
     """
-    tb = {}
-    task, i = int_decl
-    i.interface = 'foo'
-    i.register(collector, tb)
-    assert collector._delayed
+    collector.contributions['ecpy_pulses.Shape'] = ShapeInfos()
+    shape_decl.shape = 'ecpy_pulses.Shape'
+    shape_decl.metadata = {'test': True}
+    shape_decl.register(collector, {})
+    infos = collector.contributions['ecpy_pulses.Shape']
+    assert 'test' in infos.metadata
 
 
-def test_register_interface_extend_interface1(collector, int_decl):
-    """Test extending an interface.
-
-    """
-    infos = TaskInfos()
-    infos.interfaces['Test'] = InterfaceInfos()
-    collector.contributions['ecpy.Task'] = infos
-
-    task, interface = int_decl
-    task.task = 'ecpy.Task'
-    interface.interface = 'Test'
-    interface.instruments = ['test']
-    interface.dependencies = ['dep']
-
-    task.register(collector, {})
-    interface = collector.contributions['ecpy.Task'].interfaces['Test']
-    assert interface.instruments == {'test'}
-    assert 'dep' in interface.dependencies
-
-
-def test_register_interface_extend_interface2(collector, int_decl):
-    """Test extending an interface not yet declared.
+def test_register_shape_decl_extend2(collector, shape_decl):
+    """Test extending a yet to be defined sequence.
 
     """
-    collector.contributions['ecpy.Task'] = TaskInfos()
-
-    task, interface = int_decl
-    task.task = 'ecpy.Task'
-    interface.interface = 'Test'
-    interface.instruments = ['test']
-
-    task.register(collector, {})
-    assert collector._delayed == [interface]
+    shape_decl.shape = 'ecpy_pulses.Shape'
+    shape_decl.register(collector, {})
+    assert collector._delayed == [shape_decl]
 
 
-def test_register_interface_extend_task(collector, int_decl):
-    """Test extending a task by adding interfaces.
-
-    """
-    collector.contributions['ecpy.Task'] = TaskInfos()
-    task, _ = int_decl
-    task.task = 'ecpy.Task'
-    task.register(collector, {})
-    assert collector.contributions['ecpy.Task'].interfaces
-
-
-def test_register_interface_decl_missing_ext(collector):
-    """Test handling missing extended, no parent.
-
-    """
-    tb = {}
-    Interface(interface='foo:bar').register(collector, tb)
-    assert 'task/interface ' in tb['foo:bar']
-
-
-def test_register_interface_decl_path_1(int_decl, collector):
+def test_register_shape_decl_path_1(collector, shape_decl):
     """Test handling wrong path : missing ':'.
 
+    Such an errors can't be detected till the pass on the delayed and the
+    dead-end is detected.
+
     """
     tb = {}
-    task, i = int_decl
-    i.interface = 'foo.tt'
-    task.register(collector, tb)
-    assert 'ecpy.LoopTask.foo.tt' in tb
+    shape_decl.shape = 'ecpy_pulses.shape'
+    shape_decl.register(collector, tb)
+    assert shape_decl in collector._delayed
 
 
-def test_register_interface_decl_path2(int_decl, collector):
+def test_register_shape_decl_path2(collector, shape_decl):
     """Test handling wrong path : too many ':'.
 
     """
     tb = {}
-    task, i = int_decl
-    i.views = 'foo:bar:foo'
-    task.register(collector, tb)
-    assert 'ecpy.LoopTask.IterableLoopInterface' in tb
+    shape_decl.view = 'ecpy_pulses.shapes:shapes:Shape'
+    shape_decl.register(collector, tb)
+    assert 'ecpy_pulses.SquareShape' in tb
 
 
-def test_register_interface_decl_duplicate1(int_decl, collector):
+def test_register_shape_decl_duplicate1(collector, shape_decl):
     """Test handling duplicate : in collector.
 
     """
+    collector.contributions['ecpy_pulses.SquareShape'] = None
     tb = {}
-    task, i = int_decl
-    infos = TaskInfos(interfaces={i.interface.rsplit(':', 1)[1]: None})
-    collector.contributions[task.id] = infos
-    i.register(collector, tb)
-    assert 'ecpy.LoopTask.IterableLoopInterface_duplicate1' in tb
+    shape_decl.shape = 'ecpy_pulses.pulses:SquareShape'
+    shape_decl.register(collector, tb)
+    assert 'ecpy_pulses.SquareShape_duplicate1' in tb
 
 
-def test_register_interface_decl_duplicate2(int_decl, collector):
+def test_register_shape_decl_duplicate2(collector, shape_decl):
     """Test handling duplicate : in traceback.
 
     """
-    tb = {'ecpy.LoopTask.IterableLoopInterface': ''}
-    task, i = int_decl
-    task.register(collector, tb)
-    assert 'ecpy.LoopTask.IterableLoopInterface_duplicate1' in tb
+    tb = {'ecpy_pulses.SquareShape': 'rr'}
+    shape_decl.shape = 'ecpy_pulses.pulses:SquareShape'
+    shape_decl.register(collector, tb)
+    assert 'ecpy_pulses.SquareShape_duplicate1' in tb
 
 
-def test_register_interface_decl_cls1(int_decl, collector):
-    """Test handling interface class issues : failed import wrong path.
-
-    """
-    tb = {}
-    task, i = int_decl
-    i.interface = 'foo.bar:baz'
-    task.register(collector, tb)
-    assert ('ecpy.LoopTask.baz' in tb and
-            'ImportError' in tb['ecpy.LoopTask.baz'])
-
-
-def test_register_interface_decl_cls1_bis(collector):
-    """Test handling interface class issues : failed import Name error.
+def test_register_shape_decl_cls1(collector, shape_decl):
+    """Test handling sequence class issues : failed import no such module.
 
     """
     tb = {}
-    task = Task(task='ecpy.tasks.tasks.logic.loop_task:LoopTask',
-                view='ecpy.tasks.tasks.logic.views.loop_view:LoopView')
-    i = Interface(interface='loop_iterable_interface:IterableLoopInterface',
-                  views=['views.loop_iterable_view:IterableLoopLabel'])
-    task.insert_children(None, [i])
-    i.interface = 'ecpy.testing.broken_module:Test'
-    task.register(collector, tb)
-    assert ('ecpy.LoopTask.Test' in tb and
-            'NameError' in tb['ecpy.LoopTask.Test'])
+    shape_decl.shape = 'ecpy_pulses.foo:SquareShape'
+    shape_decl.register(collector, tb)
+    assert 'ecpy_pulses.SquareShape' in tb
+    assert 'import' in tb['ecpy_pulses.SquareShape']
 
 
-def test_register_interface_decl_cls2(int_decl, collector):
-    """Test handling interface class issues : undefined in module.
+def test_register_shape_decl_cls1_bis(collector, shape_decl):
+    """Test handling sequence class issues : failed import error while
+    importing.
 
     """
     tb = {}
-    task, i = int_decl
-    i.interface = 'loop_iterable_interface:baz'
-    task.register(collector, tb)
-    assert 'ecpy.LoopTask.baz' in tb
+    shape_decl.shape = 'ecpy.testing.broken_module:SquareShape'
+    shape_decl.register(collector, tb)
+    assert 'ecpy.SquareShape' in tb and 'NameError' in tb['ecpy.SquareShape']
 
 
-def test_register_interface_decl_cls3(collector, int_decl):
-    """Test handling interface class issues : wrong type.
-
-    """
-    tb = {}
-    task, i = int_decl
-    i.interface = 'loop_task:LoopTask'
-    task.register(collector, tb)
-    assert ('ecpy.LoopTask.LoopTask' in tb and
-            'subclass' in tb['ecpy.LoopTask.LoopTask'])
-
-
-def test_register_interface_decl_view1(int_decl, collector):
-    """Test handling view issues : failed import due to wrong path.
+def test_register_shape_decl_cls2(collector, shape_decl):
+    """Test handling sequence class issues : undefined in module.
 
     """
     tb = {}
-    task, i = int_decl
-    i.views = 'foo.bar:baz'
-    task.register(collector, tb)
-    assert 'ecpy.LoopTask.IterableLoopInterface' in tb
+    shape_decl.shape = 'ecpy_pulses.pulses.shapes.base_shapes:Task'
+    shape_decl.register(collector, tb)
+    assert 'ecpy_pulses.Task' in tb and 'attribute' in tb['ecpy_pulses.Task']
 
 
-def test_register_interface_decl_view1_bis(int_decl, collector):
-    """Test handling view issues : failed import due to NameError.
+def test_register_shape_decl_cls3(collector, shape_decl):
+    """Test handling sequence class issues : wrong type.
 
     """
     tb = {}
-    task = Task(task='ecpy.tasks.tasks.logic.loop_task:LoopTask',
-                view='ecpy.tasks.tasks.logic.views.loop_view:LoopView')
-    i = Interface(interface='ecpy.tasks.tasks.logic.loop_iterable_interface:IterableLoopInterface',
-                  views=['_dumy__:Test', 'ecpy.testing.broken_enaml:Task'])
-    task.insert_children(None, [i])
-    task.register(collector, tb)
-    assert 'ecpy.LoopTask.IterableLoopInterface_1' in tb
-    assert ('AttributeError' in tb['ecpy.LoopTask.IterableLoopInterface_1'] or
-            'NameError' in tb['ecpy.LoopTask.IterableLoopInterface_1'])
+    shape_decl.shape = 'ecpy.tasks.tasks.database:TaskDatabase'
+    shape_decl.register(collector, tb)
+    assert 'ecpy.TaskDatabase' in tb and 'subclass' in tb['ecpy.TaskDatabase']
 
-def test_register_interface_decl_view2(int_decl, collector):
+
+def test_register_shape_decl_view1(collector, shape_decl):
+    """Test handling view issues : failed import no such module.
+
+    """
+    tb = {}
+    shape_decl.view = 'ecpy.tasks.foo:Task'
+    shape_decl.register(collector, tb)
+    assert 'ecpy_pulses.SquareShape' in tb
+    assert'import' in tb['ecpy_pulses.SquareShape']
+
+
+def test_register_shape_decl_view1_bis(collector, shape_decl):
+    """Test handling view issues : failed import error while importing.
+
+    """
+    tb = {}
+    shape_decl.view = 'ecpy.testing.broken_enaml:Task'
+    shape_decl.register(collector, tb)
+    assert 'ecpy_pulses.SquareShape' in tb
+    assert ('AttributeError' in tb['ecpy_pulses.SquareShape'] or
+            'NameError' in tb['ecpy_pulses.SquareShape'])
+
+
+def test_register_shape_decl_view2(collector, shape_decl):
     """Test handling view issues : undefined in module.
 
     """
     tb = {}
-    task, i = int_decl
-    i.views = 'views.loop_iterable_view:baz'
-    task.register(collector, tb)
-    assert 'ecpy.LoopTask.IterableLoopInterface' in tb
+    shape_decl.view = 'ecpy.tasks.tasks.base_views:Task'
+    shape_decl.register(collector, tb)
+    assert 'ecpy_pulses.SquareShape' in tb
+    assert 'import' in tb['ecpy_pulses.SquareShape']
 
 
-def test_register_interface_decl_children1(int_decl, collector):
-    """Test handling child type issue.
+def test_register_shape_decl_view3(collector, shape_decl):
+    """Test handling view issues : wrong type.
 
     """
     tb = {}
-    task, i = int_decl
-    i.insert_children(None, [Task()])
-    task.register(collector, tb)
-    assert 'ecpy.LoopTask.IterableLoopInterface' in tb and\
-        'Interface' in tb['ecpy.LoopTask.IterableLoopInterface']
+    shape_decl.view = 'ecpy.tasks.tasks.database:TaskDatabase'
+    shape_decl.register(collector, tb)
+    assert 'ecpy_pulses.SquareShape' in tb
+    assert 'subclass' in tb['ecpy_pulses.SquareShape']
 
 
-def test_register_interface_decl_children2(int_decl, collector):
-    """Test handling child type issue when extending.
-
-    """
-    infos = TaskInfos()
-    infos.interfaces['Test'] = InterfaceInfos()
-    collector.contributions['ecpy.Task'] = infos
-
-    task, interface = int_decl
-    task.task = 'ecpy.Task'
-    interface.interface = 'Test'
-    interface.insert_children(None, [Task()])
-
-    tb = {}
-    task.register(collector, tb)
-    assert 'ecpy.Task.Test' in tb and 'Interface' in tb['ecpy.Task.Test']
-
-
-def test_unregister_interface_decl(int_decl, collector):
-    """Test unregistering an interface.
+def test_unregister_shape_decl1(collector, shape_decl):
+    """Test unregistering a sequence.
 
     """
-    task, i = int_decl
-    task.register(collector, {})
-    i.unregister(collector)
-    assert not collector.contributions['ecpy.LoopTask'].interfaces
-
-
-def test_unregister_interface_decl_bis(int_decl, collector):
-    """Test unregistering an task with an interface.
-
-    """
-    task, i = int_decl
-    task.register(collector, {})
-    task.unregister(collector)
+    shape_decl.register(collector, {})
+    shape_decl.unregister(collector)
     assert not collector.contributions
 
 
-def test_unregister_interface_decl2(collector, int_decl):
-    """Test unregistering an interface for a task which already disappeared.
+def test_unregister_shape_decl2(collector, shape_decl):
+    """Test unregistering a sequence which already disappeared.
 
     """
-    task, i = int_decl
-    task.register(collector, {})
+    shape_decl.register(collector, {})
     collector.contributions = {}
-    i.unregister(collector)
+    shape_decl.unregister(collector)
     # Would raise an error if the error was not properly catched.
 
 
-def test_unregister_interface_decl3(collector, int_decl):
-    """Test unregistering an interface which already disappeared.
+def test_unregister_shape_decl3(collector, shape_decl):
+    """Test unregistering a sequence extending an existing one.
 
     """
-    task, i = int_decl
-    task.register(collector, {})
-    collector.contributions['ecpy.LoopTask'].interfaces = {}
-    i.unregister(collector)
-    # Would raise an error if the error was not properly catched.
+    collector.contributions['ecpy_pulses.SquareShape'] = ShapeInfos()
+    shape_decl.shape = 'ecpy_pulses.SquareShape'
+    shape_decl.metadata = {'test': True}
+    shape_decl.register(collector, {})
+    shape_decl.unregister(collector)
+    assert not collector.contributions['ecpy_pulses.SquareShape'].metadata
 
 
-def test_unregister_interface_decl4(collector, int_decl):
-    """Test unregistering an interface simply contributing instruments.
-
-    """
-    infos = TaskInfos()
-    infos.interfaces['Test'] = InterfaceInfos()
-    collector.contributions['ecpy.Task'] = infos
-
-    task, interface = int_decl
-    task.task = 'ecpy.Task'
-    interface.interface = 'Test'
-    interface.instruments = ['test']
-    interface.dependencies = ['dep']
-
-    task.register(collector, {})
-    interface = collector.contributions['ecpy.Task'].interfaces['Test']
-    assert interface.instruments == {'test'}
-    task.unregister(collector)
-    assert not interface.instruments
-    assert not interface.dependencies
-
-
-def test_unregister_interface_decl5(collector, int_decl):
-    """Test unregistering an interface which still have declared interfaces.
+def test_str_shape(shape_decl):
+    """Test string representation.
 
     """
-    task, i = int_decl
-    task.register(collector, {})
-    t_infos = collector.contributions['ecpy.LoopTask']
-    infos = list(t_infos.interfaces.values())[0]
-    i = InterfaceInfos(parent=infos)
-    infos.interfaces['i'] = i
-    task.unregister(collector)
-    assert not collector.contributions
-    assert not i.parent
+    str(shape_decl)
 
+
+# =============================================================================
+# --- Test contexts -----------------------------------------------------------
+# =============================================================================
 
 @pytest.fixture
-def nested_int_decl(int_decl):
-    task, interface = int_decl
-    i = Interface(interface='loop_linspace_interface:LinspaceLoopInterface',
-                  views=['views.loop_linspace_view:LinspaceLoopView'])
-    interface.insert_children(None, [i])
-    return task, i
+def context_decl():
+    root = 'ecpy_pulses.pulses.contexts.'
+    return Context(context=root + 'base_context:BaseContext',
+                   view=root + 'views.base_context_view:BaseContextView')
 
 
-# HINT this is part broken as the class is not a subclass of IInterface
-def test_nested_interfaces_register(nested_int_decl, collector):
-    """Test registering and unregistering an interface to an interface.
+def test_register_context_decl1(collector, context_decl):
+    """Test registering the base context.
 
     """
-    task, interface = nested_int_decl
-    task.register(collector, {})
+    parent = Sequences(group='test', path='ecpy_pulses.pulses.contexts')
+    parent.insert_children(None, [context_decl])
+    context_decl.context = 'base_context:BaseContext'
+    context_decl.view = 'views.base_context_view:BaseContextView'
+    parent.register(collector, {})
+    infos = collector.contributions['ecpy_pulses.BaseContext']
+    from ecpy_pulses.pulses.contexts.base_context import BaseContext
+    with enaml.imports():
+        from ecpy_pulses.pulses.contexts.views.base_context_view\
+            import BaseContextView
+    assert infos.cls is BaseContext
+    assert infos.view is BaseContextView
+    assert infos.metadata['group'] == 'test'
 
-    interfaces = collector.contributions['ecpy.LoopTask'].interfaces
-    assert interfaces['IterableLoopInterface'].interfaces
-    interface.parent.unregister(collector)
 
-
-def test_nested_interfaces_extend1(nested_int_decl, collector):
-    """Test registering, unregistering an interface extending an interface
-    to an interface.
+def test_register_context_decl_extend1(collector, context_decl):
+    """Test extending a sequence.
 
     """
-    infos = TaskInfos()
-    infos.interfaces['Test'] = InterfaceInfos(interfaces={'Nested':
-                                                          InterfaceInfos()})
-    collector.contributions['ecpy.Task'] = infos
-
-    task, interface = nested_int_decl
-    task.task = 'ecpy.Task'
-    interface.parent.interface = 'Test'
-    interface.interface = 'Nested'
-    interface.instruments = ['test']
-
-    task.register(collector, {})
-    i = collector.contributions['ecpy.Task'].interfaces['Test']
-    assert i.interfaces['Nested'].instruments == {'test'}
-    interface.parent.unregister(collector)
+    collector.contributions['ecpy_pulses.Context'] = ContextInfos()
+    context_decl.context = 'ecpy_pulses.Context'
+    context_decl.metadata = {'test': True}
+    context_decl.register(collector, {})
+    infos = collector.contributions['ecpy_pulses.Context']
+    assert 'test' in infos.metadata
 
 
-def test_str_interface(int_decl):
-    str(int_decl[1])
+def test_register_context_decl_extend2(collector, context_decl):
+    """Test extending a yet to be defined sequence.
+
+    """
+    context_decl.context = 'ecpy_pulses.Context'
+    context_decl.register(collector, {})
+    assert collector._delayed == [context_decl]
+
+
+def test_register_context_decl_path_1(collector, context_decl):
+    """Test handling wrong path : missing ':'.
+
+    Such an errors can't be detected till the pass on the delayed and the
+    dead-end is detected.
+
+    """
+    tb = {}
+    context_decl.context = 'ecpy_pulses.context'
+    context_decl.register(collector, tb)
+    assert context_decl in collector._delayed
+
+
+def test_register_context_decl_path2(collector, context_decl):
+    """Test handling wrong path : too many ':'.
+
+    """
+    tb = {}
+    context_decl.view = 'ecpy_pulses.sequences:sequences:Context'
+    context_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseContext' in tb
+
+
+def test_register_context_decl_duplicate1(collector, context_decl):
+    """Test handling duplicate : in collector.
+
+    """
+    collector.contributions['ecpy_pulses.BaseContext'] = None
+    tb = {}
+    context_decl.context = 'ecpy_pulses.pulses:BaseContext'
+    context_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseContext_duplicate1' in tb
+
+
+def test_register_context_decl_duplicate2(collector, context_decl):
+    """Test handling duplicate : in traceback.
+
+    """
+    tb = {'ecpy_pulses.BaseContext': 'rr'}
+    context_decl.context = 'ecpy_pulses.pulses:BaseContext'
+    context_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseContext_duplicate1' in tb
+
+
+def test_register_context_decl_cls1(collector, context_decl):
+    """Test handling sequence class issues : failed import no such module.
+
+    """
+    tb = {}
+    context_decl.context = 'ecpy_pulses.foo:BaseContext'
+    context_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseContext' in tb
+    assert 'import' in tb['ecpy_pulses.BaseContext']
+
+
+def test_register_context_decl_cls1_bis(collector, context_decl):
+    """Test handling sequence class issues : failed import error while
+    importing.
+
+    """
+    tb = {}
+    context_decl.context = 'ecpy.testing.broken_module:Context'
+    context_decl.register(collector, tb)
+    assert 'ecpy.Context' in tb and 'NameError' in tb['ecpy.Context']
+
+
+def test_register_context_decl_cls2(collector, context_decl):
+    """Test handling sequence class issues : undefined in module.
+
+    """
+    tb = {}
+    context_decl.context = 'ecpy_pulses.pulses.sequences.base_sequences:Task'
+    context_decl.register(collector, tb)
+    assert 'ecpy_pulses.Task' in tb and 'attribute' in tb['ecpy_pulses.Task']
+
+
+def test_register_context_decl_cls3(collector, context_decl):
+    """Test handling sequence class issues : wrong type.
+
+    """
+    tb = {}
+    context_decl.context = 'ecpy.tasks.tasks.database:TaskDatabase'
+    context_decl.register(collector, tb)
+    assert 'ecpy.TaskDatabase' in tb and 'subclass' in tb['ecpy.TaskDatabase']
+
+
+def test_register_context_decl_view1(collector, context_decl):
+    """Test handling view issues : failed import no such module.
+
+    """
+    tb = {}
+    context_decl.view = 'ecpy.tasks.foo:Task'
+    context_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseContext' in tb
+    assert'import' in tb['ecpy_pulses.BaseContext']
+
+
+def test_register_context_decl_view1_bis(collector, context_decl):
+    """Test handling view issues : failed import error while importing.
+
+    """
+    tb = {}
+    context_decl.view = 'ecpy.testing.broken_enaml:Task'
+    context_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseContext' in tb
+    assert ('AttributeError' in tb['ecpy_pulses.BaseContext'] or
+            'NameError' in tb['ecpy_pulses.BaseContext'])
+
+
+def test_register_context_decl_view2(collector, context_decl):
+    """Test handling view issues : undefined in module.
+
+    """
+    tb = {}
+    context_decl.view = 'ecpy.tasks.tasks.base_views:Task'
+    context_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseContext' in tb
+    assert 'import' in tb['ecpy_pulses.BaseContext']
+
+
+def test_register_context_decl_view3(collector, context_decl):
+    """Test handling view issues : wrong type.
+
+    """
+    tb = {}
+    context_decl.view = 'ecpy.tasks.tasks.database:TaskDatabase'
+    context_decl.register(collector, tb)
+    assert 'ecpy_pulses.BaseContext' in tb
+    assert 'subclass' in tb['ecpy_pulses.BaseContext']
+
+
+def test_unregister_context_decl1(collector, context_decl):
+    """Test unregistering a sequence.
+
+    """
+    context_decl.register(collector, {})
+    context_decl.unregister(collector)
+    assert not collector.contributions
+
+
+def test_unregister_context_decl2(collector, context_decl):
+    """Test unregistering a sequence which already disappeared.
+
+    """
+    context_decl.register(collector, {})
+    collector.contributions = {}
+    context_decl.unregister(collector)
+    # Would raise an error if the error was not properly catched.
+
+
+def test_unregister_context_decl3(collector, context_decl):
+    """Test unregistering a sequence extending an existing one.
+
+    """
+    collector.contributions['ecpy_pulses.BaseContext'] = SequenceInfos()
+    context_decl.context = 'ecpy_pulses.BaseContext'
+    context_decl.metadata = {'test': True}
+    context_decl.register(collector, {})
+    context_decl.unregister(collector)
+    assert not collector.contributions['ecpy_pulses.BaseContext'].metadata
+
+
+def test_str_context(context_decl):
+    """Test string representation.
+
+    """
+    str(context_decl)
 
 
 # =============================================================================
@@ -685,31 +703,35 @@ def test_str_interface(int_decl):
 
 @pytest.fixture
 def config_decl():
-    class Config(TaskConfig):
-        def get_task_class(self):
-            from ecpy.tasks.tasks.base_tasks import BaseTask
-            return BaseTask
+    class Config(SequenceConfig):
+        def get_sequence_class(self):
+            from ecpy_pulses.pulses.sequences.base_sequences\
+                import BaseSequence
+            return BaseSequence
+
+    root = 'ecpy_pulses.pulses.configs.'
 
     return Config(
-        config='ecpy.tasks.configs.base_configs:PyTaskConfig',
-        view='ecpy.tasks.configs.base_config_views:PyConfigView')
+        config=root + 'base_config:SequenceConfig',
+        view=root + 'base_config_views:SequenceConfigView')
 
 
 def test_register_config_decl(collector, config_decl):
-    """Test registering the root task.
+    """Test registering the sequence config.
 
     """
     config_decl.register(collector, {})
-    from ecpy.tasks.tasks.base_tasks import BaseTask
-    infos = collector.contributions[BaseTask]
-    from ecpy.tasks.configs.base_configs import PyTaskConfig
+    from ecpy_pulses.pulses.sequences.base_sequences import BaseSequence
+    infos = collector.contributions[BaseSequence]
+    from ecpy_pulses.pulses.configs.base_config import SequenceConfig
     with enaml.imports():
-        from ecpy.tasks.configs.base_config_views import PyConfigView
-    assert infos.cls is PyTaskConfig
-    assert infos.view is PyConfigView
+        from ecpy_pulses.pulses.configs.base_config_views \
+            import SequenceConfigView
+    assert infos.cls is SequenceConfig
+    assert infos.view is SequenceConfigView
 
 
-def test_register_config_fail_to_get_task(collector, config_decl):
+def test_register_config_fail_to_get_sequence(collector, config_decl):
     """Test handling wrong path : missing ':'.
 
     """
@@ -717,9 +739,9 @@ def test_register_config_fail_to_get_task(collector, config_decl):
 
     def dummy(self):
         raise Exception()
-    type(config_decl).get_task_class = dummy
+    type(config_decl).get_sequence_class = dummy
     config_decl.register(collector, tb)
-    assert 'ecpy.PyTaskConfig' in tb
+    assert 'ecpy_pulses.SequenceConfig' in tb
 
 
 def test_register_config_decl_path_1(collector, config_decl):
@@ -739,27 +761,27 @@ def test_register_config_decl_path2(collector, config_decl):
     tb = {}
     config_decl.view = 'ecpy.tasks:tasks:Task'
     config_decl.register(collector, tb)
-    assert 'ecpy.PyTaskConfig' in tb
+    assert 'ecpy_pulses.SequenceConfig' in tb
 
 
 def test_register_config_decl_duplicate1(collector, config_decl):
     """Test handling duplicate config for a task.
 
     """
-    from ecpy.tasks.tasks.base_tasks import BaseTask
-    collector.contributions[BaseTask] = None
+    from ecpy_pulses.pulses.sequences.base_sequences import BaseSequence
+    collector.contributions[BaseSequence] = None
     tb = {}
     config_decl.register(collector, tb)
-    assert 'ecpy.PyTaskConfig' in tb
+    assert 'ecpy_pulses.SequenceConfig' in tb
 
 
 def test_register_config_decl_duplicate2(collector, config_decl):
     """Test handling duplicate : in traceback.
 
     """
-    tb = {'ecpy.PyTaskConfig': 'rr'}
+    tb = {'ecpy_pulses.SequenceConfig': 'rr'}
     config_decl.register(collector, tb)
-    assert 'PyTaskConfig_duplicate1' in tb
+    assert 'ecpy_pulses.SequenceConfig_duplicate1' in tb
 
 
 def test_register_config_decl_cls1(collector, config_decl):
@@ -782,7 +804,7 @@ def test_register_config_decl_cls1_bis(collector, config_decl):
     assert 'ecpy.Task' in tb and 'NameError' in tb['ecpy.Task']
 
 
-def test_register_task_decl_cls2(collector, config_decl):
+def test_register_config_decl_cls2(collector, config_decl):
     """Test handling task class issues : undefined in module.
 
     """
@@ -792,7 +814,7 @@ def test_register_task_decl_cls2(collector, config_decl):
     assert 'ecpy.Task' in tb and 'attribute' in tb['ecpy.Task']
 
 
-def test_register_task_decl_cls3(collector, config_decl):
+def test_register_config_decl_cls3(collector, config_decl):
     """Test handling task class issues : wrong type.
 
     """
@@ -809,7 +831,8 @@ def test_register_config_decl_view1(collector, config_decl):
     tb = {}
     config_decl.view = 'ecpy.tasks.foo:Task'
     config_decl.register(collector, tb)
-    assert 'ecpy.PyTaskConfig' in tb and 'import' in tb['ecpy.PyTaskConfig']
+    assert 'ecpy_pulses.SequenceConfig' in tb
+    assert 'import' in tb['ecpy_pulses.SequenceConfig']
 
 
 def test_register_config_decl_view1bis(collector, config_decl):
@@ -819,7 +842,8 @@ def test_register_config_decl_view1bis(collector, config_decl):
     tb = {}
     config_decl.view = 'ecpy.testing.broken_module:Task'
     config_decl.register(collector, tb)
-    assert 'ecpy.PyTaskConfig' in tb and 'NameError' in tb['ecpy.PyTaskConfig']
+    assert 'ecpy_pulses.SequenceConfig' in tb
+    assert 'NameError' in tb['ecpy_pulses.SequenceConfig']
 
 
 def test_register_config_decl_view2(collector, config_decl):
@@ -829,7 +853,8 @@ def test_register_config_decl_view2(collector, config_decl):
     tb = {}
     config_decl.view = 'ecpy.tasks.tasks.base_views:Task'
     config_decl.register(collector, tb)
-    assert 'ecpy.PyTaskConfig' in tb and 'import' in tb['ecpy.PyTaskConfig']
+    assert 'ecpy_pulses.SequenceConfig' in tb
+    assert 'import' in tb['ecpy_pulses.SequenceConfig']
 
 
 def test_register_config_decl_view3(collector, config_decl):
@@ -839,7 +864,8 @@ def test_register_config_decl_view3(collector, config_decl):
     tb = {}
     config_decl.view = 'ecpy.tasks.tasks.database:TaskDatabase'
     config_decl.register(collector, tb)
-    assert 'ecpy.PyTaskConfig' in tb and 'subclass' in tb['ecpy.PyTaskConfig']
+    assert 'ecpy_pulses.SequenceConfig' in tb
+    assert 'subclass' in tb['ecpy_pulses.SequenceConfig']
 
 
 def test_unregister_config_decl1(collector, config_decl):
