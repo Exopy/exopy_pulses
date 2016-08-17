@@ -18,7 +18,7 @@ from ecpy_pulses.pulses.pulse import Pulse
 from ecpy_pulses.pulses.sequences.base_sequences\
     import RootSequence, BaseSequence
 
-from .context import TestContext
+from ecpy_pulses.testing.context import TestContext
 
 
 @pytest.fixture
