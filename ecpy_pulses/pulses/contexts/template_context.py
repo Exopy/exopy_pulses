@@ -22,7 +22,8 @@ from ..sequences.template_sequence import TemplateSequence
 
 
 class TemplateContext(BaseContext):
-    """
+    """Context mapping the temmplate channels to real instrument channels.
+
     """
     #: Declared analogical channels to use inside the template.
     analogical_channels = List().tag(pref=True)
@@ -37,8 +38,8 @@ class TemplateContext(BaseContext):
     #: Reference to the template sequence to which this context is attached.
     template_sequence = Typed(TemplateSequence)
 
-    def prepare_compilation(self, errors):
-        """
+    def prepare_evaluation(self, errors):
+        """Copy the necessary information from the root context.
 
         """
         context = self.template_sequence.root.context
@@ -46,6 +47,7 @@ class TemplateContext(BaseContext):
         self.time_unit = context.time_unit
         self.rectify_time = context.rectify_time
         self.tolerance = context.tolerance
+        self.supported_sequences = context.supported_sequences
         mess = 'Missing/Erroneous mapping for channels {}'
         mapping = self.channel_mapping
         c_errors = [c for c in self.analogical_channels

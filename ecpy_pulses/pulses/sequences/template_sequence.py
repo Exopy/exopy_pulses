@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015 by Ecpy Authors, see AUTHORS for more details.
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Sequence use to insert another premade sequence.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
-from atom.api import (Dict, ForwardTyped, Unicode)
-from inspect import cleandoc
 from copy import deepcopy
 from ast import literal_eval
+from traceback import format_exc
+
+from atom.api import (Dict, ForwardTyped, Unicode)
 
 from ecpy.utils.atom_util import update_members_from_preferences
 
+from ..pulse import Pulse
 from ..utils.entry_eval import eval_entry
 from .base_sequences import AbstractSequence, BaseSequence
 
@@ -45,13 +46,13 @@ class TemplateSequence(AbstractSequence):
     #: Special context providing channel mapping.
     context = ForwardTyped(context).tag(pref=True)
 
-    def compile_sequence(self, root_vars, sequence_locals, missings, errors):
-        """
+    def evaluate_entries(self, root_vars, sequence_locals, missings, errors):
+        """Evaluate the entries of the items making the context.
 
         """
         # Check the channel mapping makes sense.
         if not self.context.prepare_compilation(errors):
-            return False, []
+            return False
 
         # Definition evaluation.
         self.eval_entries(root_vars, sequence_locals, missings, errors)
@@ -63,8 +64,8 @@ class TemplateSequence(AbstractSequence):
                 try:
                     val = eval_entry(formula, sequence_locals, missings)
                     self._evaluated_vars[name] = val
-                except Exception as e:
-                    errors[prefix + name] = repr(e)
+                except Exception:
+                    errors[prefix + name] = format_exc()
 
         # Local vars computation.
         for name, formula in self.local_vars.items():
@@ -72,47 +73,29 @@ class TemplateSequence(AbstractSequence):
                 try:
                     val = eval_entry(formula, sequence_locals, missings)
                     self._evaluated_vars[name] = val
-                except Exception as e:
-                    errors[prefix + name] = repr(e)
+                except Exception:
+                    errors[prefix + name] = format_exc()
 
         local_namespace = self._evaluated_vars.copy()
         local_namespace['sequence_end'] = self.duration
 
-        res, pulses = self._compile_items(local_namespace, local_namespace,
-                                          missings, errors)
+        res = self._evaluate_items(local_namespace, local_namespace,
+                                   missings, errors)
 
         if res:
-            t_start = self.start
-            c_mapping = self.context.channel_mapping
-            try:
-                for pulse in pulses:
-                    pulse.start += t_start
-                    pulse.stop += t_start
-                    pulse.channel = c_mapping[pulse.channel]
-            except KeyError as e:
-                errors[self.name + '-channels'] = \
-                    'Channel mapping is corrupted : {}'.format(e)
-                return False, []
+            overtime = []
+            self._update_times(self.items, errors, overtime)
 
-            # Check if stop time of pulses are compatible with sequence
-            # duration.
-            stop_err = [pulse for pulse in pulses
-                        if pulse.stop > self.stop]
+            if overtime:
+                msg = ('The stop time of the following items {} is larger '
+                       'than the stop time of the sequence {}')
+                ind = [p.index for p in overtime]
+                errors[self.name + '-stop'] = msg.format(ind, self.index)
 
-            if stop_err:
-                mess = cleandoc('''The stop time of the following items {}
-                    is larger than the stop time of the sequence {}''')
-                mess = mess.replace('\n', ' ')
-                ind = [p.index for p in stop_err]
-                errors[self.name + '-stop'] = mess.format(ind, self.index)
+        if errors:
+            return False
 
-            if errors:
-                return False, []
-
-            return True, pulses
-
-        else:
-            return False, []
+        return True
 
     @classmethod
     def build_from_config(cls, config, dependencies):
@@ -180,6 +163,39 @@ class TemplateSequence(AbstractSequence):
         return seq
 
     # --- Private API ---------------------------------------------------------
+
+    def _update_times(self, items, errors, overtime):
+        """Offset all the timing of the items and check it still make sense.
+
+        Parameters
+        ----------
+        items : list
+            List of items whose end time should be checked.
+
+        errors : dict
+            Dict in which to report errors.
+
+        overtime : list
+            List of items which do not respect the time constraint.
+
+        """
+        t_start = self.start
+        c_mapping = self.context.channel_mapping
+        for i in items:
+            if isinstance(i, Pulse):
+                i.start += t_start
+                i.stop += t_start
+                try:
+                    i.channel = c_mapping[i.channel]
+                except KeyError as e:
+                    errors[self.name + '-channels'] = \
+                        'Channel mapping is corrupted : {}'.format(e)
+                if i.stop > self.stop:
+                    overtime.append(i)
+            else:
+                self._update_times(i.items, errors, overtime)
+                if i.duration and i.stop > self.stop:
+                    overtime.append(i)
 
     def _post_setattr_context(self, old, new):
         """ Make sure the context has a ref to the sequence.

@@ -12,8 +12,7 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-from itertools import chain
-from inspect import cleandoc
+from traceback import format_exc
 from copy import deepcopy
 
 from atom.api import (Int, Instance, Unicode, Dict, Bool, List,
@@ -59,17 +58,19 @@ class AbstractSequence(Item):
     cache_valid = Bool(False)
 
     def cleanup_cache(self):
-        """ Clear all internal caches after successfully compiling the sequence
+        """ Clear all internal caches.
+
+        This should be called before evaluating a sequence.
 
         """
         self._evaluated_vars = {}
-        self._compiled = []
+        self._evaluated = []
         for i in self.items:
             if isinstance(i, AbstractSequence):
                 i.cleanup_cache()
 
-    def compile_sequence(self, root_vars, sequence_locals, missings, errors):
-        """ Evaluate the sequence vars and compile the list of pulses.
+    def evaluate_sequence(self, root_vars, sequence_locals, missing, errors):
+        """Evaluate the sequence vars and all the underlying items.
 
         Parameters
         ----------
@@ -96,8 +97,19 @@ class AbstractSequence(Item):
         flag : bool
             Boolean indicating whether or not the evaluation succeeded.
 
-        pulses : list
-            List of pulses in which all the string entries have been evaluated.
+        """
+        raise NotImplementedError()
+
+    def simplify_sequence(self):
+        """Simplify the items found in the sequence.
+
+        Pulses are always kept as they are, sequences are simplified based
+        on the context ability to deal with them.
+
+        Returns
+        -------
+        items : list
+            List of items after simplification.
 
         """
         raise NotImplementedError()
@@ -153,11 +165,11 @@ class AbstractSequence(Item):
     #: Dict of all already evaluated vars.
     _evaluated_vars = Dict()
 
-    #: List of already compiled items.
-    _compiled = List()
+    #: List of already evaluated items.
+    _evaluated = List()
 
-    def _compile_items(self, root_vars, sequence_locals, missings, errors):
-        """ Compile the sequence in a flat list of pulses.
+    def _evaluate_items(self, root_vars, sequence_locals, missings, errors):
+        """Compile the sequence in a flat list of pulses.
 
         Parameters
         ----------
@@ -179,15 +191,12 @@ class AbstractSequence(Item):
         flag : bool
             Boolean indicating whether or not the evaluation succeeded.
 
-        pulses : list
-            List of pulses in which all the string entries have been evaluated.
-
         """
 
-        # Inplace modification of compile will update self._compiled.
-        if not self._compiled:
-            self._compiled = [None for i in self.items if i.enabled]
-        compiled = self._compiled
+        # Inplace modification of compile will update self._evaluated.
+        if not self._evaluated:
+            self._evaluated = [None for i in self.items if i.enabled]
+        evaluated = self._evaluated
 
         # Compilation of items in multiple passes.
         while True:
@@ -203,7 +212,7 @@ class AbstractSequence(Item):
                 index += 1
 
                 # Skip evaluation if object has already been compiled.
-                if compiled[index] is not None:
+                if evaluated[index] is not None:
                     continue
 
                 # If we get a pulse simply evaluate the entries, to add their
@@ -213,15 +222,15 @@ class AbstractSequence(Item):
                     success = item.eval_entries(root_vars, sequence_locals,
                                                 miss, errors)
                     if success:
-                        compiled[index] = [item]
+                        evaluated[index] = [item]
 
                 # Here we got a sequence so we must try to compile it.
                 else:
-                    success, items = item.compile_sequence(root_vars,
-                                                           sequence_locals,
-                                                           miss, errors)
+                    success = item.evaluate_sequence(root_vars,
+                                                     sequence_locals,
+                                                     miss, errors)
                     if success:
-                        compiled[index] = items
+                        evaluated[index] = item
 
             known_locals = set(sequence_locals.keys())
             # If none of the variables found missing during last pass is now
@@ -231,15 +240,14 @@ class AbstractSequence(Item):
                 # Update the missings given by caller so that it knows it this
                 # failure is linked to circle references.
                 missings.update(miss)
-                return False, []
+                return False
 
             # If no var was found missing during last pass (and as no error
             # occured) it means the compilation succeeded.
             elif not miss:
-                pulses = list(chain.from_iterable(compiled))
-                # Clean the compiled items once the pulse is transfered
+                # Clean the evaluated items once the evaluation is over.
                 self.cleanup_cache()
-                return True, pulses
+                return True
 
 
 class BaseSequence(AbstractSequence):
@@ -280,9 +288,6 @@ class BaseSequence(AbstractSequence):
         flag : bool
             Boolean indicating whether or not the evaluation succeeded.
 
-        pulses : list
-            List of pulses in which all the string entries have been evaluated.
-
         """
         prefix = '{}_'.format(self.index)
 
@@ -296,125 +301,56 @@ class BaseSequence(AbstractSequence):
                 try:
                     val = eval_entry(formula, sequence_locals, missings)
                     self._evaluated_vars[name] = val
-                except Exception as e:
-                    errors[prefix + name] = repr(e)
+                except Exception:
+                    errors[prefix + name] = format_exc()
 
         local_namespace = sequence_locals.copy()
         local_namespace.update(self._evaluated_vars)
 
-        res, pulses = self._compile_items(root_vars, local_namespace,
-                                          missings, errors)
-
+        res = self._evaluate_items(root_vars, local_namespace, missings,
+                                   errors)
         if res:
             if self.time_constrained:
                 # Check if start, stop and duration of sequence are compatible.
-                start_err = [pulse for pulse in pulses
-                             if pulse.start < self.start]
-                stop_err = [pulse for pulse in pulses
-                            if pulse.stop > self.stop]
-
+                start_err = [item for item in self.items
+                             if item.start and item.stop and item.duration and
+                             item.start < self.start]
+                stop_err = [item for item in self.items
+                            if item.start and item.stop and item.duration and
+                            item.stop > self.stop]
                 if start_err:
-                    mess = cleandoc('''The start time of the following items {}
-                        is before the start time of the sequence {}''')
-                    mess = mess.replace('\n', ' ')
+                    msg = ('The start time of the following items {} is '
+                           'smaller than the start time of the sequence {}')
                     ind = [p.index for p in start_err]
-                    errors[self.name + '-start'] = mess.format(ind, self.index)
+                    errors[self.name + '-start'] = msg.format(ind, self.index)
                 if stop_err:
-                    mess = cleandoc('''The stop time of the following items {}
-                        is after the stop time of the sequence {}''')
-                    mess = mess.replace('\n', ' ')
+                    msg = ('The stop time of the following items {} is '
+                           'larger than  the stop time of the sequence {}')
                     ind = [p.index for p in stop_err]
-                    errors[self.name + '-stop'] = mess.format(ind, self.index)
+                    errors[self.name + '-stop'] = msg.format(ind, self.index)
 
                 if errors:
-                    return False, []
+                    return False
 
-            return True, pulses
+            return True
 
         else:
-            return False, []
+            return False
 
-    def compile_sequence(self, root_vars, sequence_locals, missings, errors):
-        """ Evaluate the sequence vars and compile the list of pulses.
-
-        Parameters
-        ----------
-        root_vars : dict
-            Dictionary of global variables for the all items. This will
-            tipically contains the i_start/stop/duration and the root vars.
-            This dict must be updated with global new values but for
-            evaluation sequence_locals must be used.
-
-        sequence_locals : dict
-            Dictionary of variables whose scope is limited to this sequence
-            parent. This dict must be updated with global new values and
-            must be used to perform evaluation (It always contains all the
-            names defined in root_vars).
-
-        missings : set
-            Set of unfound local variables.
-
-        errors : dict
-            Dict of the errors which happened when performing the evaluation.
-
-        Returns
-        -------
-        flag : bool
-            Boolean indicating whether or not the evaluation succeeded.
-
-        pulses : list
-            List of pulses in which all the string entries have been evaluated.
+    def simplify_sequence(self):
+        """Inline the sequences not supported by the context.
 
         """
-        prefix = '{}_'.format(self.index)
+        supported = self.root.context.supported_sequences
 
-        # Definition evaluation.
-        if self.time_constrained:
-            self.eval_entries(root_vars, sequence_locals, missings, errors)
+        seq = []
+        for item in self.items:
+            if isinstance(item, Pulse) or type(item) in supported:
+                seq.append(item)
+            else:
+                seq.extend(item.simplify_sequence())
 
-        # Local vars computation.
-        for name, formula in self.local_vars.items():
-            if name not in self._evaluated_vars:
-                try:
-                    val = eval_entry(formula, sequence_locals, missings)
-                    self._evaluated_vars[name] = val
-                except Exception as e:
-                    errors[prefix + name] = repr(e)
-
-        local_namespace = sequence_locals.copy()
-        local_namespace.update(self._evaluated_vars)
-
-        res, pulses = self._compile_items(root_vars, local_namespace,
-                                          missings, errors)
-
-        if res:
-            if self.time_constrained:
-                # Check if start, stop and duration of sequence are compatible.
-                start_err = [pulse for pulse in pulses
-                             if pulse.start < self.start]
-                stop_err = [pulse for pulse in pulses
-                            if pulse.stop > self.stop]
-
-                if start_err:
-                    mess = cleandoc('''The start time of the following items {}
-                        is before the start time of the sequence {}''')
-                    mess = mess.replace('\n', ' ')
-                    ind = [p.index for p in start_err]
-                    errors[self.name + '-start'] = mess.format(ind, self.index)
-                if stop_err:
-                    mess = cleandoc('''The stop time of the following items {}
-                        is after the stop time of the sequence {}''')
-                    mess = mess.replace('\n', ' ')
-                    ind = [p.index for p in stop_err]
-                    errors[self.name + '-stop'] = mess.format(ind, self.index)
-
-                if errors:
-                    return False, []
-
-            return True, pulses
-
-        else:
-            return False, []
+        return seq
 
     def get_bindable_vars(self):
         """ Access the list of bindable vars for the sequence.
@@ -679,27 +615,20 @@ class RootSequence(BaseSequence):
         super(RootSequence, self).__init__(**kwargs)
         self.root = self
 
-    def compile_sequence(self, use_context=True):
-        """ Compile a sequence to useful format.
-
-        Parameters
-        ---------------
-        use_context : bool, optional
-            Should the context compile the pulse sequence.
+    def evaluate_sequence(self):
+        """Evaluate the root sequence entries and all sub items.
 
         Returns
         -----------
         result : bool
             Flag indicating whether or not the compilation succeeded.
 
-        args : iterable
-            Objects depending on the result and use_context flag.
-            In case of failure: tuple
-                - a set of the entries whose values where never found and a
-                dict of the errors which occured during compilation.
-            In case of success:
-                - a flat list of Pulse if use_context is False
-                - a context dependent result otherwise.
+        missing : set
+            Set of the entries whose values where never found and a dict of the
+            errors which occured during compilation.
+
+        errors : dict
+            Dict describing the errors that occured during evaluation.
 
         """
         missings = set()
@@ -712,8 +641,8 @@ class RootSequence(BaseSequence):
                 try:
                     val = eval_entry(formula, root_vars, missings)
                     self._evaluated_vars[name] = val
-                except Exception as e:
-                    errors['root_' + name] = repr(e)
+                except Exception:
+                    errors['root_' + name] = format_exc()
 
         root_vars.update(self._evaluated_vars)
 
@@ -721,34 +650,28 @@ class RootSequence(BaseSequence):
             try:
                 duration = eval_entry(self.sequence_duration, root_vars,
                                       missings)
+                self.stop = self.duration = duration
                 root_vars['sequence_end'] = duration
-            except Exception as e:
-                errors['root_seq_duration'] = repr(e)
+            except Exception:
+                errors['root_seq_duration'] = format_exc()
 
-        res, pulses = self._compile_items(root_vars, root_vars,
-                                          missings, errors)
+        res = self._evaluate_items(root_vars, root_vars, missings, errors)
 
         if not res:
-            return False, (missings, errors)
+            return False, missings, errors
 
         if self.time_constrained:
-            err = [p for p in pulses if p.stop > duration]
+            overtime = []
+            self._validate_times(self.items, overtime)
 
-            if err:
-                mess = cleandoc('''The stop time of the following pulses {}
-                        is larger than the duration of the sequence.''')
-                ind = [p.index for p in err]
+            if overtime:
+                mess = ('The stop time of the following pulses {} is larger '
+                        'than the duration of the sequence.')
+                ind = [p.index for p in overtime]
                 errors['Root-stop'] = mess.format(ind)
-                return False, (missings, errors)
+                return False, missings, errors
 
-        if not use_context:
-            return True, pulses
-
-        else:
-            kwargs = {}
-            if self.time_constrained:
-                kwargs['sequence_duration'] = duration
-            return self.context.compile_sequence(pulses, **kwargs)
+        return True, missings, errors
 
     def get_bindable_vars(self):
         """ Access the list of bindable vars for the sequence.
@@ -797,6 +720,27 @@ class RootSequence(BaseSequence):
 
     # --- Private API ---------------------------------------------------------
 
+    def _validate_times(self, items, overtime):
+        """Check The timing of the pulses respect the duration of the sequence.
+
+        Parameters
+        ----------
+        items : list
+            List of items whose end time should be checked.
+
+        overtime : list
+            List of items which do not respect the time constraint.
+
+        """
+        for i in items:
+            if isinstance(i, Pulse):
+                if i.stop > self.stop:
+                    overtime.append(i)
+            else:
+                self._validate_times(i.items, overtime)
+                if i.duration and i.stop > self.stop:
+                    overtime.append(i)
+
     def _post_setattr_time_constrained(self, old, new):
         """ Keep the linkable_vars list in sync with fix_sequence_duration.
 
@@ -811,8 +755,9 @@ class RootSequence(BaseSequence):
             self.linkable_vars = link_vars
 
     def _update_linkable_vars(self, change):
-        """
-        TODO
+        """Update the linkable vars each time the linkable vars of an item is
+        updated.
+
         """
         # Don't want this to happen on member init.
         if change['type'] == 'update':

@@ -6,13 +6,11 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Definition of the interface for base pulse sequence context.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
-
-from inspect import cleandoc
 
 from atom.api import (Enum, Unicode, Bool, Float, Property, Tuple, List,
                       Constant)
@@ -30,11 +28,14 @@ TIME_CONVERSION = {'s': {'s': 1, 'ms': 1e3, 'mus': 1e6, 'ns': 1e9},
 
 
 class BaseContext(HasPrefAtom):
-    """Base Class describing a Context
+    """Base class describing a Context
 
     """
     #: Identifier for the build dependency collector
     dep_type = Constant(DEP_TYPE).tag(pref=True)
+
+    #: Tuple of sequence types that should not be simplified.
+    supported_sequences = Tuple()
 
     #: Time unit.
     time_unit = Enum('mus', 's', 'ms', 'ns').tag(pref=True)
@@ -63,13 +64,19 @@ class BaseContext(HasPrefAtom):
     #: Name of the context class. Used for persistence purposes.
     context_id = Unicode().tag(pref=True)
 
-    def compile_sequence(self, pulses, **kwargs):
-        """
+    def compile_and_transfer_sequence(self, items, driver):
+        """Compile the pulse sequence and send it to the instruments.
+
+        Parameters
+        ----------
+        items : list
+            List of handable items to be compiled and transferrred.
+
+        driver : object
+            Instrument driver to use to transfer the sequence once compiled
 
         """
-        mes = cleandoc('''compile_sequence should be implemented by subclass of
-                       BaseContext.''')
-        raise NotImplementedError(mes)
+        raise NotImplementedError()
 
     def len_sample(self, duration):
         """ Compute the number of points used to describe a lapse of time.

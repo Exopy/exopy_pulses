@@ -48,7 +48,8 @@ def test_sequence_compilation1(root):
     pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='10')
     add_children(root, (pulse1, pulse2, pulse3))
 
-    res, pulses = root.compile_sequence(False)
+    res, _, _ = root.evaluate_sequence()
+    pulses = root.items
     assert res
     assert len(pulses) == 3
     assert pulses[0].start == 1.0
@@ -74,13 +75,15 @@ def test_sequence_compilation1bis(root):
     pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='10')
     add_children(root, (pulse1, pulse2, pulse3))
 
-    res, pulses = root.compile_sequence(False)
+    res, _, _ = root.evaluate_sequence()
+    pulses = root.items
     assert res
     assert len(pulses) == 3
     assert pulses[0].stop == 1.5
 
     root.external_vars = {'a': 2.}
-    res, pulses = root.compile_sequence(False)
+    res = root.evaluate_sequence()
+    pulses = root.items
     assert res
     assert len(pulses) == 3
     assert pulses[0].stop == 2.
@@ -99,7 +102,9 @@ def test_sequence_compilation2(root):
     pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='{sequence_end}')
     add_children(root, (pulse1, pulse2, pulse3))
 
-    res, pulses = root.compile_sequence(False)
+    res, missings, errors = root.evaluate_sequence()
+    print(errors)
+    pulses = root.items
     assert res
     assert len(pulses) == 3
     assert pulses[0].start == 1.0
@@ -124,7 +129,8 @@ def test_sequence_compilation3(root):
     pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='10')
     add_children(root, (pulse1, pulse2, pulse3))
 
-    res, pulses = root.compile_sequence(False)
+    res, _, _ = root.evaluate_sequence()
+    pulses = root.items
     assert res
     assert len(pulses) == 3
     assert pulses[0].start == 1.0
@@ -149,7 +155,7 @@ def test_sequence_compilation4(root):
     pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='10')
     add_children(root, (pulse1, pulse2, pulse3))
 
-    res, (missings, errors) = root.compile_sequence(False)
+    res, missings, errors = root.evaluate_sequence()
     assert not res
     assert len(missings) == 2
     assert '1_stop' in missings
@@ -170,7 +176,7 @@ def test_sequence_compilation5(root):
     pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='{sequence_end}')
     add_children(root, (pulse1, pulse2, pulse3))
 
-    res, (missings, errors) = root.compile_sequence(False)
+    res, missings, errors = root.evaluate_sequence()
     assert not res
     assert len(missings) == 1
     assert 'a' in missings
@@ -191,7 +197,7 @@ def test_sequence_compilation6(root):
     pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='10.0')
     add_children(root, (pulse1, pulse2, pulse3))
 
-    res, (missings, errors) = root.compile_sequence(False)
+    res, missings, errors = root.evaluate_sequence()
     assert not res
     assert not missings
     assert len(errors) == 2
@@ -218,7 +224,8 @@ def test_sequence_compilation7(root):
 
     add_children(root, (pulse1, sequence1, pulse5))
 
-    res, pulses = root.compile_sequence(False)
+    res, missings, errors = root.evaluate_sequence()
+    pulses = root.simplify_sequence()
     assert res
     assert len(pulses) == 5
     assert pulses[0] is pulse1
@@ -263,7 +270,8 @@ def test_sequence_compilation8(root):
 
     add_children(root, (pulse1, sequence1, pulse5))
 
-    res, pulses = root.compile_sequence(False)
+    res, missings, errors = root.evaluate_sequence()
+    pulses = root.simplify_sequence()
     assert res
     assert len(pulses) == 5
     assert pulses[0] is pulse1
@@ -307,7 +315,8 @@ def test_sequence_compilation9(root):
 
     add_children(root, (pulse1, sequence1, pulse5))
 
-    res, pulses = root.compile_sequence(False)
+    res, missings, errors = root.evaluate_sequence()
+    pulses = root.simplify_sequence()
     assert res
     assert len(pulses) == 5
     assert pulses[0] is pulse1
@@ -353,7 +362,7 @@ def test_sequence_compilation10(root):
 
     add_children(root, (pulse1, sequence1, pulse5))
 
-    res, (missings, errors) = root.compile_sequence(False)
+    res, missings, errors = root.evaluate_sequence()
     assert not res
     assert len(missings) == 2
     assert '7_start' in missings
@@ -381,7 +390,7 @@ def test_sequence_compilation11(root):
 
     add_children(root, (pulse1, sequence1, pulse5))
 
-    res, (missings, errors) = root.compile_sequence(False)
+    res, missings, errors = root.evaluate_sequence()
     assert not res
     assert len(errors) == 1
     assert '5_start' in errors
@@ -406,7 +415,8 @@ def test_sequence_compilation12(root):
 
     add_children(root, (pulse1, sequence1, pulse5))
 
-    res, pulses = root.compile_sequence(False)
+    res, missings, errors = root.evaluate_sequence()
+    pulses = root.simplify_sequence()
     assert res
     assert len(pulses) == 5
     assert pulses[0] is pulse1
@@ -443,14 +453,14 @@ def test_sequence_compilation13(root):
     pulse4 = Pulse(def_1='2.0', def_2='0.5', def_mode='Start/Duration')
     pulse5 = Pulse(def_1='3.0', def_2='0.5', def_mode='Start/Duration')
 
-    sequence2 = BaseSequence(local_vars={'b': '2**2'})
+    sequence2 = BaseSequence(local_vars={'b': '2**'})
     sequence2.add_child_item(0, pulse3)
     sequence1 = BaseSequence()
     add_children(sequence1, (pulse2, sequence2, pulse4))
 
     add_children(root, (pulse1, sequence1, pulse5))
 
-    res, (missings, errors) = root.compile_sequence(False)
+    res, missings, errors = root.evaluate_sequence()
     assert not res
     assert len(missings) == 1
     assert 'b' in missings
@@ -476,8 +486,8 @@ def test_sequence_compilation14(root):
 
     add_children(root, (pulse1, sequence1, pulse5))
 
-    res, (missings, errors) = root.compile_sequence(False)
-    assert res
+    res, missings, errors = root.evaluate_sequence()
+    assert not res
     assert len(missings) == 1
     assert 'b' in missings
     assert not errors
@@ -507,7 +517,8 @@ def test_sequence_compilation15(root):
 
     add_children(root, (pulse1, sequence1, pulse5))
 
-    res, pulses = root.compile_sequence(False)
+    res, missings, errors = root.evaluate_sequence()
+    pulses = root.simplify_sequence()
     assert res
     assert len(pulses) == 5
     assert pulses[0] is pulse1
@@ -555,9 +566,8 @@ def test_sequence_compilation16(root):
 
     add_children(root, (pulse1, sequence1, pulse5))
 
-    res, (missings, errors) = root.compile_sequence(False)
-    assert res
-    assert missings
+    res, missings, errors = root.evaluate_sequence()
+    assert not res
     assert 'test-start' in errors
 
 
@@ -584,7 +594,7 @@ def test_sequence_compilation17(root):
 
     add_children(root, (pulse1, sequence1, pulse5))
 
-    res, (missings, errors) = root.compile_sequence(False)
+    res, missings, errors = root.evaluate_sequence()
     assert not res
     assert not missings
     assert 'test-stop' in errors
