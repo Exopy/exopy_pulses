@@ -17,7 +17,7 @@ from future.utils import python_2_unicode_compatible
 from traceback import format_exc
 from inspect import cleandoc
 
-from atom.api import Unicode, Dict, Property
+from atom.api import Unicode, Dict, Property, List
 from enaml.core.api import d_, d_func
 
 from ecpy.utils.declarator import (Declarator, GroupDeclarator, import_and_get)
@@ -145,7 +145,6 @@ class Sequence(Declarator):
 
         """
         if self.is_registered:
-            print(collector.contributions, self.id)
             # If we were just extending the sequence, clean the metadata.
             if ':' not in self.sequence:
                 if self.id in collector.contributions:
@@ -361,6 +360,9 @@ class Context(Declarator):
     #: The path of any parent GroupDeclarator will be prepended.
     view = d_(Unicode())
 
+    #: List of supported driver ids.
+    instruments = d_(List())
+
     #: Metadata associated to the context.
     metadata = d_(Dict())
 
@@ -388,6 +390,7 @@ class Context(Declarator):
 
             infos = collector.contributions[context_id]
             infos.metadata.update(self.metadata)
+            infos.instruments.update(self.instruments)
             self.is_registered = True
             return
 
@@ -463,6 +466,7 @@ class Context(Declarator):
             if ':' not in self.context:
                 if self.id in collector.contributions:
                     infos = collector.contributions[self.id]
+                    infos.instruments -= set(self.instruments)
                     for k in self.metadata:
                         del infos.metadata[k]
                 return

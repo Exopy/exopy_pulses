@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015 by Ecpy Authors, see AUTHORS for more details.
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -17,8 +17,7 @@ import enaml
 from atom.api import Atom, Dict, List
 
 from ecpy_pulses.pulses.infos import (SequenceInfos, ShapeInfos,
-                                      ConfigInfos, ContextInfos,
-                                      PulseInfos)
+                                      ContextInfos)
 from ecpy_pulses.pulses.declarations import (Sequences, Sequence,
                                              Shapes, Shape,
                                              SequenceConfigs, SequenceConfig,
@@ -492,7 +491,7 @@ def test_register_context_decl1(collector, context_decl):
     """Test registering the base context.
 
     """
-    parent = Sequences(group='test', path='ecpy_pulses.pulses.contexts')
+    parent = Contexts(group='test', path='ecpy_pulses.pulses.contexts')
     parent.insert_children(None, [context_decl])
     context_decl.context = 'base_context:BaseContext'
     context_decl.view = 'views.base_context_view:BaseContextView'
@@ -514,9 +513,11 @@ def test_register_context_decl_extend1(collector, context_decl):
     collector.contributions['ecpy_pulses.Context'] = ContextInfos()
     context_decl.context = 'ecpy_pulses.Context'
     context_decl.metadata = {'test': True}
+    context_decl.instruments = ['ecpy.i3py.TektronixAWG5014B']
     context_decl.register(collector, {})
     infos = collector.contributions['ecpy_pulses.Context']
     assert 'test' in infos.metadata
+    assert infos.instruments
 
 
 def test_register_context_decl_extend2(collector, context_decl):
@@ -682,12 +683,14 @@ def test_unregister_context_decl3(collector, context_decl):
     """Test unregistering a sequence extending an existing one.
 
     """
-    collector.contributions['ecpy_pulses.BaseContext'] = SequenceInfos()
+    collector.contributions['ecpy_pulses.BaseContext'] = ContextInfos()
     context_decl.context = 'ecpy_pulses.BaseContext'
     context_decl.metadata = {'test': True}
+    context_decl.instruments = ['ecpy.i3py.TektronixAWG5014B']
     context_decl.register(collector, {})
     context_decl.unregister(collector)
     assert not collector.contributions['ecpy_pulses.BaseContext'].metadata
+    assert not collector.contributions['ecpy_pulses.BaseContext'].instruments
 
 
 def test_str_context(context_decl):
@@ -720,7 +723,12 @@ def test_register_config_decl(collector, config_decl):
     """Test registering the sequence config.
 
     """
-    config_decl.register(collector, {})
+    parent = SequenceConfigs(group='test', path='ecpy_pulses.pulses.configs')
+    parent.insert_children(None, [config_decl])
+    config_decl.config = 'base_config:SequenceConfig'
+    config_decl.view = 'base_config_views:SequenceConfigView'
+    errors = {}
+    parent.register(collector, errors)
     from ecpy_pulses.pulses.sequences.base_sequences import BaseSequence
     infos = collector.contributions[BaseSequence]
     from ecpy_pulses.pulses.configs.base_config import SequenceConfig

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015 by Ecpy Authors, see AUTHORS for more details.
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -90,6 +90,9 @@ class ContextInfos(ObjectDependentInfos):
 
     #: Widget associated with this context.
     view = Subclass(BaseContextView)
+
+    #: List of instrument supported by this context.
+    instruments = Coerced(set, ())
 
     #: Metadata associated with this context such as who knows what.
     metadata = Dict()
