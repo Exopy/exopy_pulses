@@ -6,7 +6,7 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""The version information for this release of Ecpy.
+"""Test evaluating and simplifying base sequences
 
 """
 from __future__ import (division, unicode_literals, print_function,
@@ -42,13 +42,15 @@ def test_sequence_compilation1(root):
 
     """
     root.external_vars = {'a': 1.5}
+    root.local_vars = {'b': '2*{a}'}
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
-    pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='10')
+    pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='10 + {b}')
     add_children(root, (pulse1, pulse2, pulse3))
 
-    res, _, _ = root.evaluate_sequence()
+    res, missings, errors = root.evaluate_sequence()
+    print(errors)
     pulses = root.items
     assert res
     assert len(pulses) == 3
@@ -59,8 +61,8 @@ def test_sequence_compilation1(root):
     assert pulses[1].stop == 3.0
     assert pulses[1].duration == 0.5
     assert pulses[2].start == 3.5
-    assert pulses[2].stop == 10.0
-    assert pulses[2].duration == 6.5
+    assert pulses[2].stop == 13.0
+    assert pulses[2].duration == 9.5
 
 
 def test_sequence_compilation1bis(root):
@@ -116,6 +118,25 @@ def test_sequence_compilation2(root):
     assert pulses[2].start == 3.5
     assert pulses[2].stop == 10.0
     assert pulses[2].duration == 6.5
+
+
+def test_sequence_compilation2bis(root):
+    """Test compiling a flat sequence of fixed duration but with a pulse
+    stopping too late.
+
+    """
+    root.external_vars = {'a': 1.5}
+    root.time_constrained = True
+    root.sequence_duration = '10.0'
+
+    pulse1 = Pulse(def_1='1.0', def_2='{a}')
+    pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
+    pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='{sequence_end} + 1')
+    add_children(root, (pulse1, pulse2, pulse3))
+
+    res, missings, errors = root.evaluate_sequence()
+    assert not res
+    assert 'root-stop' in errors
 
 
 def test_sequence_compilation3(root):
@@ -205,8 +226,28 @@ def test_sequence_compilation6(root):
     assert 'root_seq_duration' in errors
 
 
+def test_sequence_compilation6bis(root):
+    """Test compiling a flat sequence with evaluation errors.
+    local vars of root
+
+    """
+    root.time_constrained = True
+    root.sequence_duration = '10.0'
+    root.external_vars = {'a': 1.5}
+    root.local_vars = {'b': '2*{a}+'}
+
+    pulse1 = Pulse(def_1='1.0', def_2='{a}')
+    pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
+    pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='{sequence_end}')
+    add_children(root, (pulse1, pulse2, pulse3))
+
+    res, missings, errors = root.evaluate_sequence()
+    assert not res
+    assert 'root_b' in errors
+
+
 def test_sequence_compilation7(root):
-    """Test compiling a nested sequence.
+    """Test compiling a nested sequence with a disabled item
 
     """
     root.external_vars = {'a': 1.5}
@@ -214,11 +255,12 @@ def test_sequence_compilation7(root):
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
     pulse3 = Pulse(def_1='{3_stop} + 0.5', def_2='10.0')
+    pulse3bis = Pulse(def_1='{3_stop} + 0.5', def_2='10.0', enabled=False)
     pulse4 = Pulse(def_1='2.0', def_2='0.5', def_mode='Start/Duration')
     pulse5 = Pulse(def_1='3.0', def_2='0.5', def_mode='Start/Duration')
 
     sequence2 = BaseSequence()
-    sequence2.add_child_item(0, pulse3)
+    add_children(sequence2, (pulse3, pulse3bis))
     sequence1 = BaseSequence()
     add_children(sequence1, (pulse2, sequence2, pulse4))
 
@@ -598,3 +640,36 @@ def test_sequence_compilation17(root):
     assert not res
     assert not missings
     assert 'test-stop' in errors
+
+
+def test_sequence_compilation18(root):
+    """Test compiling a nested fixed duration sequence.
+
+    """
+    root.external_vars = {'a': 1.5}
+    root.time_constrained = True
+    root.sequence_duration = '100'
+
+    pulse1 = Pulse(def_1='1.0', def_2='{a}')
+    pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
+    pulse3 = Pulse(def_1='{4_start} + 0.5',
+                   def_2='{4_start}+{4_duration}-0.5')
+    pulse4 = Pulse(def_1='2.0', def_2='0.5', def_mode='Start/Duration')
+    pulse5 = Pulse(def_1='3.0', def_2='0.5', def_mode='Start/Duration')
+
+    sequence2 = BaseSequence(time_constrained=True,
+                             def_1='{3_stop} + 0.5', def_2='6',
+                             name='test')
+    sequence2.add_child_item(0, pulse3)
+    sequence1 = BaseSequence()
+    add_children(sequence1, (pulse2, sequence2, pulse4))
+    add_children(root, (pulse1, sequence1, pulse5))
+
+    res, missings, errors = root.evaluate_sequence()
+    print(errors)
+    assert res
+
+    root.sequence_duration = '1'
+    res, missings, errors = root.evaluate_sequence()
+    assert not res
+    assert 'root-stop' in errors

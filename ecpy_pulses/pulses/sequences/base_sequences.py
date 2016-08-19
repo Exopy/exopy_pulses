@@ -345,6 +345,8 @@ class BaseSequence(AbstractSequence):
 
         seq = []
         for item in self.items:
+            if not item.enabled:
+                continue
             if isinstance(item, Pulse) or type(item) in supported:
                 seq.append(item)
             else:
@@ -372,9 +374,9 @@ class BaseSequence(AbstractSequence):
         return pref
 
     def update_members_from_preferences(self, **parameters):
-        """ Use the string values given in the parameters to update the members
+        """Use the string values given in the parameters to update the members
 
-        This function will call itself on any tagged HasPrefAtom member.
+        This function will update any tagged HasPrefAtom member.
         Reimplemented here to update items.
 
         """
@@ -668,7 +670,7 @@ class RootSequence(BaseSequence):
                 mess = ('The stop time of the following pulses {} is larger '
                         'than the duration of the sequence.')
                 ind = [p.index for p in overtime]
-                errors['Root-stop'] = mess.format(ind)
+                errors['root-stop'] = mess.format(ind)
                 return False, missings, errors
 
         return True, missings, errors
