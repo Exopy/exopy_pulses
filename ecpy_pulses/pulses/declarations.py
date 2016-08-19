@@ -134,10 +134,6 @@ class Sequence(Declarator):
         infos.metadata['group'] = self.get_group()
         collector.contributions[sequence_id] = infos
 
-        # Register children.
-        for i in self.children:
-            i.register(collector, traceback)
-
         self.is_registered = True
 
     def unregister(self, collector):
@@ -451,10 +447,6 @@ class Context(Declarator):
         infos.metadata['group'] = self.get_group()
         collector.contributions[context_id] = infos
 
-        # Register children.
-        for i in self.children:
-            i.register(collector, traceback)
-
         self.is_registered = True
 
     def unregister(self, collector):
@@ -618,10 +610,6 @@ class Shape(Declarator):
         # Add group and add to collector
         infos.metadata['group'] = self.get_group()
         collector.contributions[shape_id] = infos
-
-        # Register children.
-        for i in self.children:
-            i.register(collector, traceback)
 
         self.is_registered = True
 
