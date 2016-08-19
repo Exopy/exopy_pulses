@@ -17,4 +17,4 @@ def test_ecpy_pulses_api():
     """Test importing from the api.
 
     """
-    from ecpy_pulses.pulses.api import *
+    import ecpy_pulses.pulses.api

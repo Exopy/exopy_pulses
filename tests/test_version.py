@@ -6,10 +6,15 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Load pulses plugin specific fixtures.
+"""Test the version script
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-pytest_plugins = (str('ecpy_pulses.testing.fixtures'))
+
+def test_version():
+    """Try importing the version.
+
+    """
+    from ecpy_pulses.version import __version__
