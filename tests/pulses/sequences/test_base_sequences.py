@@ -28,7 +28,7 @@ def add_children(seq, children):
 
 
 def test_sequence_time_constaints_observation():
-    """Test adding, moving, deleting pulse in a sequence.
+    """Test observation of time constraint by the root.
 
     """
     root = RootSequence()
@@ -37,18 +37,90 @@ def test_sequence_time_constaints_observation():
     sequence = BaseSequence()
     root.add_child_item(0, sequence)
 
-    assert root.linkable_vars == []
+    assert root.global_vars == []
 
     sequence.time_constrained = True
 
-    assert (sorted(root.linkable_vars) ==
+    assert (sorted(root.global_vars) ==
             sorted(['1_start', '1_stop', '1_duration']))
 
     sequence.time_constrained = False
 
-    assert root.linkable_vars == []
+    assert root.global_vars == []
+
+    root.time_constrained = True
+    assert root.linkable_vars
 
 
+def test_root_handling():
+    """Test updating of item when a sequence get/lose the root.
+
+    """
+    root = RootSequence()
+    context = TestContext()
+    root.context = context
+    sequence1 = BaseSequence()
+    sequence2 = BaseSequence()
+    pulse = Pulse()
+
+    sequence2.add_child_item(0, pulse)
+    sequence1.add_child_item(0, sequence2)
+    root.add_child_item(0, sequence1)
+
+    assert pulse.root is root and sequence2.root is root
+    assert sequence2.has_observers('_last_index')
+
+    root.remove_child_item(0)
+    assert pulse.root is None and sequence2.root is None
+    assert not sequence2.has_observers('_last_index')
+
+
+def test_get_accessible_vars():
+    """Test getting the accessible vars of a sequence.
+
+    """
+    root = RootSequence(external_vars={'a': 1}, local_vars={'a2': '5'},
+                        time_constrained=True)
+    context = TestContext()
+    root.context = context
+    sequence1 = BaseSequence(local_vars={'b': '1'})
+    sequence2 = BaseSequence(local_vars={'c': '2'})
+    pulse = Pulse()
+
+    sequence2.add_child_item(0, pulse)
+    sequence1.add_child_item(0, sequence2)
+    root.add_child_item(0, sequence1)
+
+    variables = ['sequence_end', 'a', 'a2', '3_start', '3_stop',
+                 '3_duration', 'b', 'c']
+    lv = sequence2.get_accessible_vars()
+    for v in variables:
+        assert v in lv
+
+    variables.pop()
+    lv = sequence1.get_accessible_vars()
+    for v in variables:
+        assert v in lv
+
+    variables.pop()
+    lv = root.get_accessible_vars()
+    for v in variables:
+        assert v in lv
+
+
+def test_update_preferences():
+    """Test that update preferences does update the items too.
+
+    """
+    sequence = BaseSequence()
+    sequence.add_child_item(0, Pulse())
+    sequence.update_members_from_preferences({'time_constrained': 'True',
+                                              'item_0': {'def_1': '10'}})
+    assert sequence.time_constrained
+    assert sequence.items[0].def_1 == '10'
+
+
+# XXX add test for moving
 def test_sequence_indexing1():
     """Test adding, moving, deleting pulse in a sequence.
 
@@ -66,23 +138,32 @@ def test_sequence_indexing1():
     root.add_child_item(0, pulse1)
     assert pulse1.index == 1
     assert pulse1.root is root
-    assert (sorted(root.linkable_vars) ==
+    assert (sorted(root.get_accessible_vars()) ==
             (sorted(['sequence_end', '1_start', '1_stop', '1_duration'])))
 
     root.add_child_item(1, pulse2)
     assert pulse1.index == 1
     assert pulse2.index == 2
     assert pulse2.root is root
-    assert (sorted(root.linkable_vars) ==
+    assert (sorted(root.get_accessible_vars()) ==
             sorted(['sequence_end', '1_start', '1_stop', '1_duration',
                     '2_start', '2_stop', '2_duration']))
+
+    root.move_child_item(0, 1)
+    assert pulse1.index == 2
+    assert pulse2.index == 1
+    assert (sorted(root.get_accessible_vars()) ==
+            sorted(['sequence_end', '1_start', '1_stop', '1_duration',
+                    '2_start', '2_stop', '2_duration']))
+
+    root.move_child_item(0, 1)
 
     root.add_child_item(2, pulse3)
     assert pulse1.index == 1
     assert pulse2.index == 2
     assert pulse3.index == 3
     assert pulse3.root is root
-    assert (sorted(root.linkable_vars) ==
+    assert (sorted(root.get_accessible_vars()) ==
             sorted(['sequence_end', '1_start', '1_stop', '1_duration',
                     '2_start', '2_stop', '2_duration',
                     '3_start', '3_stop', '3_duration']))
@@ -93,7 +174,7 @@ def test_sequence_indexing1():
     assert pulse2.index == 0
     assert pulse3.index == 2
     assert pulse2.root is None
-    assert (sorted(root.linkable_vars) ==
+    assert (sorted(root.get_accessible_vars()) ==
             sorted(['1_start', '1_stop', '1_duration',
                     '2_start', '2_stop', '2_duration']))
 
@@ -102,7 +183,7 @@ def test_sequence_indexing1():
     assert pulse2.index == 2
     assert pulse3.index == 3
     assert pulse2.root is root
-    assert (sorted(root.linkable_vars) ==
+    assert (sorted(root.get_accessible_vars()) ==
             sorted(['1_start', '1_stop', '1_duration',
                     '2_start', '2_stop', '2_duration',
                     '3_start', '3_stop', '3_duration']))
@@ -137,7 +218,7 @@ def test_sequence_indexing2():
     assert sequence2.root is root
     assert pulse1.index == 1
     assert pulse2.index == 4
-    assert (sorted(root.linkable_vars) ==
+    assert (sorted(root.get_accessible_vars()) ==
             sorted(['1_start', '1_stop', '1_duration',
                     '4_start', '4_stop', '4_duration']))
 
@@ -148,7 +229,7 @@ def test_sequence_indexing2():
     assert pulse3.root is root
     assert pulse2.index == 5
     assert pulse3.index == 4
-    assert (sorted(root.linkable_vars) ==
+    assert (sorted(root.get_accessible_vars()) ==
             sorted(['1_start', '1_stop', '1_duration',
                     '4_start', '4_stop', '4_duration',
                     '5_start', '5_stop', '5_duration']))
@@ -163,7 +244,7 @@ def test_sequence_indexing2():
     assert sequence2.index == 4
     assert pulse3.index == 5
     assert pulse2.index == 6
-    assert (sorted(root.linkable_vars) ==
+    assert (sorted(root.get_accessible_vars()) ==
             sorted(['1_start', '1_stop', '1_duration',
                     '3_start', '3_stop', '3_duration',
                     '5_start', '5_stop', '5_duration',
@@ -174,7 +255,7 @@ def test_sequence_indexing2():
     assert sequence2.parent is None
     assert sequence2.index == 0
     assert pulse2.index == 4
-    assert (sorted(root.linkable_vars) ==
+    assert (sorted(root.get_accessible_vars()) ==
             sorted(['1_start', '1_stop', '1_duration',
                     '3_start', '3_stop', '3_duration',
                     '4_start', '4_stop', '4_duration']))

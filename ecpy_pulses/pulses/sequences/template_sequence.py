@@ -16,7 +16,7 @@ from copy import deepcopy
 from ast import literal_eval
 from traceback import format_exc
 
-from atom.api import (Dict, ForwardTyped, Unicode)
+from atom.api import (Dict, ForwardTyped, Unicode, List)
 
 from ecpy.utils.atom_util import update_members_from_preferences
 
@@ -45,6 +45,10 @@ class TemplateSequence(AbstractSequence):
 
     #: Special context providing channel mapping.
     context = ForwardTyped(context).tag(pref=True)
+
+    #: Ids of the global linkable vars. Those are for example the start, stop
+    #: and duration of most items.
+    global_vars = List()
 
     def evaluate_entries(self, root_vars, sequence_locals, missings, errors):
         """Evaluate the entries of the items making the context.

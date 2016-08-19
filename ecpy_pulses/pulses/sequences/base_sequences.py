@@ -354,11 +354,14 @@ class BaseSequence(AbstractSequence):
 
         return seq
 
-    def get_bindable_vars(self):
-        """ Access the list of bindable vars for the sequence.
+    def get_accessible_vars(self):
+        """List the accesible variables for the sequence.
+
+        Accessible variables can be referenced in formulas of the items
+        belonging to that sequence.
 
         """
-        return self.local_vars.keys() + self.parent.get_bindable_vars()
+        return self.local_vars.keys() + self.parent.get_accessible_vars()
 
     def preferences_from_members(self):
         """ Get the members values as string to store them in .ini files.
@@ -373,18 +376,18 @@ class BaseSequence(AbstractSequence):
 
         return pref
 
-    def update_members_from_preferences(self, **parameters):
+    def update_members_from_preferences(self, parameters):
         """Use the string values given in the parameters to update the members
 
         This function will update any tagged HasPrefAtom member.
         Reimplemented here to update items.
 
         """
-        super(BaseSequence, self).update_members_from_preferences(**parameters)
-
         for i, item in enumerate(self.items):
-            para = parameters['item_{}'.format(i)]
-            item.update_members_from_preferences(**para)
+            if 'item_{}'.format(i) in parameters:
+                para = parameters.pop('item_{}'.format(i))
+                item.update_members_from_preferences(para)
+        super(BaseSequence, self).update_members_from_preferences(parameters)
 
     def add_child_item(self, index, child):
         """Add a child item at the given index.
@@ -455,8 +458,8 @@ class BaseSequence(AbstractSequence):
         child = self.items.pop(index)
 
         with child.suppress_notifications():
-            del child.root
-            del child.parent
+            child.root = None
+            child.parent = None
 
             child.index = 0
 
@@ -507,8 +510,6 @@ class BaseSequence(AbstractSequence):
         if new:
             for item in self.items:
                 item.root = self.root
-                if isinstance(item, Item):
-                    item.parent = self
                 if isinstance(item, BaseSequence):
                     item.observe('_last_index', self._item_last_index_updated)
             # Connect only now to avoid cleaning up in an unwanted way the
@@ -546,7 +547,7 @@ class BaseSequence(AbstractSequence):
             free_index = self.index + 1
 
         # Cleanup the linkable_vars for all the pulses which will be reindexed.
-        linked_vars = self.root.linkable_vars
+        linked_vars = self.root.global_vars
         for var in linked_vars[:]:
             if var[0].isdigit() and int(var[0]) >= free_index:
                 linked_vars.remove(var)
@@ -590,8 +591,6 @@ class RootSequence(BaseSequence):
     Notes
     -----
 
-    The linkable_vars of the RootSequence stores all the known linkable vars
-    for the sequence.
     The start, stop, duration and def_1, def_2 members are not used by the
     RootSequence. The time_constrained member only affects the use of the
     sequence duration.
@@ -609,6 +608,10 @@ class RootSequence(BaseSequence):
 
     #: Reference to the executioner context of the sequence.
     context = Typed(BaseContext).tag(pref=True)
+
+    #: Ids of the global linkable vars. Those are for example the start, stop
+    #: and duration of most items.
+    global_vars = List()
 
     index = set_default(0)
     name = set_default('Root')
@@ -675,12 +678,12 @@ class RootSequence(BaseSequence):
 
         return True, missings, errors
 
-    def get_bindable_vars(self):
-        """ Access the list of bindable vars for the sequence.
+    def get_accessible_vars(self):
+        """ Access the list of local variables for the sequence.
 
         """
-        return (self.linkable_vars + self.local_vars.keys() +
-                self.external_vars.keys())
+        return (self.linkable_vars + self.global_vars +
+                self.local_vars.keys() + self.external_vars.keys())
 
     @classmethod
     def build_from_config(cls, config, dependencies):
@@ -763,7 +766,7 @@ class RootSequence(BaseSequence):
         """
         # Don't want this to happen on member init.
         if change['type'] == 'update':
-            link_vars = self.linkable_vars
+            link_vars = self.global_vars
             item = change['object']
             prefix = '{}_{{}}'.format(item.index)
             added = set(change['value']) - set(change.get('oldvalue', []))

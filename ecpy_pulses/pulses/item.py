@@ -45,6 +45,7 @@ class Item(HasPrefAtom):
     item_id = Unicode().tag(pref=True)
 
     #: Name of the variable which can be referenced in other items.
+    #: Those should not contain the index of the item.
     linkable_vars = List()
 
     #: Reference to the parent sequence.
