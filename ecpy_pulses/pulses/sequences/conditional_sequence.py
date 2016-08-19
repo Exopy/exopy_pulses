@@ -6,35 +6,34 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Sequence allowing conditional inclusion of its items.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-from atom.api import Unicode, set_default
+from traceback import format_exc
+
+from atom.api import Unicode, Bool, set_default
 
 from .base_sequences import BaseSequence
 from ..utils.entry_eval import eval_entry
 
 
 class ConditionalSequence(BaseSequence):
-    """ Sequence whose child items will be included only if a condition is met.
+    """Sequence whose child items will be included only if a condition is met.
 
     """
     #: Condition to be evaluated. If this evaluates to true then sub-items will
     #: be executed
     condition = Unicode().tag(pref=True)
 
-    #: Vars that can be referenced in condition. Those are provided by other 
+    #: Vars that can be referenced in condition. Those are provided by other
     #: items in the sequence.
     linkable_vars = set_default(['condition'])
 
-    def compile_sequence(self, root_vars, sequence_locals, missings, errors):
-        """ Compile the sequence in a flat list of pulses.
-
-        The list of pulse will be not empty only if the condition specified
-        for the sequence is met.
+    def evaluate_sequence(self, root_vars, sequence_locals, missings, errors):
+        """ Evaluate the sequence vars and compile the list of pulses.
 
         Parameters
         ----------
@@ -61,27 +60,39 @@ class ConditionalSequence(BaseSequence):
         flag : bool
             Boolean indicating whether or not the evaluation succeeded.
 
-        pulses : list
-            List of pulses in which all the string entries have been evaluated.
-
         """
         cond = None
         try:
             cond = bool(eval_entry(self.condition,
                                    sequence_locals, missings))
-        except Exception as e:
-            errors['{}_'.format(self.index) + 'condition'] = repr(e)
+        except Exception:
+            errors['{}_'.format(self.index) + 'condition'] = format_exc()
 
         if cond is None:
-            return False, []
+            return False
 
+        self._condition = cond
         local = '{}_'.format(self.index) + 'condition'
         sequence_locals[local] = cond
 
         if cond:
             return super(ConditionalSequence,
-                         self).compile_sequence(root_vars, sequence_locals,
-                                                missings, errors)
+                         self).evaluate_sequence(root_vars, sequence_locals,
+                                                 missings, errors)
 
         else:
-            return True, []
+            return True
+
+    def simplify_sequence(self):
+        """Inline the sequences not supported by the context.
+
+        """
+        if self._condition:
+            return super(ConditionalSequence, self).simplify_sequence()
+        else:
+            return []
+
+    # --- Private API ---------------------------------------------------------
+
+    #: Cached value of the computed condition.
+    _condition = Bool()
