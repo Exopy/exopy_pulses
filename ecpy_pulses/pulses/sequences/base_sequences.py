@@ -160,6 +160,24 @@ class AbstractSequence(Item):
 
         return sequence
 
+    def traverse(self, depth=-1):
+        """Traverse the items.
+
+        """
+        for i in super(BaseSequence, self).traverse(depth=depth):
+            yield i
+
+        if depth == 0:
+            for c in self.items:
+                if c:
+                    yield c
+
+        else:
+            for c in self.items:
+                if c:
+                    for subc in c.traverse(depth - 1):
+                        yield subc
+
     # --- Private API ---------------------------------------------------------
 
     #: Dict of all already evaluated vars.
@@ -474,24 +492,6 @@ class BaseSequence(AbstractSequence):
         notification = ContainerChange(obj=self, name='items',
                                        removed=[(index, child)])
         self.items_changed(notification)
-
-    def traverse(self, depth=-1):
-        """Reimplemented to yield all child task.
-
-        """
-        for i in super(BaseSequence, self).traverse(depth=depth):
-            yield i
-
-        if depth == 0:
-            for c in self.items:
-                if c:
-                    yield c
-
-        else:
-            for c in self.items:
-                if c:
-                    for subc in c.traverse(depth - 1):
-                        yield subc
 
     # --- Private API ---------------------------------------------------------
 
