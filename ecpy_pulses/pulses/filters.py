@@ -20,18 +20,18 @@ from ecpy.utils.declarator import Declarator
 from .item import Item
 
 
-class ItemFilter(Declarator):
+class SequenceFilter(Declarator):
     """ Base class for all item filters.
 
-    Filters should simply override the filter_items classmethod.
+    Filters should simply override the filter_sequences declarative function.
 
     """
 
     id = d_(Unicode())
 
     @d_func
-    def filter_items(self, py_sequences, template_sequences):
-        """ Class method used to filter tasks.
+    def filter_sequences(self, py_sequences, template_sequences):
+        """Declarative function filtering the items.
 
         Parameters
         ----------
@@ -51,30 +51,30 @@ class ItemFilter(Declarator):
         return items
 
 
-class SequenceFilter(ItemFilter):
-    """ Filter returning sequences selected in the method list_sequences.
+class PySequenceFilter(SequenceFilter):
+    """Filter returning only Python implemented sequences.
 
     """
 
     @d_func
-    def filter_items(self, py_sequences, template_sequences):
+    def filter_sequences(self, py_sequences, template_sequences):
 
         return list(py_sequences.keys())
 
 
-class TemplateFilter(ItemFilter):
-    """ Filter keeping only the templates.
+class TemplateFilter(SequenceFilter):
+    """Filter keeping only the templates.
 
     """
 
     @d_func
-    def filter_items(self, py_sequences, template_sequences):
+    def filter_sequences(self, py_sequences, template_sequences):
 
         return list(template_sequences.keys())
 
 
-class SubclassItemFilter(ItemFilter):
-    """ Filter keeping only the python items which are subclass of task_class.
+class SubclassSequenceFilter(SequenceFilter):
+    """Filter keeping only the python items which are subclass of subclass.
 
     """
 
@@ -82,19 +82,19 @@ class SubclassItemFilter(ItemFilter):
     subclass = d_(Subclass(Item))
 
     @d_func
-    def filter_items(self, py_sequences, template_sequences):
+    def filter_sequences(self, py_sequences, template_sequences):
         """Filter based on the specified item subclass.
 
         """
         sequences = []
-        for name, t_class in py_sequences.items():
-            if issubclass(t_class, self.subclass):
+        for name, infos in py_sequences.items():
+            if issubclass(infos.cls, self.subclass):
                 sequences.append(name)
 
         return sequences
 
 
-class MetadataItemFilter(ItemFilter):
+class MetadataSequenceFilter(SequenceFilter):
     """ Filter keeping only the items with the right class attribute.
 
     """
@@ -105,7 +105,7 @@ class MetadataItemFilter(ItemFilter):
     meta_value = d_(Value())
 
     @d_func
-    def filter_items(self, py_sequences, template_sequences):
+    def filter_sequences(self, py_sequences, template_sequences):
         """Filter keeping only the items whose metadata fit the provided
         key/value pair.
 
@@ -113,19 +113,19 @@ class MetadataItemFilter(ItemFilter):
         sequences = []
         for name, s_infos in py_sequences.items():
             if (self.meta_key in s_infos.metadata and
-                    s_infos.metadat[self.meta_key] == self.meta_val):
+                    s_infos.metadata[self.meta_key] == self.meta_value):
                 sequences.append(name)
 
         return sequences
 
 
-class GroupItemFilter(MetadataItemFilter):
+class GroupSequenceFilter(MetadataSequenceFilter):
     """Filter keeping only the items from the right group which is a
     metadata property of those items.
 
     """
     #: Group to which the task must belong.
-    grup = d_(Unicode())
+    group = d_(Unicode())
 
     meta_key = set_default('group')
 

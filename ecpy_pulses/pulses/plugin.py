@@ -426,8 +426,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                 sequences.pop('ecpy_pulses.RootSequence')
             except KeyError:
                 pass
-            return s_filter.filter_items(sequences,
-                                         template_sequences_data)
+            return s_filter.filter_sequences(sequences,
+                                             template_sequences_data)
         else:
             logger = logging.getLogger(__name__)
             logger.warn("Did not find the filter " + str(filter_name) +
