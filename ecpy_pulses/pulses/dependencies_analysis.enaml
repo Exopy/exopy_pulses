@@ -1,0 +1,137 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""Depndencies analysis and collection machinery for pulses.
+
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+from enaml.workbench.api import PluginManifest, Extension, ExtensionPoint
+
+from ecpy.app.dependencies.api import BuildDependency, RuntimeDependencyAnalyser
+
+# TODO need an addtional coollector for template configs
+enamldef PulsesBuildingDependenciesExtension(Extension):
+        id = 'build_deps'
+        point = 'ecpy.app.dependencies.build'
+
+        BuildDependency:
+            id = 'ecpy.pulses.items'
+            analyse => (workbench, obj, getter, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+
+                i_id = getter(obj, 'item_id')
+                i_infos = manager.get_item_infos(i_id)
+
+                if i_infos is None:
+                    errors[i_id] = 'Unknown item.'
+                    return
+
+                dependencies.add(i_id)
+                return i_infos.dependencies
+
+            validate => (workbench, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+                for i_id in dependencies:
+                    i_infos = manager.get_item_infos(i_id)
+                    if i_infos is None:
+                        errors[i_id] = 'Unknown item.'
+
+            collect => (workbench, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+                for i_id in dependencies:
+                    i_infos = manager.get_item_infos(i_id)
+                    if i_infos is None:
+                        errors[i_id] = 'Unknown item.'
+                        continue
+
+                    dependencies[i_id] = i_infos.cls
+
+        BuildDependency:
+            id = 'ecpy.pulses.contexts'
+            analyse => (workbench, obj, getter, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+
+                c_id = getter(obj, 'context_id')
+                c_infos = manager.get_context_infos(c_id)
+
+                if c_infos is None:
+                    errors[c_id] = 'Unknown context.'
+                    return
+
+                dependencies.add(c_id)
+                return c_infos.dependencies
+
+            validate => (workbench, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+                for c_id in dependencies:
+                    c_infos = manager.get_context_infos(c_id)
+                    if c_infos is None:
+                        errors[c_id] = 'Unknown context.'
+
+            collect => (workbench, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+                for c_id in dependencies:
+                    c_infos = manager.get_context_infos(c_id)
+                    if c_infos is None:
+                        errors[c_id] = 'Unknown context.'
+                        continue
+
+                    dependencies[c_id] = c_infos.cls
+
+        BuildDependency:
+            id = 'ecpy.pulses.shapes'
+            analyse => (workbench, obj, getter, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+
+                s_id = getter(obj, 'shape_id')
+                s_infos = manager.get_shape_infos(s_id)
+
+                if s_infos is None:
+                    errors[s_id] = 'Unknown shape.'
+                    return
+
+                dependencies.add(s_id)
+                return s_infos.dependencies
+
+            validate => (workbench, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+                for s_id in dependencies:
+                    s_infos = manager.get_shape_infos(s_id)
+                    if s_infos is None:
+                        errors[s_id] = 'Unknown shape.'
+
+            collect => (workbench, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+                for s_id in dependencies:
+                    s_infos = manager.get_shape_infos(s_id)
+                    if s_infos is None:
+                        errors[s_id] = 'Unknown shape.'
+                        continue
+
+                    dependencies[s_id] = s_infos.cls
+
+        BuildDependency:
+            id = 'ecpy.pulses.modulation'
+            analyse => (workbench, obj, getter, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+
+                s_id = type(obj).__name__
+                dependencies.add(s_id)
+
+                return set()
+
+            validate => (workbench, dependencies, errors):
+                return
+
+            collect => (workbench, dependencies, errors):
+                manager = workbench.get_plugin('ecpy.pulses')
+                for el in dependencies:
+                    cls = manager.get_modulation('ecpy_pulses.Modulation')
+                    dependencies[el] = cls
