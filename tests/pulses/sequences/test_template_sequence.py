@@ -1,285 +1,327 @@
 # -*- coding: utf-8 -*-
-# =============================================================================
-# module : test_template_sequence.py
-# author : Matthieu Dartiailh
-# license : MIT license
-# =============================================================================
-import os
-from configobj import ConfigObj
-from nose.tools import (assert_equal, assert_true, assert_false,
-                        assert_in)
-from hqc_meas.pulses.pulse import Pulse
-from hqc_meas.pulses.base_sequences import RootSequence, Sequence
-from hqc_meas.pulses.shapes.base_shapes import SquareShape
-from hqc_meas.pulses.contexts.template_context import TemplateContext
-from hqc_meas.pulses.sequences.template_sequence import TemplateSequence
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""Test the templates sequences functionalities.
 
-from ..context import TestContext
-from ..template_makers import create_template_sequence
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+import pytest
+
+from ecpy_pulses.pulses.sequencesbase_sequences import RootSequence
+from ecpy_pulses.pulses.sequences.template_sequence import TemplateSequence
+
+from ecpy_pulses.testing.context import TestContext
 
 
-PACKAGE_PATH = os.path.dirname(__file__)
+@pytest.fixture
+def template_preferences(pulses_plugin, template_sequence):
+    """Preferences corresponding to the template sequence.
+
+    """
+    infos = pulses_plugin.get_item_infos(template_sequence)
+    return infos.metadata['template-config']
 
 
-class TestBuilding(object):
+@pytest.fixture
+def template_depependencies(pulses_plugin, template_preferences):
+    """Collect the build dependency of the template_sequence.
 
-    def setup(self):
-        pref = create_template_sequence()
-        conf = ConfigObj()
-        conf.update(pref)
-        dep = {'Sequence': Sequence, 'Pulse': Pulse,
-               'TemplateSequence': TemplateSequence,
-               'shapes': {'SquareShape': SquareShape},
-               'contexts': {'TemplateContext': TemplateContext,
-                            'TestContext': TestContext},
-               'templates': {'test': ('', conf, 'Basic user comment\nff')}}
-        self.dependecies = {'pulses': dep}
+    """
+    workbench = pulses_plugin.workbench
+    core = workbench.get_plugin('enaml.workbench.core')
+    cmd = 'ecpy.app.dependencies.analyse'
+    dep_analysis = core.invoke_command(cmd, {'obj': template_preferences})
+    cmd = 'ecpy.app.dependencies.collect'
+    dep = core.invoke_command(cmd, {'kind': 'build',
+                                    'dependencies': dep_analysis.dependencies})
+    dep = dep.dependencies
+    dep[''] = {'': template_preferences}
+    return dep
 
-    def test_build_from_config1(self):
-        # Test building a template sequence from only the template file.
-        # No information is knwon about channel mapping of template_vars values
-        conf = {'template_id': 'test', 'name': 'Template',
-                'template_vars': "{'b': '19', 'c': ''}"}
-        seq = TemplateSequence.build_from_config(conf, self.dependecies)
 
-        assert_equal(seq.name, 'Template')
-        assert_equal(seq.template_id, 'test')
-        assert_equal(seq.template_vars, dict(b='19'))
-        assert_equal(seq.local_vars, dict(a='1.5'))
-        assert_equal(len(seq.items), 4)
-        assert_equal(seq.items[3].index, 5)
-        assert_equal(seq.docs, 'Basic user comment\nff')
+def root_with_template(template_sequence, template_dependencies):
+    """Build a root using the template sequence.
 
-        context = seq.context
-        assert_equal(context.template, seq)
-        assert_equal(context.logical_channels, ['A', 'B'])
-        assert_equal(context.analogical_channels, ['Ch1', 'Ch2'])
-        assert_equal(context.channel_mapping, {'A': '', 'B': '', 'Ch1': '',
-                                               'Ch2': ''})
+    """
+    root = RootSequence()
+    root.context = TestContext(sampling=0.5)
 
-    def test_build_from_config2(self):
-        # Test rebuilding a sequence including a template sequence.
-        # Channel mapping of template_vars values are known.
-        conf = {'template_id': 'test', 'name': 'Template',
-                'template_vars': "{'b': '25'}"}
-        seq = TemplateSequence.build_from_config(conf, self.dependecies)
-        seq.context.channel_mapping = {'A': 'Ch1_L', 'B': 'Ch2_L',
+    conf = {'template_id': template_sequence, 'name': 'Template',
+            'template_vars': "{'b': '19'}"}
+    seq = TemplateSequence.build_from_config(conf, template_dependencies)
+    seq.context.channel_mapping = {'A': 'Ch1_L', 'B': 'Ch2_L',
+                                   'Ch1': 'Ch2_A', 'Ch2': 'Ch1_A'}
+    seq.def_1 = '1.0'
+    seq.def_2 = '20.0'
+
+    root.add_child_item(0, seq)
+    return root
+
+
+def test_build_from_config1(template_sequence, template_dependencies):
+    """ Test building a template sequence from only the template file.
+
+    No information is knwon about channel mapping of template_vars values
+
+    """
+    conf = {'template_id': template_sequence, 'name': 'Template',
+            'template_vars': "{'b': '19', 'c': ''}"}
+    seq = TemplateSequence.build_from_config(conf, template_dependencies)
+
+    assert seq.name == 'Template'
+    assert seq.template_id == template_sequence
+    assert seq.template_vars == dict(b='19')
+    assert seq.local_vars == dict(a='1.5')
+    assert len(seq.items) == 4
+    assert seq.items[3].index == 5
+    assert seq.docs == 'Basic user comment\nff'
+
+    context = seq.context
+    assert context.template is seq
+    assert context.logical_channels == ['A', 'B']
+    assert context.analogical_channels == ['Ch1', 'Ch2']
+    assert context.channel_mapping == {'A': '', 'B': '', 'Ch1': '',
+                                       'Ch2': ''}
+
+
+def test_build_from_config2(template_sequence, template_dependencies):
+    """ Test rebuilding a sequence including a template sequence.
+
+    Channel mapping of template_vars values are known.
+
+    """
+    conf = {'template_id': 'test', 'name': 'Template',
+            'template_vars': "{'b': '25'}"}
+    seq = TemplateSequence.build_from_config(conf, template_dependencies)
+    seq.context.channel_mapping = {'A': 'Ch1_L', 'B': 'Ch2_L',
+                                   'Ch1': 'Ch2_A', 'Ch2': 'Ch1_A'}
+    root = RootSequence()
+    context = TestContext(sampling=0.5)
+    root.context = context
+    root.add_child_item(0, seq)
+    pref = root.preferences_from_members()
+
+    new = RootSequence.build_from_config(pref, template_dependencies)
+    assert new.items[0].index == 1
+
+    seq = new.items[0]
+    assert seq.name == 'Template'
+    assert seq.template_id == template_sequence
+    assert seq.template_vars == dict(b='25')
+    assert seq.local_vars == dict(a='1.5')
+    assert len(seq.items) == 4
+    assert seq.items[3].index == 5
+    assert seq.docs == 'Basic user comment\nff'
+
+    context = seq.context
+    assert context.template is seq
+    assert context.logical_channels == ['A', 'B']
+    assert context.analogical_channels == ['Ch1', 'Ch2']
+    assert context.channel_mapping == {'A': 'Ch1_L', 'B': 'Ch2_L',
                                        'Ch1': 'Ch2_A', 'Ch2': 'Ch1_A'}
-        root = RootSequence()
-        context = TestContext(sampling=0.5)
-        root.context = context
-        root.items = [seq]
-        pref = root.preferences_from_members()
 
-        new = RootSequence.build_from_config(pref, self.dependecies)
-        assert_equal(new.items[0].index, 1)
 
-        seq = new.items[0]
-        assert_equal(seq.name, 'Template')
-        assert_equal(seq.template_id, 'test')
-        assert_equal(seq.template_vars, dict(b='25'))
-        assert_equal(seq.local_vars, dict(a='1.5'))
-        assert_equal(len(seq.items), 4)
-        assert_equal(seq.items[3].index, 5)
-        assert_equal(seq.docs, 'Basic user comment\nff')
+def test_build_from_config3(template_sequence, template_dependencies):
+    """Test rebuilding a sequence including twice the same template sequence
 
-        context = seq.context
-        assert_equal(context.template, seq)
-        assert_equal(context.logical_channels, ['A', 'B'])
-        assert_equal(context.analogical_channels, ['Ch1', 'Ch2'])
-        assert_equal(context.channel_mapping, {'A': 'Ch1_L', 'B': 'Ch2_L',
-                                               'Ch1': 'Ch2_A', 'Ch2': 'Ch1_A'})
+    """
+    conf = {'template_id': template_sequence, 'name': 'Template',
+            'template_vars': "{'b': '19'}"}
+    seq = TemplateSequence.build_from_config(conf, template_dependencies)
+    seq.context.channel_mapping = {'A': 'Ch1_L', 'B': 'Ch2_L',
+                                   'Ch1': 'Ch2_A', 'Ch2': 'Ch1_A'}
 
-    def test_build_from_config(self):
-        # Test rebuilding a sequence including twice the same template sequence
-        conf = {'template_id': 'test', 'name': 'Template',
-                'template_vars': "{'b': '19'}"}
-        seq = TemplateSequence.build_from_config(conf, self.dependecies)
-        seq.context.channel_mapping = {'A': 'Ch1_L', 'B': 'Ch2_L',
+    conf = {'template_id': 'test', 'name': 'Template',
+            'template_vars': "{'b': '12'}"}
+    seq2 = TemplateSequence.build_from_config(conf, template_dependencies)
+    seq2.context.channel_mapping = {'A': 'Ch1_L', 'B': 'Ch2_L',
+                                    'Ch1': 'Ch1_A', 'Ch2': 'Ch2_A'}
+
+    root = RootSequence()
+    context = TestContext(sampling=0.5)
+    root.context = context
+    root.add_child_item(0, seq)
+    root.add_child_item(0, seq2)
+    pref = root.preferences_from_members()
+
+    new = RootSequence.build_from_config(pref, template_dependencies)
+    assert new.items[0].index == 1
+
+    seq = new.items[0]
+    assert seq.name == 'Template'
+    assert seq.template_id == template_sequence
+    assert seq.template_vars == dict(b='19')
+    assert seq.local_vars == dict(a='1.5')
+    assert len(seq.items) == 4
+    assert seq.items[3].index == 5
+    assert seq.docs == 'Basic user comment\nff'
+
+    context = seq.context
+    assert context.template == seq
+    assert context.logical_channels == ['A', 'B']
+    assert context.analogical_channel == ['Ch1', 'Ch2']
+    assert context.channel_mapping == {'A': 'Ch1_L', 'B': 'Ch2_L',
                                        'Ch1': 'Ch2_A', 'Ch2': 'Ch1_A'}
 
-        conf = {'template_id': 'test', 'name': 'Template',
-                'template_vars': "{'b': '12'}"}
-        seq2 = TemplateSequence.build_from_config(conf, self.dependecies)
-        seq2.context.channel_mapping = {'A': 'Ch1_L', 'B': 'Ch2_L',
-                                        'Ch1': 'Ch1_A', 'Ch2': 'Ch2_A'}
+    assert new.items[1].index == 2
 
-        root = RootSequence()
-        context = TestContext(sampling=0.5)
-        root.context = context
-        root.items = [seq, seq2]
-        pref = root.preferences_from_members()
+    seq = new.items[1]
+    assert seq.name == 'Template'
+    assert seq.template_id == 'test'
+    assert seq.template_vars == dict(b='12')
+    assert seq.local_vars == dict(a='1.5')
+    assert len(seq.items) == 4
+    assert seq.items[3].index == 5
+    assert seq.docs == 'Basic user comment\nff'
 
-        new = RootSequence.build_from_config(pref, self.dependecies)
-        assert_equal(new.items[0].index, 1)
-
-        seq = new.items[0]
-        assert_equal(seq.name, 'Template')
-        assert_equal(seq.template_id, 'test')
-        assert_equal(seq.template_vars, dict(b='19'))
-        assert_equal(seq.local_vars, dict(a='1.5'))
-        assert_equal(len(seq.items), 4)
-        assert_equal(seq.items[3].index, 5)
-        assert_equal(seq.docs, 'Basic user comment\nff')
-
-        context = seq.context
-        assert_equal(context.template, seq)
-        assert_equal(context.logical_channels, ['A', 'B'])
-        assert_equal(context.analogical_channels, ['Ch1', 'Ch2'])
-        assert_equal(context.channel_mapping, {'A': 'Ch1_L', 'B': 'Ch2_L',
-                                               'Ch1': 'Ch2_A', 'Ch2': 'Ch1_A'})
-
-        assert_equal(new.items[1].index, 2)
-
-        seq = new.items[1]
-        assert_equal(seq.name, 'Template')
-        assert_equal(seq.template_id, 'test')
-        assert_equal(seq.template_vars, dict(b='12'))
-        assert_equal(seq.local_vars, dict(a='1.5'))
-        assert_equal(len(seq.items), 4)
-        assert_equal(seq.items[3].index, 5)
-        assert_equal(seq.docs, 'Basic user comment\nff')
-
-        context = seq.context
-        assert_equal(context.template, seq)
-        assert_equal(context.logical_channels, ['A', 'B'])
-        assert_equal(context.analogical_channels, ['Ch1', 'Ch2'])
-        assert_equal(context.channel_mapping, {'A': 'Ch1_L', 'B': 'Ch2_L',
-                                               'Ch1': 'Ch1_A', 'Ch2': 'Ch2_A'})
+    context = seq.context
+    assert context.template == seq
+    assert context.logical_channels == ['A', 'B']
+    assert context.analogical_channels == ['Ch1', 'Ch2']
+    assert context.channel_mapping == {'A': 'Ch1_L', 'B': 'Ch2_L',
+                                       'Ch1': 'Ch1_A', 'Ch2': 'Ch2_A'}
 
 
-class TestCompilation(object):
+def test_sequence_compilation1(root_with_template):
+    """Test evaluating and simplifying  a template when everything is ok.
 
-    def setup(self):
-        pref = create_template_sequence()
-        conf = ConfigObj()
-        conf.update(pref)
-        dep = {'Sequence': Sequence, 'Pulse': Pulse,
-               'TemplateSequence': TemplateSequence,
-               'shapes': {'SquareShape': SquareShape},
-               'contexts': {'TemplateContext': TemplateContext,
-                            'TestContext': TestContext},
-               'templates': {'test': ('', conf, 'Basic user comment\nff')}}
-        self.dependecies = {'pulses': dep}
+    """
+    res, missings, errors = root_with_template.evaluate_sequence()
+    pulses = root_with_template.simplify_sequence()
 
-        self.root = RootSequence()
-        self.context = TestContext(sampling=0.5)
-        self.root.context = self.context
+    assert res, errors
+    assert len(pulses) == 4
 
-        conf = {'template_id': 'test', 'name': 'Template',
-                'template_vars': "{'b': '19'}"}
-        seq = TemplateSequence.build_from_config(conf, self.dependecies)
-        seq.context.channel_mapping = {'A': 'Ch1_L', 'B': 'Ch2_L',
-                                       'Ch1': 'Ch2_A', 'Ch2': 'Ch1_A'}
-        seq.def_1 = '1.0'
-        seq.def_2 = '20.0'
+    pulse = pulses[0]
+    assert pulse.index == 1
+    assert pulse.start == 2.0
+    assert pulse.stop == 2.5
+    assert pulse.duration == 0.5
+    assert pulse.channel == 'Ch1_L'
 
-        self.template = seq
+    pulse = pulses[1]
+    assert pulse.index == 2
+    assert pulse.start == 3.5
+    assert pulse.stop == 4
+    assert pulse.duration == 0.5
+    assert pulse.channel == 'Ch2_L'
 
-        self.root.items = [seq]
+    pulse = pulses[2]
+    assert pulse.index == 4
+    assert pulse.start == 4.5
+    assert pulse.stop == 20
+    assert pulse.duration == 15.5
+    assert pulse.channel == 'Ch1_A'
 
-    def test_sequence_compilation1(self):
-        # Test compiling a template when everything is ok.
-        res, pulses = self.root.compile_sequence(False)
+    pulse = pulses[3]
+    assert pulse.index == 5
+    assert pulse.start == 4.5
+    assert pulse.stop == 20
+    assert pulse.duration == 15.5
+    assert pulse.channel == 'Ch2_A'
 
-        assert_true(res, '{}'.format(pulses))
-        assert_equal(len(pulses), 4)
 
-        pulse = pulses[0]
-        assert_equal(pulse.index, 1)
-        assert_equal(pulse.start, 2.0)
-        assert_equal(pulse.stop, 2.5)
-        assert_equal(pulse.duration, 0.5)
-        assert_equal(pulse.channel, 'Ch1_L')
+def test_sequence_compilation2(root_with_template):
+    """Test compiling a template : issue in context, incomplete mapping.
 
-        pulse = pulses[1]
-        assert_equal(pulse.index, 2)
-        assert_equal(pulse.start, 3.5)
-        assert_equal(pulse.stop, 4)
-        assert_equal(pulse.duration, 0.5)
-        assert_equal(pulse.channel, 'Ch2_L')
+    """
+    template = root_with_template.items[0]
+    template.context.channel_mapping = {'A': 'Ch1_L', 'B': 'Ch2_L',
+                                        'Ch1': 'Ch2_A'}
 
-        pulse = pulses[2]
-        assert_equal(pulse.index, 4)
-        assert_equal(pulse.start, 4.5)
-        assert_equal(pulse.stop, 20)
-        assert_equal(pulse.duration, 15.5)
-        assert_equal(pulse.channel, 'Ch1_A')
+    res, miss, errors = root_with_template.evaluate_sequence()
 
-        pulse = pulses[3]
-        assert_equal(pulse.index, 5)
-        assert_equal(pulse.start, 4.5)
-        assert_equal(pulse.stop, 20)
-        assert_equal(pulse.duration, 15.5)
-        assert_equal(pulse.channel, 'Ch2_A')
+    assert not res
+    assert not miss
+    assert 'Template-context' in errors
+    assert 'Ch2' in errors['Template-context']
 
-    def test_sequence_compilation2(self):
-        # Test compiling a template : issue in context, incomplete mapping.
-        self.template.context.channel_mapping = {'A': 'Ch1_L', 'B': 'Ch2_L',
-                                                 'Ch1': 'Ch2_A'}
 
-        res, (miss, errors) = self.root.compile_sequence(False)
+def test_sequence_compilation3(root_with_template):
+    """Test compiling a template : issue in context, erroneous mapping.
 
-        assert_false(res)
-        assert_false(miss)
-        assert_in('Template-context', errors)
-        assert_in('Ch2', errors['Template-context'])
+    """
+    template = root_with_template.items[0]
+    template.context.channel_mapping = {'A': 'Ch1_L', 'B': 'Ch2_L',
+                                        'Ch1': 'Ch2_A', 'Ch2': 'A'}
 
-    def test_sequence_compilation3(self):
-        # Test compiling a template : issue in context, erroneous mapping.
-        self.template.context.channel_mapping = {'A': 'Ch1_L', 'B': 'Ch2_L',
-                                                 'Ch1': 'Ch2_A', 'Ch2': 'A'}
+    res, miss, errors = root_with_template.evaluate_sequence()
 
-        res, (miss, errors) = self.root.compile_sequence(False)
+    assert not res
+    assert not miss
+    assert 'Template-context' in errors
+    assert 'Ch2' in errors['Template-context']
 
-        assert_false(res)
-        assert_false(miss)
-        assert_in('Template-context', errors)
-        assert_in('Ch2', errors['Template-context'])
 
-    def test_sequence_compilation3bis(self):
-        # Test compiling a template : pulse as umapped channel.
-        self.template.items[0].channel = '__'
-        res, (miss, errors) = self.root.compile_sequence(False)
+def test_sequence_compilation3bis(root_with_template):
+    """Test compiling a template : pulse as umapped channel.
 
-        assert_false(res)
-        assert_false(miss)
-        assert_in('Template-channels', errors)
-        assert_in('__', errors['Template-channels'])
+    """
+    template = root_with_template.items[0]
+    template.items[0].channel = '__'
+    res, miss, errors = root_with_template.evaluate_sequence(False)
 
-    def test_sequence_compilation4(self):
-        # Test compiling a template : issue in defs.
-        self.template.def_1 = 'r*'
+    assert not res
+    assert not miss
+    assert 'Template-channels' in errors
+    assert '__' in errors['Template-channels']
 
-        res, (miss, errors) = self.root.compile_sequence(False)
 
-        assert_false(res)
-        assert_false(miss)
-        assert_in('1_start', errors)
+def test_sequence_compilation4(root_with_template):
+    """Test compiling a template : issue in defs.
 
-    def test_sequence_compilation5(self):
-        # Test compiling a template : issue in template_vars.
-        self.template.template_vars = {'b': '*1'}
+    """
+    template = root_with_template.items[0]
+    template.def_1 = 'r*'
 
-        res, (miss, errors) = self.root.compile_sequence(False)
+    res, miss, errors = root_with_template.evaluate_sequence()
 
-        assert_false(res)
-        assert_in('1_b', errors)
+    assert not res
+    assert not miss
+    assert '1_start' in errors
 
-    def test_sequence_compilation6(self):
-        # Test compiling a template : issue in local_vars.
-        self.template.local_vars = {'a': '*1'}
 
-        res, (miss, errors) = self.root.compile_sequence(False)
+def test_sequence_compilation5(root_with_template):
+    """Test compiling a template : issue in template_vars.
 
-        assert_false(res)
-        assert_in('1_a', errors)
+    """
+    template = root_with_template.items[0]
+    template.template_vars = {'b': '*1'}
 
-    def test_sequence_compilation7(self):
-        # Test compiling a template : issue in stop time.
-        self.template.items[0].def_2 = '200'
+    res, miss, errors = root_with_template.compile_sequence(False)
 
-        res, (miss, errors) = self.root.compile_sequence(False)
+    assert not res
+    assert '1_b' in errors
 
-        assert_false(res)
-        assert_in('Template-stop', errors)
+
+def test_sequence_compilation6(root_with_template):
+    """Test compiling a template : issue in local_vars.
+
+    """
+    template = root_with_template.items[0]
+    template.local_vars = {'a': '*1'}
+
+    res, miss, errors = root_with_template.evaluate_sequence()
+
+    assert not res
+    assert '1_a' in errors
+
+
+def test_sequence_compilation7(root_with_template):
+    """Test compiling a template : issue in stop time.
+
+    """
+    template = root_with_template.items[0]
+    template.items[0].def_2 = '200'
+
+    res, miss, errors = root_with_template.compile_sequence(False)
+
+    assert not res
+    assert 'Template-stop' in errors

@@ -9,6 +9,9 @@
 """Sequence use to insert another premade sequence.
 
 """
+# TODO this is unfinished and requires a update to ecpy to support declaring
+# multiple build dependencies
+
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
@@ -30,6 +33,7 @@ def context():
     return TemplateContext
 
 
+# TODO need a custom dep_id to also collect the config of the template
 class TemplateSequence(AbstractSequence):
     """ Sequence used to represent a template in a Sequence.
 
@@ -50,7 +54,7 @@ class TemplateSequence(AbstractSequence):
     #: and duration of most items.
     global_vars = List()
 
-    def evaluate_entries(self, root_vars, sequence_locals, missings, errors):
+    def evaluate_sequence(self, root_vars, sequence_locals, missings, errors):
         """Evaluate the entries of the items making the context.
 
         """
@@ -101,6 +105,23 @@ class TemplateSequence(AbstractSequence):
 
         return True
 
+    def simplify_sequence(self):
+        """Inline the sequences not supported by the context.
+
+        """
+        supported = self.root.context.supported_sequences
+
+        seq = []
+        for item in self.items:
+            if not item.enabled:
+                continue
+            if isinstance(item, Pulse) or type(item) in supported:
+                seq.append(item)
+            else:
+                seq.extend(item.simplify_sequence())
+
+        return seq
+
     @classmethod
     def build_from_config(cls, config, dependencies):
         """ Create a new instance using the provided infos for initialisation.
@@ -122,6 +143,8 @@ class TemplateSequence(AbstractSequence):
             Newly created and initiliazed sequence.
 
         """
+        # TOOD this is not correct as the template config is never retrieved
+
         # First get the underlying template from the dependencies and merge
         # config into it as it has more recent infos about the context and
         # the vars.
