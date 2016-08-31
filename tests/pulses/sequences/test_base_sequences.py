@@ -292,7 +292,7 @@ def test_traverse_sequence():
     add_children(seq, [pulse4])
 
     items = root.traverse()
-    assert len(list(items)) == 10
+    assert len(list(items)) == 11
 
     assert list(root.traverse(0)) == [root, pulse1, pulse2, pulse3, seq]
 

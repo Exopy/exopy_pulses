@@ -355,9 +355,13 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         raise NotImplementedError()
 
     def get_modulation(self, modulation_id, view=False):
+        """Get the modulation class.
+
         """
-        """
-        return Modulation
+        if modulation_id == 'ecpy_pulses.Modulation':
+            return Modulation
+        else:
+            None
 
     def get_config(self, sequence_id):
         """ Access the proper config for a sequence.

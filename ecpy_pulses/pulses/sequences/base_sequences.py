@@ -164,7 +164,7 @@ class AbstractSequence(Item):
         """Traverse the items.
 
         """
-        for i in super(BaseSequence, self).traverse(depth=depth):
+        for i in super(AbstractSequence, self).traverse(depth=depth):
             yield i
 
         if depth == 0:
@@ -722,6 +722,15 @@ class RootSequence(BaseSequence):
 
         seq._post_setattr_root(True, True)
         return seq
+
+    def traverse(self, depth=-1):
+        """Traverse the items.
+
+        """
+        for i in super(RootSequence, self).traverse(depth=depth):
+            yield i
+
+        yield self.context
 
     # --- Private API ---------------------------------------------------------
 

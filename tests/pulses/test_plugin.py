@@ -197,6 +197,9 @@ def test_get_modulation(workbench):
     cls = plugin.get_modulation('ecpy_pulses.Modulation')
     assert cls
 
+    cls = plugin.get_modulation('__unknown__')
+    assert cls is None
+
 
 # TODO add a test for the template case when template are back
 def test_get_config(workbench):

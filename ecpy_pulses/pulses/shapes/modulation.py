@@ -40,6 +40,9 @@ class Modulation(HasPrefAtom):
     #: Identifier for the build dependency collector
     dep_type = Constant(DEP_TYPE).tag(pref=True)
 
+    #: Id of the modulation used to query it from the plugin.
+    modulation_id = Unicode().tag(pref=True)
+
     #: Flag indicating whether or not the modulation is activated.
     activated = Bool().tag(pref=True)
 
@@ -155,6 +158,12 @@ class Modulation(HasPrefAtom):
 
     # --- Private API ---------------------------------------------------------
 
+    #: Computed frequency (cached)
     _frequency = Float()
 
+    #: Computed phase (cached)
     _phase = Float()
+
+    def _default_modulation_id(self):
+        pack, _ = self.__module__.split('.', 1)
+        return pack + '.' + type(self).__name__

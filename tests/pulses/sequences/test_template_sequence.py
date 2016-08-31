@@ -14,7 +14,7 @@ from __future__ import (division, unicode_literals, print_function,
 
 import pytest
 
-from ecpy_pulses.pulses.sequencesbase_sequences import RootSequence
+from ecpy_pulses.pulses.sequences.base_sequences import RootSequence
 from ecpy_pulses.pulses.sequences.template_sequence import TemplateSequence
 
 from ecpy_pulses.testing.context import TestContext

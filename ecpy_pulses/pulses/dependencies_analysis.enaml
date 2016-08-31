@@ -41,14 +41,14 @@ enamldef PulsesBuildingDependenciesExtension(Extension):
                 manager = workbench.get_plugin('ecpy.pulses')
                 for i_id in dependencies:
                     cls = manager.get_item(i_id)
-                    if i_infos is None:
+                    if cls is None:
                         errors[i_id] = 'Unknown item.'
 
             collect => (workbench, dependencies, errors):
                 manager = workbench.get_plugin('ecpy.pulses')
                 for i_id in dependencies:
                     cls = manager.get_item(i_id)
-                    if i_infos is None:
+                    if cls is None:
                         errors[i_id] = 'Unknown item.'
                         continue
 
@@ -60,7 +60,7 @@ enamldef PulsesBuildingDependenciesExtension(Extension):
                 manager = workbench.get_plugin('ecpy.pulses')
 
                 c_id = getter(obj, 'context_id')
-                c_infos = manager.get_context(c_id)
+                c_infos = manager.get_context_infos(c_id)
 
                 if c_infos is None:
                     errors[c_id] = 'Unknown context.'
@@ -72,15 +72,15 @@ enamldef PulsesBuildingDependenciesExtension(Extension):
             validate => (workbench, dependencies, errors):
                 manager = workbench.get_plugin('ecpy.pulses')
                 for c_id in dependencies:
-                    c_infos = manager.get_context(c_id)
-                    if c_infos is None:
+                    cls = manager.get_context(c_id)
+                    if cls is None:
                         errors[c_id] = 'Unknown context.'
 
             collect => (workbench, dependencies, errors):
                 manager = workbench.get_plugin('ecpy.pulses')
                 for c_id in dependencies:
                     cls = manager.get_context(c_id)
-                    if c_infos is None:
+                    if cls is None:
                         errors[c_id] = 'Unknown context.'
                         continue
 
@@ -105,14 +105,14 @@ enamldef PulsesBuildingDependenciesExtension(Extension):
                 manager = workbench.get_plugin('ecpy.pulses')
                 for s_id in dependencies:
                     cls = manager.get_shape(s_id)
-                    if s_infos is None:
+                    if cls is None:
                         errors[s_id] = 'Unknown shape.'
 
             collect => (workbench, dependencies, errors):
                 manager = workbench.get_plugin('ecpy.pulses')
                 for s_id in dependencies:
                     cls = manager.get_shape(s_id)
-                    if s_infos is None:
+                    if cls is None:
                         errors[s_id] = 'Unknown shape.'
                         continue
 
@@ -123,16 +123,28 @@ enamldef PulsesBuildingDependenciesExtension(Extension):
             analyse => (workbench, obj, getter, dependencies, errors):
                 manager = workbench.get_plugin('ecpy.pulses')
 
-                s_id = type(obj).__name__
-                dependencies.add(s_id)
+                m_id = getter(obj, 'modulation_id')
+                cls = manager.get_modulation(m_id)
+                if cls is None:
+                    errors[m_id] = 'Unknown modulation.'
+                    return
 
+                dependencies.add(m_id)
                 return set()
 
             validate => (workbench, dependencies, errors):
-                return
+                manager = workbench.get_plugin('ecpy.pulses')
+                for m_id in dependencies:
+                    cls = manager.get_modulation(m_id)
+                    if cls is None:
+                        errors[m_id] = 'Unknown modulation.'
 
             collect => (workbench, dependencies, errors):
                 manager = workbench.get_plugin('ecpy.pulses')
-                for el in dependencies:
-                    cls = manager.get_modulation('ecpy_pulses.Modulation')
-                    dependencies[el] = cls
+                for m_id in dependencies:
+                    cls = manager.get_modulation(m_id)
+                    if cls is None:
+                        errors[m_id] = 'Unknown modulation.'
+                        continue
+
+                    dependencies[m_id] = cls
