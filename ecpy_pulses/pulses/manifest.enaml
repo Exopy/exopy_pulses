@@ -13,7 +13,6 @@ and defining some default pulse shapes.
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
 from ast import literal_eval
 from future.builtins import str
 from configobj import ConfigObj
@@ -82,6 +81,9 @@ def build_sequence(event):
         RootSequence in which to insert the new sequence once built (ui mode
         only).
 
+    parent_ui : object, optional
+        Parent widget for the dialog (ui mode only).
+
     path : unicode, optional
         Path to the file holding the sequence config. The stored sequence
         should be a RootSequence not a TemplateSequence. Used in file mode.
@@ -100,7 +102,7 @@ def build_sequence(event):
     if mode == 'ui':
         parent_ui = event.parameters.get('parent_ui')
         root = event.parameters['root']
-        dial = BuilderView(parent_ui, manager=manager)
+        dial = BuilderView(parent_ui, manager=manager, root=root)
         dial.exec_()
         if dial.result:
             seq = dial.config.build_sequence()
@@ -393,21 +395,6 @@ enamldef PulsesManagerManifest(PluginManifest):
                     from ecpy_pulses.pulses.sequences.base_sequences import (
                         BaseSequence)
                     return BaseSequence
-            SequenceConfig:
-                config = 'template_config:TemplateConfig'
-                view = 'template_config_view:TemplateConfigView'
-                get_sequence_class => ():
-                    return '__template__'
-
-    Extension:
-        id = 'contexts'
-        point = 'ecpy.pulses.contexts'
-        Contexts:
-            path = 'ecpy_pulses.pulses.contexts'
-            Context:
-                context = 'template_context:TemplateContext'
-                view = 'views.template_context_view:TemplateContextView'
-
 
     Extension:
         id = 'shapes'

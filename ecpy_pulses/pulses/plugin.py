@@ -24,7 +24,7 @@ from ecpy.utils.plugin_tools import (HasPreferencesPlugin, ExtensionsCollector,
 from ecpy.utils.watchdog import SystematicFileUpdater
 
 from .pulse import Pulse
-from .filters import ItemFilter
+from .filters import SequenceFilter
 from .utils.sequences_io import load_sequence_prefs
 from .declarations import (Sequence, Sequences, SequenceConfig,
                            SequenceConfigs, Contexts, Context, Shapes, Shape)
@@ -95,13 +95,13 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         state = core.invoke_command('ecpy.app.states.get',
                                     {'state_id': 'ecpy.app.directory'})
 
-        t_dir = os.path.join(state.app_directory, 'pulses')
-        # Create tasks subfolder if it does not exist.
-        if not os.path.isdir(t_dir):
-            os.mkdir(t_dir)
+        p_dir = os.path.join(state.app_directory, 'pulses')
+        # Create pulses subfolder if it does not exist.
+        if not os.path.isdir(p_dir):
+            os.mkdir(p_dir)
 
-        temp_dir = os.path.join(t_dir, 'templates')
-        # Create profiles subfolder if it does not exist.
+        temp_dir = os.path.join(p_dir, 'templates')
+        # Create templates subfolder if it does not exist.
         if not os.path.isdir(temp_dir):
             os.mkdir(temp_dir)
 
@@ -112,7 +112,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         # declarations
         self._filters = ExtensionsCollector(workbench=self.workbench,
                                             point=FILTERS_POINT,
-                                            ext_class=ItemFilter)
+                                            ext_class=SequenceFilter)
 
         self._configs = DeclaratorsCollector(workbench=self.workbench,
                                              point=CONFIGS_POINT,
@@ -130,6 +130,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._shapes = DeclaratorsCollector(workbench=self.workbench,
                                             point=SHAPES_POINT,
                                             ext_class=(Shapes, Shape))
+
         # Bind the observers before starting the collectors so that they will
         # update the lists of known seq, configs, filters, contexts...
         self._bind_observers()
@@ -141,9 +142,9 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._shapes.start()
 
         # Populate the Pulse Info Object
-        self._pulse_info = PulseInfos()
-        self._pulse_info.cls = Pulse
-        self._pulse_info.view = PulseView
+        self._pulse_infos = PulseInfos()
+        self._pulse_infos.cls = Pulse
+        self._pulse_infos.view = PulseView
 
         core.invoke_command('ecpy.app.errors.exit_error_gathering')
 
@@ -183,7 +184,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         """
         if item_id == "ecpy_pulses.Pulse":
-            return self._pulse_info
+            return self._pulse_infos
         if item_id in self._sequences.contributions:
             return self._sequences.contributions[item_id]
         elif item_id in self._template_sequences_infos:
@@ -249,7 +250,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         items_cls = {}
         missing = []
         for t in item_ids:
-            res = self.get_task(t)
+            res = self.get_item(t)
             if res:
                 items_cls[t] = res
             else:
@@ -295,7 +296,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             Associated view if requested.
 
         """
-        infos = self.get_item_infos(context_id)
+        infos = self.get_context_infos(context_id)
         if not infos:
             return None if not view else (None, None)
         else:
@@ -340,17 +341,18 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
             Associated view if requested.
 
         """
-        infos = self.get_item_infos(shape_id)
+        infos = self.get_shape_infos(shape_id)
         if not infos:
             return None if not view else (None, None)
         else:
             return infos.cls if not view else (infos.cls, infos.view)
 
     # TODO for future easiness of extension
+    # Note that the pulse view should be updated too
     def get_modulation_infos(self, modulation_id):
         """
         """
-        pass
+        raise NotImplementedError()
 
     def get_modulation(self, modulation_id, view=False):
         """
@@ -362,16 +364,20 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
         Parameters
         ----------
-        sequence : str
-            Name of the sequnce for which a config is required
+        sequence_id : str
+            Id of the sequence for which a config is required
 
         Returns
         -------
         config : tuple
             Tuple containing the config object requested, and its visualisation
 
-        """
+        Notes
+        -----
+        It is the responsability of the user to properly set the root attribute
+        of the returned config object.
 
+        """
         templates = self._template_sequences_data
         if sequence_id in templates:
             config_infos = self._configs.contributions['__template__']
@@ -395,10 +401,10 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                     conf_cls = configs[i_class].cls
                     conf_view = configs[i_class].view
                     conf = conf_cls(manager=self,
-                                    sequence_class=sequence_class,
-                                    root=self.workspace.state.sequence)
+                                    sequence_class=sequence_class)
                     view = conf_view(model=conf)
                     return conf, view
+
         return None, None
 
     def list_sequences(self, filter_name='All'):
@@ -424,7 +430,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
             try:
                 sequences.pop('ecpy_pulses.RootSequence')
-            except KeyError:
+            except KeyError:  # pragma: no cover
                 pass
             return s_filter.filter_sequences(sequences,
                                              template_sequences_data)
@@ -446,7 +452,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
     _template_sequences_infos = Dict(Unicode(), SequenceInfos)
 
     #: Info Object for Pulse
-    _pulse_info = Typed(PulseInfos)
+    _pulse_infos = Typed(PulseInfos)
 
     #: Sequence contexts.
     _contexts = Typed(DeclaratorsCollector)
@@ -464,7 +470,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
     _observer = Typed(Observer, ())
 
     def _refresh_known_template_sequences(self):
-        """ Refresh the known template sequences.
+        """Refresh the known template sequences.
 
         """
         templates = {}
@@ -568,13 +574,16 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         self._observer.join()
 
     def _update_templates(self, change):
-        """ Observer ensuring that we observe the right template folders.
+        """Observer ensuring that we observe the right template folders.
 
         """
         self._observer.unschedule_all()
 
         for folder in self.templates_folders:
-            handler = SystematicFileUpdater(self._refresh_template_tasks)
+            if not os.path.isdir(folder):
+                continue
+            handler = SystematicFileUpdater(
+                self._refresh_known_template_sequences)
             self._observer.schedule(handler, folder, recursive=True)
 
         self._refresh_known_template_sequences()

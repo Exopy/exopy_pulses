@@ -48,6 +48,10 @@ enamldef BuilderView(Dialog): dial:
     #: Config object corresponding to the currently selected sequence.
     attr config
 
+    #: Reference to the root sequence into which the built sequence will be
+    #: inserted.
+    attr root
+
     #: Reference to the sequence selector.
     alias selector : selector
 
@@ -61,6 +65,7 @@ enamldef BuilderView(Dialog): dial:
                 conf.objects = [Label(text=('No configuration view was'+
                                             'found for this task'))]
                 return
+            config.root = root
             dial.config = config
             conf.objects = [view]
         else:

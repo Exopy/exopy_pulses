@@ -6,7 +6,7 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Base view for all contexts.
 
 """
 from __future__ import (division, unicode_literals, print_function,
@@ -19,7 +19,10 @@ enamldef BaseContextView(Container): view:
     """ Parent class for all Context Views.
 
     """
+    #: Reference to the context obect being edited through this view.
     attr context
+
+    #:
     attr core
 
     hug_height = 'strong'

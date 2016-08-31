@@ -1,356 +1,227 @@
 # -*- coding: utf-8 -*-
-# =============================================================================
-# module : tests/pulses/manager/test_plugin.py
-# author : Matthieu Dartiailh
-# license : MIT license
-# =============================================================================
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""Test the pulses plugin capabilities.
+
 """
-"""
-from enaml.workbench.api import Workbench
-import enaml
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
 import os
+
+import pytest
+import enaml
 from configobj import ConfigObj
-from nose.tools import (assert_equal, assert_not_is_instance, assert_true,
-                        assert_false, assert_in, assert_not_in,
-                        assert_items_equal)
-from nose.plugins.attrib import attr
-from nose.plugins.skip import SkipTest
 
 with enaml.imports():
-    from enaml.workbench.core.core_manifest import CoreManifest
-    from hqc_meas.utils.state.manifest import StateManifest
-    from hqc_meas.utils.preferences.manifest import PreferencesManifest
-    from hqc_meas.utils.dependencies.manifest import DependenciesManifest
-    from hqc_meas.pulses.manager.manifest import PulsesManagerManifest
-
-from ...util import complete_line, create_test_dir, remove_tree
-from ..template_makers import create_template_sequence
+    from .contributions import PulsesContributions
 
 
-def setup_module():
-    print complete_line(__name__ + ': setup_module()', '~', 78)
+@pytest.fixture
+def workbench(pulses_workbench):
+    """Simply register the contributions for testing.
+
+    """
+    pulses_workbench.register(PulsesContributions())
+    return pulses_workbench
 
 
-def teardown_module():
-    print complete_line(__name__ + ': teardown_module()', '~', 78)
+def test_init(workbench):
+    """Test starting the plugin.
 
-HQC_MEAS_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..',
-                             'hqc_meas')
+    """
+    plugin = workbench.get_plugin('ecpy.pulses')
+
+    core = workbench.get_plugin('enaml.workbench.core')
+    core.invoke_command('ecpy.app.errors.enter_error_gathering')
+
+    state = core.invoke_command('ecpy.app.states.get',
+                                {'state_id': 'ecpy.app.directory'})
+
+    assert os.path.isdir(os.path.join(state.app_directory, 'pulses'))
+    assert os.path.isdir(os.path.join(state.app_directory, 'pulses',
+                                      'templates'))
+
+    # check collector : sequences, shapes, filters, context, configs
+    assert plugin.sequences
+    assert plugin.shapes
+    assert plugin.filters
+    assert plugin.contexts
+    assert plugin._configs.contributions
+
+    # check pulse infos
+    assert plugin._pulse_infos
 
 
-class Test(object):
+def test_template_observation(workbench, template_sequence, app_dir,
+                              capturelog):
+    """Test that new templates are properly detected.
 
-    test_dir = ''
+    """
+    plugin = workbench.get_plugin('ecpy.pulses')
+    assert template_sequence in plugin.sequences
+    template_path = os.path.join(app_dir, 'pulses', 'templates')
+    prof = ConfigObj(os.path.join(template_path, 'template.temp_pulse.ini'))
+    prof.write()
+    from time import sleep
+    sleep(1)
+    assert template_sequence in plugin.sequences
+    assert 'template' in plugin.sequences
+    os.remove(os.path.join(template_path, 'template.temp_pulse.ini'))
+    sleep(1)
+    assert template_sequence in plugin.sequences
+    assert 'template' not in plugin.sequences
 
-    @classmethod
-    def setup_class(cls):
-        print complete_line(__name__ +
-                            ':{}.setup_class()'.format(cls.__name__), '-', 77)
-        # Creating dummy directory for prefs (avoid prefs interferences).
-        directory = os.path.dirname(__file__)
+    plugin.templates_folders = ['']
+    assert capturelog.records()
 
-        # Creating dummy directory for prefs (avoid prefs interferences).
-        cls.test_dir = os.path.join(directory, '_temps')
-        create_test_dir(cls.test_dir)
+    plugin.templates_folders = [os.path.join(app_dir, 'pulses', 'templates')]
+    assert template_sequence in plugin.sequences
 
-        # Creating dummy default.ini file in utils.
-        util_path = os.path.join(HQC_MEAS_PATH, 'utils/preferences')
-        def_path = os.path.join(util_path, 'default.ini')
-        if os.path.isfile(def_path):
-            os.rename(def_path, os.path.join(util_path, '__default.ini'))
 
-        # Making the preference manager look for info in test dir.
-        default = ConfigObj(def_path)
-        default['folder'] = cls.test_dir
-        default['file'] = 'default_test.ini'
-        default.write()
+def test_get_item_infos(workbench, template_sequence):
+    """Test getting the infos related to an item (pulse or sequence).
 
-        # Creating contexts preferences.
-        contexts_path = os.path.join(HQC_MEAS_PATH, 'pulses', 'contexts')
-        contexts_api = set(('awg_context.py',))
-        contexts_loading = [unicode('contexts.' + mod[:-3])
-                            for mod in os.listdir(contexts_path)
-                            if mod.endswith('.py') and mod not in contexts_api]
+    """
+    plugin = workbench.get_plugin('ecpy.pulses')
+    for id_ in ('ecpy_pulses.Pulse', 'ecpy_pulses.BaseSequence',
+                template_sequence, 'ecpy_pulses.__template__', 'unknown'):
+        infos = plugin.get_item_infos(id_)
+        if id_ == 'unknown':
+            assert infos is None
+        else:
+            assert infos and infos.cls, infos.view
 
-        # Creating sequences preferences.
-        sequences_path = os.path.join(HQC_MEAS_PATH, 'pulses', 'sequences')
-        sequences_api = set(('conditional_sequence.py',))
-        sequences_loading = [unicode('sequences.' + mod[:-3])
-                             for mod in os.listdir(sequences_path)
-                             if mod.endswith('.py') and
-                             mod not in sequences_api]
 
-        # Creating shapes preferences.
-        shapes_path = os.path.join(HQC_MEAS_PATH, 'pulses', 'shapes')
-        shapes_api = set(('base_shapes.py',))
-        shapes_loading = [unicode('shapes.' + mod[:-3])
-                          for mod in os.listdir(shapes_path)
-                          if mod.endswith('.py') and mod not in shapes_api]
+def test_get_item(workbench):
+    """Test getting an item class and potentially view.
 
-        # Creating a false template.
-        template_path = os.path.join(cls.test_dir, 'temp_templates')
-        os.mkdir(template_path)
-        conf = ConfigObj()
-        conf.filename = os.path.join(template_path, 'test.ini')
-        conf.update(create_template_sequence())
-        conf.write()
+    """
+    plugin = workbench.get_plugin('ecpy.pulses')
+    for view in (False, True):
+        for id_ in ('ecpy_pulses.Pulse', 'ecpy_pulses.BaseSequence',
+                    'ecpy_pulses.__template__', 'unknown'):
+            res = plugin.get_item(id_, view) if view else plugin.get_item(id_)
+            if view:
+                if id_ == 'unknown':
+                    assert res == (None, None)
+                else:
+                    infos = plugin.get_item_infos(id_)
+                    assert res[0] is infos.cls
+                    assert res[1] is infos.view
+            else:
+                if id_ == 'unknown':
+                    assert res is None
+                else:
+                    infos = plugin.get_item_infos(id_)
+                    assert res is infos.cls
 
-        # Saving plugin preferences.
-        man_conf = {'contexts_loading': repr(contexts_loading),
-                    'sequences_loading': repr(sequences_loading),
-                    'shapes_loading': repr(shapes_loading),
-                    'templates_folders': repr([template_path])}
 
-        conf = ConfigObj(os.path.join(cls.test_dir, 'default_test.ini'))
-        conf[u'hqc_meas.pulses'] = {}
-        conf[u'hqc_meas.pulses'].update(man_conf)
-        conf.write()
+def test_get_items(workbench):
+    """Test getting multiple items class.
 
-    @classmethod
-    def teardown_class(cls):
-        print complete_line(__name__ +
-                            ':{}.teardown_class()'.format(cls.__name__), '-',
-                            77)
-        # Removing pref files creating during tests.
-        remove_tree(cls.test_dir)
+    """
+    plugin = workbench.get_plugin('ecpy.pulses')
+    items, missing = plugin.get_items(('ecpy_pulses.Pulse',
+                                       'ecpy_pulses.BaseSequence',
+                                       'ecpy_pulses.__template__', 'unknown'))
+    for id_ in ('ecpy_pulses.Pulse', 'ecpy_pulses.BaseSequence',
+                'ecpy_pulses.__template__'):
+        assert id_ in items
+        assert items[id_] is plugin.get_item(id_)
 
-        # Restoring default.ini file in utils
-        util_path = os.path.join(HQC_MEAS_PATH, 'utils/preferences')
-        def_path = os.path.join(util_path, 'default.ini')
-        os.remove(def_path)
+    assert 'unknown' in missing
 
-        aux = os.path.join(util_path, '__default.ini')
-        if os.path.isfile(aux):
-            os.rename(aux, def_path)
 
-    def setup(self):
+def test_get_context_infos(workbench):
+    """Test get a context infos.
 
-        self.workbench = Workbench()
-        self.workbench.register(CoreManifest())
-        self.workbench.register(StateManifest())
-        self.workbench.register(PreferencesManifest())
-        self.workbench.register(DependenciesManifest())
+    """
+    plugin = workbench.get_plugin('ecpy.pulses')
+    infos = plugin.get_context_infos('ecpy_pulses.TestContext')
+    assert infos and infos.cls and infos.view
+    assert plugin.get_context_infos('__unknown__') is None
 
-    def teardown(self):
-        self.workbench.unregister(u'hqc_meas.pulses')
-        self.workbench.unregister(u'hqc_meas.dependencies')
-        self.workbench.unregister(u'hqc_meas.preferences')
-        self.workbench.unregister(u'hqc_meas.state')
-        self.workbench.unregister(u'enaml.workbench.core')
 
-    def test_init(self):
-        self.workbench.register(PulsesManagerManifest())
-        plugin = self.workbench.get_plugin(u'hqc_meas.pulses')
+def test_get_context(workbench):
+    """Test getting a context class and view.
 
-        assert_in('sequences.__init__', plugin.sequences_loading)
-        assert_in('contexts.__init__', plugin.contexts_loading)
-        assert_in('shapes.__init__', plugin.shapes_loading)
-        assert_items_equal(plugin.sequences, ['Conditional sequence',
-                                              'Sequence', 'Test'])
-        assert_items_equal(plugin._sequences.keys(),
-                           ['Conditional sequence',
-                            'Pulse', 'Sequence', 'RootSequence'])
-        assert_items_equal(plugin._template_sequences.keys(),
-                           ['Test'])
-        assert_equal(plugin.shapes, ['Square'])
-        assert_equal(plugin.contexts, ['AWG'])
+    """
+    plugin = workbench.get_plugin('ecpy.pulses')
+    cls = plugin.get_context('ecpy_pulses.TestContext')
+    assert cls is plugin.get_context_infos('ecpy_pulses.TestContext').cls
 
-    def test_load_all(self):
-        self.workbench.register(PulsesManagerManifest())
-        plugin = self.workbench.get_plugin(u'hqc_meas.pulses')
-        plugin.contexts_loading = []
-        plugin.shapes_loading = []
-        plugin.sequences_loading = []
+    cls, view = plugin.get_context('ecpy_pulses.TestContext', True)
+    assert cls is plugin.get_context_infos('ecpy_pulses.TestContext').cls
+    assert view is plugin.get_context_infos('ecpy_pulses.TestContext').view
 
-        if plugin.report():
-            raise SkipTest(plugin.report())
+    assert plugin.get_context('__unknown__', True) == (None, None)
 
-    @attr('no_travis')
-    def test_template_observation(self):
-        self.workbench.register(PulsesManagerManifest())
-        plugin = self.workbench.get_plugin(u'hqc_meas.pulses')
-        assert_in('Test',  plugin.sequences)
-        template_path = os.path.join(self.test_dir, 'temp_templates')
-        prof = ConfigObj(os.path.join(template_path, 'template.ini'))
-        prof.write()
-        from time import sleep
-        sleep(0.1)
-        assert_in('Test',  plugin.sequences)
-        assert_in('Template',  plugin.sequences)
-        os.remove(os.path.join(template_path, 'template.ini'))
-        sleep(0.1)
-        assert_in('Test',  plugin.sequences)
-        assert_not_in('Template',  plugin.sequences)
 
-    def test_context_request1(self):
-        # Request using context name
-        self.workbench.register(PulsesManagerManifest())
-        core = self.workbench.get_plugin(u'enaml.workbench.core')
-        com = u'hqc_meas.pulses.contexts_request'
-        contexts, miss = core.invoke_command(com,
-                                             {'contexts': ['AWG', 'XXXX']},
-                                             self)
+def test_get_shape_infos(workbench):
+    """Test getting a shape infos.
 
-        assert_equal(contexts.keys(), ['AWG'])
-        assert_equal(len(contexts['AWG']), 2)
-        assert_equal(miss, ['XXXX'])
+    """
+    plugin = workbench.get_plugin('ecpy.pulses')
+    infos = plugin.get_shape_infos('ecpy_pulses.SquareShape')
+    assert infos and infos.cls and infos.view
+    assert plugin.get_shape_infos('__unknown__') is None
 
-    def test_context_request2(self):
-        # Request using class name, no views
-        self.workbench.register(PulsesManagerManifest())
-        core = self.workbench.get_plugin(u'enaml.workbench.core')
-        com = u'hqc_meas.pulses.contexts_request'
-        contexts, miss = core.invoke_command(com, {'contexts': ['AWGContext'],
-                                                   'use_class_names': True,
-                                                   'views': False},
-                                             self)
-        assert_equal(contexts.keys(), ['AWGContext'])
-        assert_not_is_instance(contexts['AWGContext'], tuple)
-        assert_equal(miss, [])
 
-    def test_shape_request1(self):
-        # Request using shape name
-        self.workbench.register(PulsesManagerManifest())
-        core = self.workbench.get_plugin(u'enaml.workbench.core')
-        com = u'hqc_meas.pulses.shapes_request'
-        shapes, miss = core.invoke_command(com,
-                                           {'shapes': ['Square', 'XXXX']},
-                                           self)
+def test_get_shape(workbench):
+    """Test getting a shape class and view.
 
-        assert_equal(shapes.keys(), ['Square'])
-        assert_equal(len(shapes['Square']), 2)
-        assert_equal(miss, ['XXXX'])
+    """
+    plugin = workbench.get_plugin('ecpy.pulses')
+    cls = plugin.get_shape('ecpy_pulses.SquareShape')
+    assert cls is plugin.get_shape_infos('ecpy_pulses.SquareShape').cls
 
-    def test_shape_request2(self):
-        # Request using class name, no views
-        self.workbench.register(PulsesManagerManifest())
-        core = self.workbench.get_plugin(u'enaml.workbench.core')
-        com = u'hqc_meas.pulses.shapes_request'
-        shapes, miss = core.invoke_command(com, {'shapes': ['SquareShape'],
-                                                 'use_class_names': True,
-                                                 'views': False},
-                                           self)
-        assert_equal(shapes.keys(), ['SquareShape'])
-        assert_not_is_instance(shapes['SquareShape'], tuple)
-        assert_equal(miss, [])
+    cls, view = plugin.get_shape('ecpy_pulses.SquareShape', True)
+    assert cls is plugin.get_shape_infos('ecpy_pulses.SquareShape').cls
+    assert view is plugin.get_shape_infos('ecpy_pulses.SquareShape').view
 
-    def test_sequence_request1(self):
-        # Request using sequence name
-        self.workbench.register(PulsesManagerManifest())
-        core = self.workbench.get_plugin(u'enaml.workbench.core')
-        com = u'hqc_meas.pulses.sequences_request'
-        kwargs = {'sequences': ['Conditional sequence', 'XXXX']}
-        sequences, miss = core.invoke_command(com, kwargs, self)
+    assert plugin.get_shape('__unknown__', True) == (None, None)
 
-        assert_equal(sequences.keys(), ['Conditional sequence'])
-        assert_equal(len(sequences['Conditional sequence']), 2)
-        assert_equal(miss, ['XXXX'])
 
-    def test_sequence_request2(self):
-        # Request using class name, no views
-        self.workbench.register(PulsesManagerManifest())
-        core = self.workbench.get_plugin(u'enaml.workbench.core')
-        com = u'hqc_meas.pulses.sequences_request'
-        kwargs = {'sequences': ['ConditionalSequence'],
-                  'use_class_names': True, 'views': False}
-        sequences, miss = core.invoke_command(com, kwargs, self)
+# TODO add real test when this is complete
+def test_get_modulation(workbench):
+    """Test retrieving the for the time being unique modulation.
 
-        assert_equal(sequences.keys(), ['ConditionalSequence'])
-        assert_not_is_instance(sequences['ConditionalSequence'], tuple)
-        assert_equal(miss, [])
+    """
+    plugin = workbench.get_plugin('ecpy.pulses')
+    cls = plugin.get_modulation('ecpy_pulses.Modulation')
+    assert cls
 
-    def test_config_request_build1(self):
-        # Test requesting a config for a standard sequence.
-        self.workbench.register(PulsesManagerManifest())
-        plugin = self.workbench.get_plugin(u'hqc_meas.pulses')
 
-        conf, view = plugin.config_request('Conditional sequence')
+# TODO add a test for the template case when template are back
+def test_get_config(workbench):
+    """Test getting a config for a sequence class.
 
-        assert_equal(type(conf).__name__, 'SequenceConfig')
-        conf.sequence_name = 'Test'
-        assert_equal(conf.config_ready, True)
-        sequence = conf.build_sequence()
-        assert_equal(sequence.name, 'Test')
+    """
+    plugin = workbench.get_plugin('ecpy.pulses')
+    cls, view = plugin.get_config('ecpy_pulses.BaseSequence')
 
-#    def test_config_request_build2(self):
-#        # Test requesting a config for a template sequence.
-#        self.workbench.register(PulsesManagerManifest())
-#        core = self.workbench.get_plugin(u'enaml.workbench.core')
-#        com = u'hqc_meas.task_manager.config_request'
-#
-#        conf, view = core.invoke_command(com, {'task': 'Template'}, self)
-#        assert_equal(type(conf).__name__, 'IniConfigTask')
-#        conf.task_name = 'Test'
-#        assert_equal(conf.config_ready, True)
-#        task = conf.build_task()
-#        assert_equal(task.task_name, 'Test')
-#        assert_equal(len(task.children_task), 1)
-#        task2 = task.children_task[0]
-#        assert_equal(task2.task_name, 'a')
-#        assert_equal(task2.task_class, 'LogTask')
+    assert cls and view
 
-    def test_filter(self):
-        # Filtering sequences.
-        self.workbench.register(PulsesManagerManifest())
-        plugin = self.workbench.get_plugin(u'hqc_meas.pulses')
+    cls, view = plugin.get_config('__unknown__')
+    assert cls is None and view is None
 
-        seq = plugin.filter_sequences('All')
-        assert_in('Sequence', seq)
-        assert_not_in('Pulse', seq)
-        assert_not_in('RootSequence', seq)
 
-    def test_collect_dependencies(self):
-        # Test collecting build dependencies.
-        self.workbench.register(PulsesManagerManifest())
-        from hqc_meas.pulses.base_sequences import RootSequence, Sequence
-        from hqc_meas.pulses.pulse import Pulse
-        from hqc_meas.pulses.shapes.base_shapes import SquareShape
-        from hqc_meas.pulses.contexts.awg_context import AWGContext
-        root = RootSequence(context=AWGContext())
+def test_list_sequences(workbench, template_sequence, capturelog):
+    """Test iltering sequences.
 
-        pulse1 = Pulse(def_1='1.0', def_2='{7_start} - 1.0')
-        pulse2 = Pulse(def_1='{a} + 1.0', def_2='{6_start} + 1.0')
-        pulse3 = Pulse(def_1='{3_stop} + 0.5', def_2='10.0')
-        pulse4 = Pulse(def_1='2.0', def_2='0.5', def_mode='Start/Duration')
-        pulse5 = Pulse(def_1='{1_stop}', def_2='0.5',
-                       def_mode='Start/Duration')
-        pulse5.shape = SquareShape(amplitude='0.5')
-        pulse5.kind = 'Analogical'
+    """
+    plugin = workbench.get_plugin('ecpy.pulses')
 
-        pulse5.modulation.frequency = '1.0**'
-        pulse5.modulation.phase = '1.0'
-        pulse5.modulation.activated = True
+    seq = plugin.list_sequences('All')
+    assert 'ecpy_pulses.BaseSequence' in seq
+    assert 'ecpy_pulses.Pulse' not in seq
+    assert 'ecpy_pulses.RootSequence' not in seq
 
-        sequence2 = Sequence(items=[pulse3])
-        sequence1 = Sequence(items=[pulse2, sequence2, pulse4])
-
-        root.items = [pulse1, sequence1, pulse5]
-
-        core = self.workbench.get_plugin(u'enaml.workbench.core')
-        com = u'hqc_meas.dependencies.collect_dependencies'
-        res, build, run = core.invoke_command(com, {'obj': root}, core)
-        assert_true(res)
-        assert_in('pulses', build)
-        assert_items_equal(['Sequence', 'Pulse', 'RootSequence', 'shapes',
-                            'contexts', 'templates', 'sequences'],
-                           build['pulses'].keys())
-        assert_equal(['SquareShape'], build['pulses']['shapes'].keys())
-        assert_equal(['AWGContext'], build['pulses']['contexts'].keys())
-        assert_false(run)
-
-    def test_collect_dependencies2(self):
-        # Test collecting_dependencies for a sequence including a template
-        # sequence.
-        self.workbench.register(PulsesManagerManifest())
-        plugin = self.workbench.get_plugin(u'hqc_meas.pulses')
-        plugin.contexts_loading = []
-        plugin.sequences_loading = []
-
-        # TODO rr
-
-    def test_collect_dependencies3(self):
-        # Test collecting_dependencies for a walk containing a sequence path.
-        self.workbench.register(PulsesManagerManifest())
-        plugin = self.workbench.get_plugin(u'hqc_meas.pulses')
-        plugin.contexts_loading = []
-        plugin.sequences_loading = []
+    plugin.list_sequences('__unknown__')
+    assert capturelog.records()
