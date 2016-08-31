@@ -120,7 +120,6 @@ def test_update_preferences():
     assert sequence.items[0].def_1 == '10'
 
 
-# XXX add test for moving
 def test_sequence_indexing1():
     """Test adding, moving, deleting pulse in a sequence.
 
@@ -294,7 +293,8 @@ def test_traverse_sequence():
     items = root.traverse()
     assert len(list(items)) == 11
 
-    assert list(root.traverse(0)) == [root, pulse1, pulse2, pulse3, seq]
+    assert list(root.traverse(0)) == [root, pulse1, pulse2, pulse3, seq,
+                                      context]
 
 
 def test_build_from_config():

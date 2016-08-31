@@ -100,8 +100,8 @@ def test_merging_template1(pulses_plugin, template_sequence):
     assert seq.items[2].items[0].channel == ''
     assert seq.items[3].channel == 'Ch3'
 
-# XXX test failed collection of dependencies
-# XXX test adding template vars as globals
-# XXX test merging a template containing a template and check that the
+# TODO test failed collection of dependencies
+# TODO test adding template vars as globals
+# TODO test merging a template containing a template and check that the
 #     channel mapping is correct
-# XXX test the view
+# TODO test the view

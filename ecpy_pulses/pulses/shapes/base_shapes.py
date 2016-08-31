@@ -77,5 +77,8 @@ class AbstractShape(HasPrefAtom):
         raise NotImplementedError('')
 
     def _default_shape_id(self):
+        """Compute the shape id.
+
+        """
         pack, _ = self.__module__.split('.', 1)
         return pack + '.' + type(self).__name__

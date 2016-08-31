@@ -1,6 +1,7 @@
 [run]
 omit =
     */__init__.py
+    */testing/*
 plugins = 
   enaml_coverage_plugin
 

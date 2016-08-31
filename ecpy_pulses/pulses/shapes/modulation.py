@@ -165,5 +165,8 @@ class Modulation(HasPrefAtom):
     _phase = Float()
 
     def _default_modulation_id(self):
+        """Compute the class id.
+
+        """
         pack, _ = self.__module__.split('.', 1)
         return pack + '.' + type(self).__name__

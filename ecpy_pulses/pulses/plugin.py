@@ -61,7 +61,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
 
     """
     #: Folders containings templates which should be loaded.
-    templates_folders = List()  # .tag(pref=True)  # XXX harcoded currently
+    templates_folders = List()  # .tag(pref=True)  # TODO harcoded currently
 
     #: List of all known sequences and template-sequences.
     sequences = List(Unicode())

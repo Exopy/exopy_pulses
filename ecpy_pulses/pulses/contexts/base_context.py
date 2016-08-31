@@ -79,7 +79,7 @@ class BaseContext(HasPrefAtom):
         raise NotImplementedError()
 
     def len_sample(self, duration):
-        """ Compute the number of points used to describe a lapse of time.
+        """Compute the number of points used to describe a lapse of time.
 
         Parameters
         ----------
@@ -111,7 +111,7 @@ class BaseContext(HasPrefAtom):
 
         else:
             if abs(time - rectified_time) > self.tolerance:
-                raise ValueError('Time does not fit the instr resolution')
+                raise ValueError('Time does not fit the instrument resolution')
             return time
 
     def _default_context_id(self):
