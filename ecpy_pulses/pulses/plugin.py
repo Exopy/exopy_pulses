@@ -321,7 +321,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         return self._shapes.contributions.get(shape_id)
 
     def get_shape(self, shape_id, view=False):
-        """Access the class associated with a context.
+        """Access the class associated with a shape.
 
         Parameters
         ----------

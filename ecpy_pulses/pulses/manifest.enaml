@@ -206,29 +206,138 @@ more infos about how to declare a new config.
 
 """
 
-# XXX complete description
 GET_ITEM_INFOS_DESCRIPTION =\
-"""TODO
+"""Give access to an item infos.
+
+NB : an item can be a sequence or a pulse.
+
+Parameters
+----------
+item_id : unicode
+    The id of the requested item.
+
+Returns
+-------
+item_infos : ItemInfos or None
+    The required item infos or None if it was not found.
+
 """
 
 GET_ITEM_DESCRIPTION =\
-"""TODO
+"""Access a given item class.
+
+Parameters
+----------
+item_id : unicode
+    Id of the item for which to return the actual class.
+
+view : bool, optional
+    Whether or not to return the view assoicated with the item.
+
+Returns
+-------
+item_cls : type or None
+    Class associated to the requested item or None if the item was not
+    found.
+
+item_view : EnamlDefMeta or None, optional
+    Associated view if requested.
+
+"""
+
+GET_ITEMS_DESCRIPTION =\
+"""Access the classes associated to a set of items.
+
+Parameters
+----------
+item_ids : list(unicode)
+    Ids of the item for which to return the actual class.
+
+Returns
+-------
+items_cls : dict
+    Dictionary mapping the requested items to the actual classes.
+
+missing : list
+    List of items that were not found.
+
 """
 
 GET_SHAPE_INFOS_DESCRIPTION =\
-"""TODO
+""" Give access to a shape infos.
+
+Parameters
+----------
+shape : unicode
+    Id of the requested shapes.
+view : bool
+    When false, the view is not returned alongside the class.
+
+Returns
+-------
+shape_infos : ShapeInfos or None
+    The required shape infos or None if the shape was not found.
+
 """
 
 GET_SHAPE_DESCRIPTION =\
-"""TODO
+"""Access the class associated with a shape.
+
+Parameters
+----------
+shape_id : unicode
+    Id of the shape for which to return the class
+
+view : bool, optional
+    Whether or not to return the view associated with context.
+
+Returns
+-------
+context_cls : type or None
+    Class associated to the requested shape or None if the shape
+    was not found.
+
+item_view : EnamlDefMeta or None, optional
+    Associated view if requested.
+
 """
 
 GET_CONTEXT_INFOS_DESCRIPTION =\
-"""TODO
+"""Give access to a context infos.
+
+Parameters
+----------
+context_id : unicode
+    Id of the requested context.
+
+Returns
+-------
+context_infos : ContextInfos or None
+    Infos for the requested context or None if the context was not
+    found.
+
 """
 
 GET_CONTEXT_DESCRIPTION =\
-"""TODO
+"""Access the class associated with a context.
+
+Parameters
+----------
+context_id : unicode
+    Id of the context for which to return the class
+
+view : bool, optional
+    Whether or not to return the view associated with context.
+
+Returns
+-------
+context_cls : type or None
+    Class associated to the requested context or None if the context
+    was not found.
+
+item_view : EnamlDefMeta or None, optional
+    Associated view if requested.
+
 """
 
 # =============================================================================
