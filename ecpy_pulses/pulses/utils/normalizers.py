@@ -40,7 +40,7 @@ def normalize_sequence_name(name):
     n_len = len(name)
     for i, char in enumerate(name):
         if char == '_':
-            aux += ' '
+            aux += ''
             continue
 
         if char != '\0':
@@ -82,7 +82,7 @@ def normalize_context_name(name):
     aux = ''
     for i, char in enumerate(name):
         if char == '_':
-            aux += ' '
+            aux += ''
             continue
 
         if char != '\0':
@@ -114,7 +114,7 @@ def normalize_shape_name(name):
 
     """
     if name.endswith('Shape'):
-        name = name[:-7] + '\0'
+        name = name[:-5] + '\0'
 
     package = None
     if '.' in name:
@@ -123,13 +123,13 @@ def normalize_shape_name(name):
     aux = ''
     for i, char in enumerate(name):
         if char == '_':
-            aux += ' '
+            aux += ''
             continue
 
         if char != '\0':
             if char.isupper() and i != 0:
                 if name[i-1].islower():
-                    if name[i+1].islower():
+                    if i + 1 < len(name) and name[i+1].islower():
                         aux += ' ' + char.lower()
                     else:
                         aux += ' ' + char
