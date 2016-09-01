@@ -21,7 +21,7 @@ from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
 
 from ...utils.entry_eval import EVALUATER_TOOLTIP
 from .abstract_sequence_view import AbstractSequenceView
-from .base_sequence_view import instantiate_context_view
+from .base_sequences_views import instantiate_context_view
 
 
 enamldef TemplateSequenceView(AbstractSequenceView): view:
@@ -52,7 +52,7 @@ enamldef TemplateSequenceView(AbstractSequenceView): view:
                 QtLineCompleter:
                     hug_width = 'ignore'
                     text := item.def_1
-                    entries_updater << item.parent.get_bindable_vars
+                    entries_updater << item.parent.get_accessible_vars
                     tool_tip = EVALUATER_TOOLTIP
         SplitItem:
             Container:
@@ -62,7 +62,7 @@ enamldef TemplateSequenceView(AbstractSequenceView): view:
                 QtLineCompleter:
                     hug_width = 'ignore'
                     text := item.def_2
-                    entries_updater << item.parent.get_bindable_vars
+                    entries_updater << item.parent.get_accessible_vars
                     tool_tip = EVALUATER_TOOLTIP
 
     Notebook: _nb:

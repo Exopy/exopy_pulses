@@ -27,33 +27,38 @@ from ...utils.entry_eval import EVALUATER_TOOLTIP
 from ...pulse import Pulse
 
 
-def instantiate_context_view(core, context, cache):
+def instantiate_context_view(core, context):
     """ Instantiate the appropriate view for the given context.
 
     """
     if context:
-        cmd = 'ecpy.pulses.get_context_infos'
-        context_info, _ = core.invoke_command(cmd,
-                                          {'context': context.context_id})
-        view = context_info.view
-        kwargs = {'context': context}
-        if hasattr(view, 'edition_mode'):
-            kwargs['edition_mode'] = cache.get('edition_mode', False)
-        instantiated_view = view(**kwargs)
-
-        return instantiated_view
+        cmd = 'ecpy.pulses.get_context'
+        cls, view = core.invoke_command(cmd, {'context_id': context.context_id,
+                                              'view': True})
+        return view(context=context)
 
 
 enamldef BaseSequenceView(AbstractSequenceView): view:
     """ View for Sequence.
 
     """
-    alias t_bool:_t_bool
-    alias t_def:_t_def
-    alias nb:_nb
+    #: Time constraint checkbox that should be properly set in the layout.
+    alias t_bool: _t_bool
 
-    alias core : editor.core
-    alias cache : editor.cache
+    #: Definitions associated with the time constraint tha should be properly
+    #: set in the layout.
+    alias t_def: _t_def
+
+    #: Notebook displaying either the items or the local vars.
+    #: Should be properly set in the layout.
+    alias nb: _nb
+
+    refresh => ():
+        """Ensure that all children items are also properly displayed.
+
+        """
+        AbstractSequenceView.refresh(self)
+        editor.refresh()
 
     constraints << [vbox(hbox(_t_bool, *_t_def.items), _nb),
                     align('v_center', _t_def.items[0], _t_def.items[1])]\
@@ -85,7 +90,7 @@ enamldef BaseSequenceView(AbstractSequenceView): view:
                     QtLineCompleter: val_1:
                         hug_width = 'ignore'
                         text := item.def_1
-                        entries_updater << item.parent.get_bindable_vars
+                        entries_updater << item.parent.get_accessible_vars
                         tool_tip = EVALUATER_TOOLTIP
             SplitItem:
                 Container:
@@ -97,7 +102,7 @@ enamldef BaseSequenceView(AbstractSequenceView): view:
                     QtLineCompleter: val_2:
                         hug_width = 'ignore'
                         text := item.def_2
-                        entries_updater << item.parent.get_bindable_vars
+                        entries_updater << item.parent.get_accessible_vars
                         tool_tip = EVALUATER_TOOLTIP
 
     Notebook: _nb:
@@ -107,7 +112,9 @@ enamldef BaseSequenceView(AbstractSequenceView): view:
             title = 'Sequence'
             FoldableSequenceEditor: editor:
                 sequence := view.item
+                root << view.root
 
+        # XXX set up completion
         Page:
             title = 'Local vars'
             DictEditor(FieldFieldEditor): de:
@@ -120,10 +127,50 @@ enamldef RootSequenceView(AbstractSequenceView): view:
     """ View for root sequence.
 
     """
+    #: Additional pages to display other than children items and context.
     alias additional_pages : include.objects
 
-    alias core : editor.core
-    alias cache : editor.cache
+    #: Refrence to the core plugin of the application.
+    attr core
+
+    func create_new_sequence():
+        """Create a new sequence to insert into the hierarchy.
+
+        """
+        return core.invoke_command('ecpy.pulses.build_sequence',
+                                   {'parent_ui': editor, 'mode': 'ui',
+                                    'root': self.item})
+
+    func view_for(obj):
+        """Create a widget for the specified item.
+
+        The view is initialized but given no parent.
+
+        """
+        if obj not in _cache:
+            cmd = 'ecpy.pulses.get_item'
+            _, view_cls = core.invoke_command(cmd,
+                                              {'item_id': obj.item_id,
+                                               'view': True})
+            _cache[obj] = view_cls(item=obj, root=self)
+
+        return _cache[obj]
+
+    func discard_view(item):
+        """Take care of destroying the view associated with a given item.
+
+        """
+        try:
+            view = _cache.pop(item)
+            view.destroy()
+        except KeyError:
+            pass
+
+    ended ::
+        # When this view is destroyed it must destroy all the view in the cache
+        for view in _cache.values():
+            if not view.is_destroyed:
+                view.destroy()
 
     constraints << [vbox(hbox(dur, *val.items), nb),
                     align('v_center', val.items[0], val.items[1])] \
@@ -141,7 +188,7 @@ enamldef RootSequenceView(AbstractSequenceView): view:
         QtLineCompleter:
             hug_width = 'ignore'
             text := item.sequence_duration
-            entries_updater << item.get_bindable_vars
+            entries_updater << item.get_accessible_vars
             tool_tip = EVALUATER_TOOLTIP
 
     Notebook: nb:
@@ -150,20 +197,28 @@ enamldef RootSequenceView(AbstractSequenceView): view:
             title = 'Sequence'
             SequenceEditor: editor:
                 sequence << view.item
+                root = view
 
         Page:
             title = 'Context'
             Container:
                 PushButton:
-                    text = 'Change context' if item.context else 'Choose context'
+                    text = ('Change context' if item.context else
+                            'Choose context')
                     clicked ::
                         cmd = 'ecpy.pulses.build_context'
                         view.core.invoke_command(cmd, {'root': item,
                                                        'parent_ui': self})
                 Include:
-                    objects << [instantiate_context_view(core, item.context,
-                                                         cache)]\
-                        if getattr(item, 'context') else []
+                    objects << ([instantiate_context_view(core, item.context)]
+                                if getattr(item, 'context') else [])
 
         Include: include:
             pass
+
+    # =========================================================================
+    # --- Private API ---------------------------------------------------------
+    # =========================================================================
+
+    #: Dictionary used to store the view associated with each task.
+    attr _cache : dict = {item: self}

@@ -143,7 +143,14 @@ def build_sequence(event):
 
 
 def build_context(event):
-    """ Select a context for a given pulse sequence.
+    """Select a context for a given pulse sequence.
+
+    Parameters
+    ----------
+    root :
+
+    parent_ui :
+
 
     """
     manager = event.workbench.get_plugin('ecpy.pulses')
@@ -158,29 +165,9 @@ def build_context(event):
 # --- Descriptions ------------------------------------------------------------
 # =============================================================================
 
-SHOW_MANAGER_DESCRIPTION = \
-""" Show the task manager window."""
+BUILD_SEQUENCE_DESCRIPTION = build_sequence.__doc__
 
-SHOW_ERRORS_DESCRIPTION = \
-""" Show the errors which happened on plugin startup."""
-
-CONTEXTS_REQUEST_DESCRIPTION = \
-""" Request the infos associated to a list of contexts. """
-
-GET_SHAPES_INFOS_DESCRIPTION = \
-""" Request the infos associated to a list of shapes. TODO """
-
-GET_SHAPE_INFOS_DESCRIPTION = \
-""" Request the infos associated to a single shape. TODO """
-
-BUILD_SEQUENCE_DESCRIPTION = \
-""" Build a sequence from the one knwon to the plugin."""
-
-BUILD_CONTEXT_DESCRIPTION = \
-""" Build a context for the given root sequence."""
-
-MANAGER_STATE_DESCRIPTION = \
-""" The tasks manager gives access to the known tasks and filters."""
+BUILD_CONTEXT_DESCRIPTION = build_context.__doc__
 
 FILTERS_DESC =\
 """Filters are used when listing the items known to the application. Filters
@@ -219,90 +206,28 @@ more infos about how to declare a new config.
 
 """
 
-GET_SEQUENCES_INFOS_DESCRIPTION =\
-"""Retrieve the infos object associated with a list of sequences given the
-name of the sequence.
-
-Parameters
-----------
-sequences : list(unicode)
-    List of the names of the sequence class name for which to
-    retrieve the infos.
-
-Returns
--------
-sequences : dict
-   The required sequences infos as a dict. For Python sequences the
-   entry will contain the class and the view ({name: (class, view)}).
-   For templates the entry will contain the path, the data as a
-   ConfigObj object and the doc ({name : (path, data, doc)})
-
-missings : list
-    List of the sequences which were not found.
-
-"""
-
-GET_SEQUENCE_INFOS_DESCRIPTION =\
-"""Retrieve the infos object associated with a sequence given the
-name of the sequence.
-
-Parameters
-----------
-sequence : unicode
-    Sequence of the names for which to retrieve the infos.
-
-Returns
--------
-infos : SequenceInfos|None
-    Infos for the requested sequence or None if no matching sequence was found.
-
-missing : str | None
-    Id of the sequence that was not found.
-
-
-"""
-
-GET_SEQUENCES_DESCRIPTION =\
-"""Retrieve the class and the view for a list of sequence names.
-
-Parameters
-----------
-sequences : unicode
-    List of the names of the sequence class name to find.
-
-Returns
--------
-TODO
-
-"""
-
-GET_SEQUENCE_DESCRIPTION =\
-"""Retrieve the class and the view for a sequence name.
-
-Parameters
-----------
-sequence : unicode
-    Name of the sequence to retrieve.
-
-Returns
--------
-TODO
-
-"""
-
-GET_ITEMS_INFOS_DESCRIPTION =\
-"""TODO
-"""
-
+# XXX complete description
 GET_ITEM_INFOS_DESCRIPTION =\
 """TODO
 """
 
-GET_CONTEXTS_INFOS_DESCRIPTION =\
+GET_ITEM_DESCRIPTION =\
+"""TODO
+"""
+
+GET_SHAPE_INFOS_DESCRIPTION =\
+"""TODO
+"""
+
+GET_SHAPE_DESCRIPTION =\
 """TODO
 """
 
 GET_CONTEXT_INFOS_DESCRIPTION =\
+"""TODO
+"""
+
+GET_CONTEXT_DESCRIPTION =\
 """TODO
 """
 
@@ -375,13 +300,13 @@ enamldef PulsesManagerManifest(PluginManifest):
             path = 'ecpy_pulses.pulses.sequences'
             Sequence:
                 sequence = 'base_sequences:BaseSequence'
-                view = 'views.base_sequence_view:BaseSequenceView'
+                view = 'views.base_sequences_views:BaseSequenceView'
             Sequence:
                 sequence = 'conditional_sequence:ConditionalSequence'
                 view = 'views.conditional_view:ConditionalSequenceView'
             Sequence:
                 sequence = 'base_sequences:RootSequence'
-                view = 'views.base_sequence_view:RootSequenceView'
+                view = 'views.base_sequences_views:RootSequenceView'
 
     Extension:
         id = 'configs'
@@ -434,46 +359,35 @@ enamldef PulsesManagerManifest(PluginManifest):
 #            id = 'ecpy.instr_manager.show_manager'
 #            description = SHOW_MANAGER_DESCRIPTION
 #            handler = show_manager
-        Command:
-            id = 'ecpy.pulses.get_sequences_infos'
-            description = GET_SEQUENCES_INFOS_DESCRIPTION
-            handler = make_handler(PLUGIN_ID, 'get_sequences_infos')
-        Command:
-            id = 'ecpy.pulses.get_sequence_infos'
-            description = GET_SEQUENCE_INFOS_DESCRIPTION
-            handler = make_handler(PLUGIN_ID, 'get_sequence_infos')
-        Command:
-            id = 'ecpy.pulses.get_sequences'
-            description = GET_SEQUENCES_DESCRIPTION
-            handler = make_handler(PLUGIN_ID, 'get_sequences')
-        Command:
-            id = 'ecpy.pulses.get_sequence'
-            description = GET_SEQUENCE_DESCRIPTION
-            handler = make_handler(PLUGIN_ID, 'get_sequence')
-        Command:
-            id = 'ecpy.pulses.get_items_infos'
-            description = GET_ITEMS_INFOS_DESCRIPTION
-            handler = make_handler(PLUGIN_ID, 'get_items_infos')
+        # XXX clean this mess
         Command:
             id = 'ecpy.pulses.get_item_infos'
             description = GET_ITEM_INFOS_DESCRIPTION
             handler = make_handler(PLUGIN_ID, 'get_item_infos')
         Command:
-            id = 'ecpy.pulses.get_contexts_infos'
-            description = GET_CONTEXTS_INFOS_DESCRIPTION
-            handler = make_handler(PLUGIN_ID, 'get_contexts_infos')
+            id = 'ecpy.pulses.get_item'
+            description = GET_ITEM_DESCRIPTION
+            handler = make_handler(PLUGIN_ID, 'get_item')
+        Command:
+            id = 'ecpy.pulses.get_items'
+            description = GET_ITEMS_DESCRIPTION
+            handler = make_handler(PLUGIN_ID, 'get_items')
         Command:
             id = 'ecpy.pulses.get_context_infos'
             description = GET_CONTEXT_INFOS_DESCRIPTION
             handler = make_handler(PLUGIN_ID,'get_context_infos')
         Command:
-            id = 'ecpy.pulses.get_shapes_infos'
-            description = GET_SHAPES_INFOS_DESCRIPTION
-            handler = make_handler(PLUGIN_ID,'get_shapes_infos')
+            id = 'ecpy.pulses.get_context'
+            description = GET_CONTEXT_DESCRIPTION
+            handler = make_handler(PLUGIN_ID,'get_context')
         Command:
             id = 'ecpy.pulses.get_shape_infos'
             description = GET_SHAPE_INFOS_DESCRIPTION
             handler = make_handler(PLUGIN_ID,'get_shape_infos')
+        Command:
+            id = 'ecpy.pulses.get_shape'
+            description = GET_SHAPE_DESCRIPTION
+            handler = make_handler(PLUGIN_ID,'get_shape')
         Command:
             id = 'ecpy.pulses.build_sequence'
             description = BUILD_SEQUENCE_DESCRIPTION

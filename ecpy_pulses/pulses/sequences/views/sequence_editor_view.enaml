@@ -34,6 +34,7 @@ from ...utils.entry_eval import EVALUATER_TOOLTIP
 from ...pulse import Pulse
 from ...infos import SequenceInfos, PulseInfos
 from ..base_sequences import AbstractSequence
+from .abstract_sequence_view import AbstractSequenceView
 
 #: TODO A Nice thing wold be to make the stock ecpy popuplistmenu more flexible.
 #: For the time beeing, this will suffice.
@@ -156,16 +157,11 @@ enamldef EmptyEditorButtons(Container): view:
     PushButton: seq:
         text = 'Add Sequence'
         clicked ::
-            obj = core.invoke_command('ecpy.pulses.build_sequence',
-                                      {'parent_ui': editor,
-                                       'mode': 'ui',
-                                       'root': editor.sequence.root},
-                                       view)
+            obj = editor.root.create_new_sequence()
             if obj:
                 editor.sequence.add_child_item(0, obj)
 
 
-# XXX reorder methods
 class SequenceEditor(Container):
     """ A custom container to edit the items of a sequence.
 
@@ -176,10 +172,10 @@ class SequenceEditor(Container):
     #: Dictionary of operations used by to alter the children member list.
     operations = d_(Constant())
 
-    padding = set_default(2)
+    #: Reference to the root view.
+    root = d_(Typed(AbstractSequenceView))
 
-    core = d_(Value())
-    cache = d_(Value())
+    padding = set_default(2)
 
     @d_func
     def refresh(self):
@@ -216,8 +212,7 @@ class SequenceEditor(Container):
         """
         # Populate the container.
         self._populate()
-        super(Container, self).initialize()
-        self._setup_views(self.sequence.items)
+        super(SequenceEditor, self).initialize()
         self.sequence.observe('items', self._update_views)
         self.sequence.observe('items_changed', self._update_views)
 
@@ -228,7 +223,7 @@ class SequenceEditor(Container):
         """
         self.sequence.unobserve('items', self._update_views)
         self.sequence.unobserve('items_changed', self._update_views)
-        super(Container, self).destroy()
+        super(SequenceEditor, self).destroy()
 
     # =========================================================================
     # --- Private API ---------------------------------------------------------
@@ -249,16 +244,12 @@ class SequenceEditor(Container):
         """Populate the container based on the children member.
 
         """
-
         items = self.sequence.items
         if items:
             for item in items:
                 button = ItemEditorButton(item=item, editor=self)
-                view = self._instantiate_view(item, {'root':
-                                                     self.sequence.root})
+                view = self.root.view_for(item)
                 self._children_buttons[item] = (button, view)
-                button.set_parent(self)
-                view.set_parent(self)
 
             self.insert_children(None, chain(*self._children_buttons.values()))
 
@@ -267,6 +258,9 @@ class SequenceEditor(Container):
             self._empty_button.show()
 
     def _post_setattr_sequence(self, old, new):
+        """Update the views each time the items change.
+
+        """
         old.unobserve('items', self._update_views)
         old.unobserve('items_changed', self._update_views)
         self._update_views(None)
@@ -301,8 +295,7 @@ class SequenceEditor(Container):
                 # Add all of the children that were added:
                 for index, child in change.added:
                     button = ItemEditorButton(item=child, editor=self)
-                    view = self._instantiate_view(child, {'root':
-                                                    self.sequence.root})
+                    view = root.view_for(child)
                     self._children_buttons[child] = (button, view)
                     button.set_parent(self)
                     view.set_parent(self)
@@ -334,7 +327,7 @@ class SequenceEditor(Container):
             # more).
             for b, w in self._children_buttons.values():
                 b.destroy()
-                w.destroy()
+                root.discard_view(w.item)
 
             self._empty_button.set_parent(None)
 
@@ -348,7 +341,7 @@ class SequenceEditor(Container):
         """
         button, view = self._children_buttons.pop(item)
         button.destroy()
-        view.destroy()
+        root.discard_view(w.item)
 
     def _default_operations(self):
         """Build the operations dictionary used by the popup menu.
@@ -368,10 +361,7 @@ class SequenceEditor(Container):
             """Handler for the add entry of the menu.
 
             """
-            obj = self.core.invoke_command('ecpy.pulses.build_sequence',
-                                      {'parent_ui': self,
-                                       'mode': 'ui',
-                                       'root': self.sequence.root}, self)
+            obj = root.create_new_sequence()
             if obj:
                 if obj:
                     if position == 'after':
@@ -398,56 +388,6 @@ class SequenceEditor(Container):
         """
         return EmptyEditorButtons(editor=self)
 
-    # =========================================================================
-    # --- Old ViewManager -----------------------------------------------------
-    # =========================================================================
-    #: Dict mapping item names to their view.
-    views = Dict()
-
-    def _setup_views(self, children):
-        t_classes = set([item.item_id for item in children])
-        self.get_views(t_classes)
-
-    def _instantiate_view(self, item, attrs):
-        """ A helper function instantiating a item view.
-
-        Parameters
-        ----------
-        item : Item
-            Item instance for which to create a view.
-
-        attrs : dict
-            Dict of additional object which should be passed to the view if it
-            defines the attribute.
-
-        Returns
-        -------
-        view :
-            Created item view.
-
-        """
-        it_id = item.item_id
-
-        views = self.views
-        if it_id not in views:
-            self.get_views([it_id])
-        view = views[it_id]
-        kwargs = {'item': item, 'core': self.core, 'cache': self.cache}
-        for key in attrs:
-            if hasattr(view, key):
-                kwargs[key] = attrs[key]
-
-        return view(**kwargs)
-
-    def get_views(self, item_id):
-        """ Helper method updating the known views with the ones associated
-        with the given item_id.
-
-        """
-        cmd = 'ecpy.pulses.get_items_infos'
-        items, _ = self.core.invoke_command(cmd, {'items': item_id})
-        self.views.update({k: v.view for k, v in items.items()})
-
 
 enamldef FoldableSequenceEditor(Container):
     """Sequence editor which can be masked.
@@ -456,11 +396,8 @@ enamldef FoldableSequenceEditor(Container):
     #: Direct access to the sequence of the underlying editor.
     alias sequence: editor.sequence
 
-    #: Reference to the editor's ecpy core plugin.
-    alias core : editor.core
-
-    #: Reference to the editor's ecpy cache dictionary.
-    alias cache : editor.cache
+    #: Reference to the root view.
+    alias root : editor.root
 
     #: Reference to the dictionary with allowed operations.
     alias operations : editor.operations

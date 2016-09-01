@@ -10,12 +10,12 @@
 """
 from enaml.layout.api import hbox, align, spacer, vbox
 from enaml.widgets.api import (Container, Label, ScrollArea, Action, Notebook,
-                               Page, CheckBox, ObjectCombo, Splitter, 
+                               Page, CheckBox, ObjectCombo, Splitter,
                                SplitItem)
 from enaml.core.api import Conditional
 
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
-from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor, 
+from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
                                             FieldFieldCompleterEditor)
 
 from .abstract_sequence_view import AbstractSequenceView
@@ -27,9 +27,6 @@ enamldef ConditionalSequenceView(AbstractSequenceView): view:
 
     """
 
-    alias core : editor.core
-    alias cache : editor.cache
-    
     constraints << [vbox(hbox(t_bool, cond_lab, cond_val),
                          hbox(*t_def.items), nb)]\
                    if t_def.condition else\
@@ -65,7 +62,7 @@ enamldef ConditionalSequenceView(AbstractSequenceView): view:
                     QtLineCompleter:
                         hug_width = 'ignore'
                         text := item.def_1
-                        entries_updater << item.parent.get_bindable_vars
+                        entries_updater << item.parent.get_accessible_vars
                         tool_tip = EVALUATER_TOOLTIP
             SplitItem:
                 Container:
@@ -75,7 +72,7 @@ enamldef ConditionalSequenceView(AbstractSequenceView): view:
                     QtLineCompleter:
                         hug_width = 'ignore'
                         text := item.def_2
-                        entries_updater << item.parent.get_bindable_vars
+                        entries_updater << item.parent.get_accessible_vars
                         tool_tip = EVALUATER_TOOLTIP
 
     Notebook: nb:
@@ -84,13 +81,14 @@ enamldef ConditionalSequenceView(AbstractSequenceView): view:
             title = 'Sequence'
             FoldableSequenceEditor: editor:
                 sequence << view.item
-                #sequence := view.item
+                root << view.root
 
+        # XXX add autocompletion
         Page:
             title = 'Local vars'
             DictEditor(FieldFieldEditor): de:
                 de.mapping = item.local_vars
-            
+
             #DictEditor(VarEditor): ed:
             #    ed.title = 'Name : formula'
             #    ed.model = item

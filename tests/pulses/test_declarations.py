@@ -44,7 +44,7 @@ def collector():
 def sequence_decl():
     root = 'ecpy_pulses.pulses.sequences.'
     return Sequence(sequence=root + 'base_sequences:BaseSequence',
-                    view=root + 'views.base_sequence_view:BaseSequenceView')
+                    view=root + 'views.base_sequences_views:BaseSequenceView')
 
 
 def test_register_sequence_decl1(collector, sequence_decl):
@@ -54,12 +54,12 @@ def test_register_sequence_decl1(collector, sequence_decl):
     parent = Sequences(group='test', path='ecpy_pulses.pulses.sequences')
     parent.insert_children(None, [sequence_decl])
     sequence_decl.sequence = 'base_sequences:BaseSequence'
-    sequence_decl.view = 'views.base_sequence_view:BaseSequenceView'
+    sequence_decl.view = 'views.base_sequences_views:BaseSequenceView'
     parent.register(collector, {})
     infos = collector.contributions['ecpy_pulses.BaseSequence']
     from ecpy_pulses.pulses.sequences.base_sequences import BaseSequence
     with enaml.imports():
-        from ecpy_pulses.pulses.sequences.views.base_sequence_view\
+        from ecpy_pulses.pulses.sequences.views.base_sequences_views\
             import BaseSequenceView
     assert infos.cls is BaseSequence
     assert infos.view is BaseSequenceView

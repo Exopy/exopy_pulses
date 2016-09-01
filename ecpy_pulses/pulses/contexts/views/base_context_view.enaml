@@ -16,13 +16,13 @@ from enaml.widgets.api import (Label, ObjectCombo, Container)
 
 
 enamldef BaseContextView(Container): view:
-    """ Parent class for all Context Views.
+    """Base class for all Context views.
 
     """
     #: Reference to the context obect being edited through this view.
     attr context
 
-    #:
-    attr core
+    #: Refrence to the view of the root of the sequence.
+    attr root
 
     hug_height = 'strong'
