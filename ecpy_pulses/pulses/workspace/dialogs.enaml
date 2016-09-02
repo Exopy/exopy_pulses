@@ -88,12 +88,6 @@ enamldef CompilationWidget(Container): main:
                 de.mapping := workspace.state.sequence.external_vars
                 de.operations = ['move']
 
-#            DictEditor(_ValEditor): ed:
-#                ed.model = workspace.state.sequence
-#                ed.iterable_name = 'external_vars'
-#                ed.title = 'Variables'
-#                ed.operations = ['move']
-
     Label: dur_lab:
         text = 'Compilation duration (µs)'
 

@@ -6,12 +6,11 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Pulse edition workspace manifest contributing to the UI.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
-
 
 from enaml.widgets.api import (Container, DockArea, DockItem, Menu, Action,
                                PopupView, Label)
@@ -21,24 +20,17 @@ from enaml.workbench.core.api import Command
 from enaml.workbench.ui.api import ActionItem, MenuItem
 from enaml.styling import StyleSheet, Style, Setter
 
+from ecpy.utils.plugin_tools import make_handler
+
 # --- Command handlers --------------------------------------------------------
 
-# Sequence creation
-# =================
-
-def new_sequence(event):
-    workbench = event.workbench
-    plugin = workbench.get_plugin('ecpy.pulses')
-    plugin.workspace.new_sequence()
-
-
 NEW_DESCRIPTION =\
-'''Create a new sequence.'''
-
-# Sequence saving
-# ===============
+"""Create a blank new sequence"""
 
 enamldef MoreVisibleLabel(StyleSheet):
+    """Style to make a Label much more visible for transient notifications.
+
+    """
     Style:
         style_class = 'large-font'
         Setter:
@@ -47,6 +39,9 @@ enamldef MoreVisibleLabel(StyleSheet):
 
 
 enamldef SaveConfirm(PopupView):
+    """Popup notifying the user that the saving did occur.
+
+    """
     parent_anchor = (0.5, 0.0)
     timeout = 2
     MoreVisibleLabel:
@@ -58,6 +53,9 @@ enamldef SaveConfirm(PopupView):
 
 
 def save_sequence(event):
+    """Save a sequence.
+
+    """
     workbench = event.workbench
     plugin = workbench.get_plugin('ecpy.pulses')
     if plugin.workspace_state.sequence_type != 'Unknown':
@@ -74,6 +72,9 @@ been saved to a file then simply override it.'''
 
 
 def save_sequence_as(event):
+    """Save a sequence to a new file.
+
+    """
     workbench = event.workbench
     plugin = workbench.get_plugin('ecpy.pulses')
     plugin.workspace.save_sequence('file')
@@ -85,35 +86,41 @@ to choose a file to which the sequence should be saved.'''
 
 
 def save_sequence_as_template(event):
+    """Save a sequence as a template.
+
+    """
     workbench = event.workbench
     plugin = workbench.get_plugin('ecpy.pulses')
     plugin.workspace.save_sequence('template')
 
 
-SAVE_AS_TEMPLATE_DESCRIPTION =\
-'''Save the currently edited sequence as template.'''
+SAVE_AS_TEMPLATE_DESCRIPTION = save_sequence_as_template.__doc__
 
 # Sequence loading
 # ================
 
 def load_sequence(event):
+    """Load sequence from a file.
+
+    """
     workbench = event.workbench
     plugin = workbench.get_plugin('ecpy.pulses')
     plugin.workspace.load_sequence('file')
 
 
-LOAD_DESCRIPTION =\
-'''Load a measure from a file.'''
+LOAD_DESCRIPTION = load_sequence.__doc__
 
 
 def load_template(event):
+    """Load a template sequence for edition.
+
+    """
     workbench = event.workbench
     plugin = workbench.get_plugin('ecpy.pulses')
     plugin.workspace.load_sequence('template')
 
 
-LOAD_DESCRIPTION =\
-'''Create a measure from a template.'''
+LOAD_DESCRIPTION = load_template.___doc__
 
 
 # --- Menu contribution manifest ----------------------------------------------

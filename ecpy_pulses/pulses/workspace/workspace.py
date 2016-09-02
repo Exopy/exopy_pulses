@@ -298,11 +298,11 @@ class SequenceEditionSpace(Workspace):
     def _load_sequence_from_file(self, path):
         core = self.workbench.get_plugin('enaml.workbench.core')
         cmd = 'ecpy.pulses.build_sequence'
-        return core.invoke_command(cmd, {'mode': 'file', 'path': path})
+        return core.invoke_command(cmd, {'path': path})
 
     def _load_sequence_from_template(self, prefs):
         prefs['external_vars'] = prefs.pop('template_vars')
         prefs['item_id'] = 'ecpy_pulses.RootSequence'
         core = self.workbench.get_plugin('enaml.workbench.core')
         cmd = 'ecpy.pulses.build_sequence'
-        return core.invoke_command(cmd, {'mode': 'file', 'prefs': prefs})
+        return core.invoke_command(cmd, {'prefs': prefs})
