@@ -35,6 +35,7 @@ from .filters import (SequenceFilter, PySequenceFilter, TemplateFilter,
 from .declarations import (Sequences, Sequence, SequenceConfigs,
                            SequenceConfig, Contexts, Context, Shapes, Shape)
 from .dependencies_analysis import PulsesBuildingDependenciesExtension
+from .sequences.base_sequences import RootSequence
 
 
 PLUGIN_ID = 'ecpy.pulses'
@@ -45,13 +46,16 @@ PLUGIN_ID = 'ecpy.pulses'
 # =============================================================================
 
 def manager_plugin_factory():
-    """ Factory funcion for the task manager plugin.
+    """ Factory funcion for the pulse manager plugin.
 
     """
     from .plugin import PulsesManagerPlugin
     return PulsesManagerPlugin()
 
 def workspace_factory(workbench):
+    """Factory function for the pulse seqeuences edition workspace.
+
+    """
     from .workspace.workspace import SequenceEditionSpace
     return SequenceEditionSpace()
 
@@ -59,38 +63,18 @@ def workspace_factory(workbench):
 # --- Command Handlers --------------------------------------------------------
 # =============================================================================
 
-# TODO implement a true manager
-#def show_manager(event):
-#    """ Handler for the 'ecpy.instr_manager.show_manager' command
-#
-#    """
-#    manager = event.workbench.get_plugin('ecpy')
-#    from .manager_view import TaskManagerView
-#    TaskManagerView(manager=manager).show()
+def create_sequence(event):
+    """Create a new sequence configured through the ui.
 
-def build_sequence(event):
-    """ Handler for the 'ecpy.pulses.build_sequence' command.
+    Handler for the ecpy.pulses.create_sequence command.
 
     Parameters
     ----------
-    mode : {'ui', 'file'}
-        Should the command open a dialog to select a sequence (ui), or should
-        it build a RootSequence from the given ressource.
+    root : RootSequence
+        RootSequence in which the new sequence will be inserted once built.
 
-    root : RootSequence, optional
-        RootSequence in which to insert the new sequence once built (ui mode
-        only).
-
-    parent_ui : object, optional
-        Parent widget for the dialog (ui mode only).
-
-    path : unicode, optional
-        Path to the file holding the sequence config. The stored sequence
-        should be a RootSequence not a TemplateSequence. Used in file mode.
-
-    prefs : dict, optional
-        Sequence config describing the sequence to rebuild. The stored sequence
-        should be a RootSequence not a TemplateSequence. Used in file mode.
+    parent_ui : object
+        Parent widget for the dialog.
 
     Returns
     -------
@@ -98,59 +82,78 @@ def build_sequence(event):
 
     """
     manager = event.workbench.get_plugin('ecpy.pulses')
-    mode = event.parameters.get('mode')
-    if mode == 'ui':
-        parent_ui = event.parameters.get('parent_ui')
-        root = event.parameters['root']
-        dial = BuilderView(parent_ui, manager=manager, root=root)
-        dial.exec_()
-        if dial.result:
-            seq = dial.config.build_sequence()
-            if seq:
-                return seq
-            else:
-                BasicErrorsDisplay(errors=dial.config.errors,
-                                   kind='Config errors').exec_()
-
-    elif mode == 'file':
-        if 'path' in event.parameters:
-            prefs = ConfigObj(event.parameters['path'])
-        elif 'prefs' in event.parameters:
-            prefs = event.parameters['prefs']
+    parent_ui = event.parameters.get('parent_ui')
+    root = event.parameters['root']
+    dial = BuilderView(parent_ui, manager=manager, root=root)
+    dial.exec_()
+    if dial.result:
+        seq = dial.config.build_sequence()
+        if seq:
+            return seq
         else:
-            raise ValueError('No valid kwargs found for file mode')
-
-        # Collect the dependencies
-        core = event.workbench.get_plugin('enaml.workbench.core')
-        cmd = 'ecpy.app.dependencies.analyse'
-
-        cont = core.invoke_command(cmd, {'obj': prefs})
-        if cont.errors:
-            raise RuntimeError('Failed to analyse dependencies :\n%s' %
-                               cont.errors)
-
-        cmd = 'ecpy.app.dependencies.collect'
-        cont = core.invoke_command(cmd, {'kind': 'build',
-                                         'dependencies': cont.dependencies})
-        if cont.errors:
-            raise RuntimeError('Failed to collect dependencies :\n%s' %
-                               cont.errors)
-        build_dep = cont.dependencies
-
-        # Implement the logic here to rebuild the sequence
-        seq = RootSequence.build_from_config(deepcopy(prefs), build_dep)
-        return seq
+            BasicErrorsDisplay(errors=dial.config.errors,
+                               kind='Config errors').exec_()
 
 
-def build_context(event):
+def build_sequence(event):
+    """Build a sequence stored into a file or ConfigObj object.
+
+    Handler for the 'ecpy.pulses.build_sequence' command.
+
+    Parameters
+    ----------
+    path : unicode, optional
+        Path to the file holding the sequence config. The stored sequence
+        should be a RootSequence not a TemplateSequence.
+
+    prefs : dict, optional
+        Sequence config describing the sequence to rebuild. The stored sequence
+        should be a RootSequence not a TemplateSequence.
+
+    Returns
+    -------
+    sequence : BaseSequence
+
+    """
+    manager = event.workbench.get_plugin('ecpy.pulses')
+    if 'path' in event.parameters:
+        prefs = ConfigObj(event.parameters['path'])
+    elif 'prefs' in event.parameters:
+        prefs = event.parameters['prefs']
+    else:
+        raise ValueError('No valid kwargs were found.')
+
+    # Collect the dependencies
+    core = event.workbench.get_plugin('enaml.workbench.core')
+    cmd = 'ecpy.app.dependencies.analyse'
+
+    cont = core.invoke_command(cmd, {'obj': prefs})
+    if cont.errors:
+        raise RuntimeError('Failed to analyse dependencies :\n%s' %
+                           cont.errors)
+
+    cmd = 'ecpy.app.dependencies.collect'
+    cont = core.invoke_command(cmd, {'kind': 'build',
+                                     'dependencies': cont.dependencies})
+    if cont.errors:
+        raise RuntimeError('Failed to collect dependencies :\n%s' %
+                           cont.errors)
+    build_dep = cont.dependencies
+
+    seq = RootSequence.build_from_config(deepcopy(prefs), build_dep)
+    return seq
+
+
+def create_context(event):
     """Select a context for a given pulse sequence.
 
     Parameters
     ----------
-    root :
+    root : RootSequence
+        Root sequence to which add the built context.
 
-    parent_ui :
-
+    parent_ui : object
+        Parent for the dialog used to select the context.
 
     """
     manager = event.workbench.get_plugin('ecpy.pulses')
@@ -165,9 +168,11 @@ def build_context(event):
 # --- Descriptions ------------------------------------------------------------
 # =============================================================================
 
+CREATE_SEQUENCE_DESCRIPTION = create_sequence.__doc__
+
 BUILD_SEQUENCE_DESCRIPTION = build_sequence.__doc__
 
-BUILD_CONTEXT_DESCRIPTION = build_context.__doc__
+CREATE_CONTEXT_DESCRIPTION = create_context.__doc__
 
 FILTERS_DESC =\
 """Filters are used when listing the items known to the application. Filters
@@ -351,19 +356,6 @@ enamldef PulsesManagerManifest(PluginManifest):
     id = PLUGIN_ID
     factory = manager_plugin_factory
 
-
-    # =========================================================================
-    # --- Startup Extension ----------------------------------------------------
-    # =========================================================================
-
-    Extension:
-        point = 'ecpy.app.startup'
-        AppStartup:
-            id = 'ecpy.pulses'
-            run => (workbench, cmd_args):
-                print('The Ecpy_Pulses plugin has been loaded.')
-
-
     # =========================================================================
     # --- Extension points ----------------------------------------------------
     # =========================================================================
@@ -464,11 +456,6 @@ enamldef PulsesManagerManifest(PluginManifest):
     Extension:
         id = 'commands'
         point = 'enaml.workbench.core.commands'
-#        Command:
-#            id = 'ecpy.instr_manager.show_manager'
-#            description = SHOW_MANAGER_DESCRIPTION
-#            handler = show_manager
-        # XXX clean this mess
         Command:
             id = 'ecpy.pulses.get_item_infos'
             description = GET_ITEM_INFOS_DESCRIPTION
@@ -498,13 +485,17 @@ enamldef PulsesManagerManifest(PluginManifest):
             description = GET_SHAPE_DESCRIPTION
             handler = make_handler(PLUGIN_ID,'get_shape')
         Command:
+            id = 'ecpy.pulses.create_sequence'
+            description = CREATE_SEQUENCE_DESCRIPTION
+            handler = create_sequence
+        Command:
             id = 'ecpy.pulses.build_sequence'
             description = BUILD_SEQUENCE_DESCRIPTION
             handler = build_sequence
         Command:
-            id = 'ecpy.pulses.build_context'
-            description = BUILD_CONTEXT_DESCRIPTION
-            handler = build_context
+            id = 'ecpy.pulses.create_context'
+            description = CREATE_CONTEXT_DESCRIPTION
+            handler = create_context
 
     Extension:
         id = 'menu'
@@ -514,10 +505,6 @@ enamldef PulsesManagerManifest(PluginManifest):
             label = 'Pulses'
             ItemGroup:
                 id = 'user'
-#        ActionItem:
-#            path = '/tasks/show_manager'
-#            label = 'Manager'
-#            command = 'ecpy.task_manager.show_manager'
         ActionItem:
                 path = '/workspace/pulses'
                 label = 'Pulses'

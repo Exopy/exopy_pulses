@@ -12,7 +12,6 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-import enaml
 import pytest
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -21,18 +20,6 @@ from ecpy_pulses.pulses.pulse import Pulse
 from ecpy_pulses.pulses.sequences.base_sequences import RootSequence
 from ecpy_pulses.pulses.shapes.square_shape import SquareShape
 from ecpy_pulses.testing.context import TestContext
-
-with enaml.imports():
-    from .contributions import PulsesContributions
-
-
-@pytest.fixture
-def workbench(pulses_workbench):
-    """Simply register the contributions for testing.
-
-    """
-    pulses_workbench.register(PulsesContributions())
-    return pulses_workbench
 
 
 @pytest.fixture

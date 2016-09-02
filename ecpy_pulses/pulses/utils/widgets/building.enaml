@@ -63,7 +63,7 @@ enamldef BuilderView(Dialog): dial:
             if config is None:
                 dial.config = None
                 conf.objects = [Label(text=('No configuration view was'+
-                                            'found for this task'))]
+                                            'found for this sequence'))]
                 return
             config.root = root
             dial.config = config
@@ -121,10 +121,9 @@ enamldef ContextBuilderView(Dialog): dial:
     func _update():
         sc = _context_map[selector.selected_item]
         if sc:
-            contexts_infos, _ = manager.get_contexts_infos([sc])
-            if contexts_infos:
-                info = contexts_infos[sc]
-                dial.context = info.cls
+            context_infos = manager.get_context_infos(sc)
+            if context_infos:
+                dial.context = context_infos.cls
 
     initialized ::
         _update()

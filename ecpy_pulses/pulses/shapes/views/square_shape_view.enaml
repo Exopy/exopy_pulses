@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-# =============================================================================
-# module : base_shapes_views.enaml
-# author : Matthieu Dartiailh
-# license : MIT license
-# =============================================================================
-"""
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""View for the SquareShape.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
-
 
 from enaml.layout.api import hbox, vbox, align
 from enaml.widgets.api import (Label, GroupBox)
@@ -23,8 +24,6 @@ enamldef SquareShapeView(AbstractShapeView):
     """ View for a square pulse.
 
     """
-    attr shape
-
     GroupBox:
         title = 'Square'
         constraints = [hbox(amp_lab, amp_val),
@@ -34,4 +33,5 @@ enamldef SquareShapeView(AbstractShapeView):
             text = 'Amplitude'
         QtLineCompleter: amp_val:
             text := shape.amplitude
-            tool_tip = 'Relative amplitude of the pulse (should be between -1.0 and 1.0)'
+            tool_tip = ('Relative amplitude of the pulse (should be between '
+                        '-1.0 and 1.0)')

@@ -49,8 +49,8 @@ enamldef TemplateConfigView(AbstractConfigView): main:
             checked := model.merge
             enabled << bool(model.root.context)
             tool_tip << (fill(cleandoc('''Should the template be inserted as a
-                sequence and forget it is a template.''')) if enabled else 
-                fill(cleandoc('''To merge you should first select a 
+                sequence and forget it is a template.''')) if enabled else
+                fill(cleandoc('''To merge you should first select a
                                  context.''')))
         Conditional: con:
             condition << not bool(model.root.context)
@@ -61,7 +61,7 @@ enamldef TemplateConfigView(AbstractConfigView): main:
                 clicked ::
                     core = model.manager.workbench.get_plugin(
                                                         'enaml.workbench.core')
-                    cmd = 'ecpy.pulses.build_context'
+                    cmd = 'ecpy.pulses.create_context'
                     core.invoke_command(cmd, {'root': model.root,
                                               'parent_ui': self})
     Conditional:

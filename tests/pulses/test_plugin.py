@@ -14,21 +14,7 @@ from __future__ import (division, unicode_literals, print_function,
 
 import os
 
-import pytest
-import enaml
 from configobj import ConfigObj
-
-with enaml.imports():
-    from .contributions import PulsesContributions
-
-
-@pytest.fixture
-def workbench(pulses_workbench):
-    """Simply register the contributions for testing.
-
-    """
-    pulses_workbench.register(PulsesContributions())
-    return pulses_workbench
 
 
 def test_init(workbench):
@@ -98,6 +84,7 @@ def test_get_item_infos(workbench, template_sequence):
             assert infos and infos.cls, infos.view
 
 
+# XXX test using the commands
 def test_get_item(workbench):
     """Test getting an item class and potentially view.
 

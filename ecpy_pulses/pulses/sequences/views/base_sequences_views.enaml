@@ -137,9 +137,8 @@ enamldef RootSequenceView(AbstractSequenceView): view:
         """Create a new sequence to insert into the hierarchy.
 
         """
-        return core.invoke_command('ecpy.pulses.build_sequence',
-                                   {'parent_ui': editor, 'mode': 'ui',
-                                    'root': self.item})
+        return core.invoke_command('ecpy.pulses.create_sequence',
+                                   {'parent_ui': editor, 'root': self.item})
 
     func view_for(obj):
         """Create a widget for the specified item.
@@ -206,7 +205,7 @@ enamldef RootSequenceView(AbstractSequenceView): view:
                     text = ('Change context' if item.context else
                             'Choose context')
                     clicked ::
-                        cmd = 'ecpy.pulses.build_context'
+                        cmd = 'ecpy.pulses.create_context'
                         view.core.invoke_command(cmd, {'root': item,
                                                        'parent_ui': self})
                 Include:

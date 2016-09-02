@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015 by Ecpy Authors, see AUTHORS for more details.
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Base classes for shape views.
 
 """
 from __future__ import (division, unicode_literals, print_function,
@@ -25,12 +25,21 @@ enamldef AbstractShapeView(SplitItem):
     """ Abstract class from which all ShapeViews must inherit.
 
     """
+    #: Reference to the item which owns the shape.
     attr item
 
-enamldef ModulationView(AbstractShapeView):
+    #: Shape edited through this view.
+    attr shape
+
+
+enamldef ModulationView(SplitItem):
     """ View for the modulation of an analogical pulse.
 
     """
+    #: Reference to the item which owns the shape.
+    attr item
+
+    #: Modulation edited through this view.
     attr modulation
 
     GroupBox:
@@ -59,7 +68,8 @@ enamldef ModulationView(AbstractShapeView):
                         entries_updater << item.parent.get_accessible_vars
                         tool_tip = EVALUATER_TOOLTIP
                     ObjectCombo: freq_un:
-                        items = list(modulation.get_member('frequency_unit').items)
+                        items = list(modulation.get_member(
+                                                    'frequency_unit').items)
                         selected := modulation.frequency_unit
             SplitItem:
                 Container:

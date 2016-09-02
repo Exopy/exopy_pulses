@@ -175,7 +175,6 @@ enamldef PulseView(GroupBox): view:
                     return self.ids_map[id_]
 
                 items << list(ids_map)
-                # Assume ends in Shape
                 selected << item.shape.shape_id if item.shape else ''
                 to_string = _to_name
                 selected ::
