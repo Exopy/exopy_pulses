@@ -6,7 +6,9 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Test for the modulation.
+"""Test for the square shape.
+
+The view is tested as part of the pulse.
 
 """
 from __future__ import (division, unicode_literals, print_function,

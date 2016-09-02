@@ -123,3 +123,15 @@ def test_conditional_sequence_compilation3(root):
     res, missings, errors = root.evaluate_sequence()
     assert not res
     assert '2_condition' in errors
+
+
+def test_conditional_sequence_view(windows, workbench, pulse,
+                                   process_and_sleep):
+    """Test the view of the Pulse class.
+
+    """
+    import enaml
+    from ecpy.testing.util import show_widget
+    with enaml.imports():
+        from ecpy_pulses.pulses.sequences.views.base_sequences_views\
+            import RootSequenceView)
