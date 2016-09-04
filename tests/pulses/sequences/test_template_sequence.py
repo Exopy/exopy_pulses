@@ -19,7 +19,8 @@ from ecpy_pulses.pulses.sequences.template_sequence import TemplateSequence
 
 from ecpy_pulses.testing.context import TestContext
 
-pytestmark = pytest.mark.skipif(True)
+pytestmark = pytest.mark.skipif('True')
+
 
 @pytest.fixture
 def template_preferences(pulses_plugin, template_sequence):

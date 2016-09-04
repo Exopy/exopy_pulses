@@ -125,13 +125,17 @@ def test_conditional_sequence_compilation3(root):
     assert '2_condition' in errors
 
 
-def test_conditional_sequence_view(windows, workbench, pulse,
+def test_conditional_sequence_view(windows, workbench, root,
                                    process_and_sleep):
     """Test the view of the Pulse class.
 
     """
     import enaml
-    from ecpy.testing.util import show_widget
+    from ecpy.testing.util import show_and_close_widget
     with enaml.imports():
         from ecpy_pulses.pulses.sequences.views.base_sequences_views\
-            import RootSequenceView)
+            import RootSequenceView
+
+    core = workbench.get_plugin('enaml.workbench.core')
+    root.add_child_item(0, ConditionalSequence())
+    show_and_close_widget(RootSequenceView(item=root, core=core))

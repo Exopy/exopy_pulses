@@ -544,3 +544,40 @@ def test_pulse_view(windows, workbench, pulse, process_and_sleep):
     mod_check.checked = False
     process_and_sleep()
     assert widgets_num == len(pulse_view.widgets())
+
+
+def test_pulse_view2(windows, workbench, pulse):
+    """Test showing a pulse logical at the start.
+
+    """
+    import enaml
+    from ecpy.testing.util import show_and_close_widget
+    with enaml.imports():
+        from ecpy_pulses.pulses.sequences.views.base_sequences_views\
+            import RootSequenceView
+
+    pulse.kind = 'Logical'
+    root = pulse.root
+    root.add_child_item(0, pulse)
+    core = workbench.get_plugin('enaml.workbench.core')
+    root_view = RootSequenceView(item=root, core=core)
+    show_and_close_widget(root_view)
+
+
+def test_pulse_view3(windows, workbench, pulse):
+    """Test showing a pulse with a shape at the start at the start.
+
+    """
+    import enaml
+    from ecpy.testing.util import show_and_close_widget
+    with enaml.imports():
+        from ecpy_pulses.pulses.sequences.views.base_sequences_views\
+            import RootSequenceView
+
+    pulse.kind = 'Analogical'
+    pulse.shape = SquareShape()
+    root = pulse.root
+    root.add_child_item(0, pulse)
+    core = workbench.get_plugin('enaml.workbench.core')
+    root_view = RootSequenceView(item=root, core=core)
+    show_and_close_widget(root_view)
