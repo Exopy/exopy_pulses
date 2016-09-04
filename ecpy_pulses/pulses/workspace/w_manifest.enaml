@@ -24,8 +24,18 @@ from ecpy.utils.plugin_tools import make_handler
 
 # --- Command handlers --------------------------------------------------------
 
-NEW_DESCRIPTION =\
-"""Create a blank new sequence"""
+# Sequence creation
+# =================
+
+def new_sequence(event):
+    """Create a blank new sequence.
+
+    """
+    workbench = event.workbench
+    plugin = workbench.get_plugin('ecpy.pulses')
+    plugin.workspace.new_sequence()
+
+NEW_DESCRIPTION = new_sequence.__doc__
 
 enamldef MoreVisibleLabel(StyleSheet):
     """Style to make a Label much more visible for transient notifications.
@@ -120,7 +130,7 @@ def load_template(event):
     plugin.workspace.load_sequence('template')
 
 
-LOAD_DESCRIPTION = load_template.___doc__
+LOAD_DESCRIPTION = load_template.__doc__
 
 
 # --- Menu contribution manifest ----------------------------------------------

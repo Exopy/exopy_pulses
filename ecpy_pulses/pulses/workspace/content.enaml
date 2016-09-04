@@ -26,7 +26,9 @@ enamldef SequenceEditorDockItem(DockItem):
     """ Panel used to edit the workspace sequence.
 
     """
+    #: Reference to the workspace driving this item.
     attr workspace
+
     name = 'sequence_editor'
     title = 'Sequence'
     closable = False
@@ -39,7 +41,6 @@ enamldef SequenceEditorDockItem(DockItem):
             item ::
                 self.cache = {'edition_mode': True}
             core = workspace.workbench.get_plugin('enaml.workbench.core')
-            cache = {'edition_mode': True}
 
         PushButton: com:
             text = 'Compile'
@@ -48,6 +49,10 @@ enamldef SequenceEditorDockItem(DockItem):
 
 
 enamldef _KeyValEditor(Container):
+    """Key value editor for local variables.
+
+    """
+    #: Pair model being edited.
     attr model
     constraints = [hbox(lab, val)]
     padding = 1
@@ -62,7 +67,7 @@ enamldef _KeyValEditor(Container):
 
 
 enamldef VarEditorDockItem(DockItem):
-    """ Panel used to edit the sequence external variables.
+    """Panel used to edit the sequence external variables.
 
     """
     attr workspace
@@ -73,15 +78,13 @@ enamldef VarEditorDockItem(DockItem):
     Container:
         DictEditor(_KeyValEditor): ed:
             ed.mapping = workspace.state.sequence.external_vars
-            #ed.title = 'Name : value'
-            #ed.model << workspace.state.sequence
-            #ed.iterable_name = 'external_vars'
 
 
 enamldef SequenceSpaceContent(Container): main:
     """ Content for the sequence edition workspace.
 
     """
+    #: Reference to the workspace driving the widget
     attr workspace
 
     DockArea:
@@ -89,6 +92,7 @@ enamldef SequenceSpaceContent(Container): main:
         layout = VSplitLayout(TabLayout('sequence_editor',
                                         'vars_editor'),
                               'main_log', sizes=[5000,10])
+        style = 'metro'
 
         SequenceEditorDockItem:
             stretch = 10

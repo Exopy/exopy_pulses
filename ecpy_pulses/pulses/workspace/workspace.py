@@ -6,12 +6,11 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Workspace dedicated to teh edition of pulse sequences.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
-
 
 import os
 import logging
@@ -53,13 +52,14 @@ class SequenceEditionSpaceState(Atom):
     #: Path to the file in which the edited sequence should be saved.
     sequence_path = Unicode()
 
-    #: Description of the sequence (only applyt o template).
+    #: Description of the sequence (only apply to a template).
     sequence_doc = Unicode()
 
     # --- Private API ---------------------------------------------------------
 
-    def _observe_sequence(self, change):
-        """
+    def _post_setattr_sequence(self, change):
+        """Reset the known specifities of a sequence when a new one is set.
+
         """
         self.sequence_type = 'Unknown'
         self.sequence_path = u''
@@ -67,7 +67,8 @@ class SequenceEditionSpaceState(Atom):
 
 
 class SequenceEditionSpace(Workspace):
-    """
+    """Workspace dedicated to the edition of pulse sequences.
+
     """
     # --- Public API ----------------------------------------------------------
 
@@ -86,7 +87,8 @@ class SequenceEditionSpace(Workspace):
     window_title = set_default('Pulses')
 
     def start(self):
-        """
+        """Add the workspace sepcific menu and create the content.
+
         """
         plugin = self.workbench.get_plugin(u'ecpy.pulses')
         plugin.workspace = self
@@ -98,21 +100,22 @@ class SequenceEditionSpace(Workspace):
             self.state = state
             plugin.workspace_state = state
 
-        #: Add handler to the root logger to display messages in panel.
+        # Add handler to the root logger to display messages in panel.
         core = self.workbench.get_plugin(u'enaml.workbench.core')
         cmd = u'ecpy.app.logging.add_handler'
         self.log_model = core.invoke_command(cmd,
                                              {'id': LOG_ID, 'mode': 'ui'},
                                              self)[0]
 
-        #: Create content.
+        # Create content.
         self.content = SequenceSpaceContent(workspace=self)
 
-        #: Contribute menus.
+        # Contribute menus.
         self.workbench.register(SequenceSpaceMenu())
 
     def stop(self):
-        """
+        """Remove the menus and log handler.
+
         """
         # Remove handler from the root logger.
         core = self.workbench.get_plugin(u'enaml.workbench.core')
