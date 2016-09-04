@@ -12,7 +12,10 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-from ecpy.testing.util import handle_dialog, handle_question
+import os
+
+import pytest
+from ecpy.testing.util import handle_question, handle_dialog
 
 
 pytest_plugins = str('ecpy_pulses.testing.workspace.fixtures'),
@@ -82,8 +85,84 @@ def test_new_sequence(workspace, windows, process_and_sleep):
     assert old_seq is workspace.state.sequence
 
 
-def test_save_load_sequence(workspace, windows, process_and_sleep, tmpdir):
+def test_save_load_sequence(workspace, windows, process_and_sleep, tmpdir,
+                            monkeypatch):
     """Test saving and reloading a sequence.
 
+    Notes
+    -----
+    For the time being the template support being left unfinished it is
+    not tested.
+
     """
-    pass
+    # Monkeypatch file dialog to avoid dealing with native file dialogs.
+    from ecpy_pulses.pulses.workspace.workspace import FileDialogEx
+
+    class MockDialogFactory(object):
+        path = ''
+
+        def __call__(self, parent, current_path=None, name_filters=None):
+            return self.path
+
+    monkeypatch.setattr(FileDialogEx, 'get_open_file_name',
+                        MockDialogFactory())
+    monkeypatch.setattr(FileDialogEx, 'get_save_file_name',
+                        MockDialogFactory())
+
+    workbench = workspace.workbench
+    ui = workbench.get_plugin('enaml.workbench.ui')
+    ui.show_window()
+    process_and_sleep()
+
+    core = workbench.get_plugin('enaml.workbench.core')
+    old_seq = workspace.state.sequence
+    path = os.path.join(str(tmpdir), 'test.pulse.ini')
+
+    # Test saving a sequence for the first time
+    MockDialogFactory.path = path
+    cmd = 'ecpy.pulses.workspace.save'
+    core.invoke_command(cmd, dict(mode='default'))
+
+    assert os.path.isfile(path)
+    os.remove(path)
+
+    # Test saving a previously saved sequence
+    cmd = 'ecpy.pulses.workspace.save'
+    core.invoke_command(cmd, dict(mode='default'))
+
+    assert os.path.isfile(path)
+
+    # Test saving as
+    path2 = os.path.join(str(tmpdir), 'test2.pulse.ini')
+
+    MockDialogFactory.path = path2
+    cmd = 'ecpy.pulses.workspace.save_as'
+    core.invoke_command(cmd, dict(mode='default'))
+
+    assert os.path.isfile(path2)
+
+    # Test handling an incorrect mode.
+    with pytest.raises(ValueError):
+        workspace.save_sequence(mode='__dummy__')
+
+    # Test loading a measure.
+    cmd = 'ecpy.pulses.workspace.load'
+    core.invoke_command(cmd, dict(mode='file'))
+
+    assert workspace.state.sequence
+    assert workspace.state.sequence is not old_seq
+    assert workspace.state.sequence_type == 'Standard'
+    assert workspace.state.sequence_path == path2
+
+    # Test handling an error in loading.
+    def make_raise(*args, **kwargs):
+        raise Exception()
+    type(workspace)._load_sequence_from_file = make_raise
+
+    with handle_dialog('accept'):
+        cmd = 'ecpy.pulses.workspace.load'
+        core.invoke_command(cmd, dict(mode='file'))
+
+    # Test handling an incorrect mode.
+    with pytest.raises(ValueError):
+        workspace.load_sequence('__dummy__')

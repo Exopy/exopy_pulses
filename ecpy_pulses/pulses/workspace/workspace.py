@@ -6,7 +6,7 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Workspace dedicated to teh edition of pulse sequences.
+"""Workspace dedicated to the edition of pulse sequences.
 
 """
 from __future__ import (division, unicode_literals, print_function,
@@ -14,13 +14,15 @@ from __future__ import (division, unicode_literals, print_function,
 
 import os
 import logging
+from inspect import cleandoc
+from textwrap import fill
+from traceback import format_exc
+
 import enaml
 from atom.api import (Atom, Typed, Value, Enum, Unicode, Property,
                       set_default)
 from enaml.workbench.ui.api import Workspace
 from enaml.widgets.api import FileDialogEx
-from inspect import cleandoc
-from textwrap import fill
 
 from ..api import RootSequence
 from ..utils.sequences_io import save_sequence_prefs
@@ -29,11 +31,9 @@ with enaml.imports():
     from enaml.stdlib.message_box import question
     from .content import SequenceSpaceContent
     from .w_manifest import SequenceSpaceMenu
-    from .dialogs import (TemplateLoadDialog, TemplateSaveDialog,
-                          TypeSelectionDialog)
 
 
-LOG_ID = u'ecpy.pulses.workspace'
+LOG_ID = 'ecpy.pulses.workspace'
 
 
 class SequenceEditionSpaceState(Atom):
@@ -163,17 +163,20 @@ class SequenceEditionSpace(Workspace):
         if mode == 'default':
             state = self.state
             if state.sequence_type == 'Unknown':
-                # Here ask question and call save_sequence with right kind.
-                dial = TypeSelectionDialog(self.content)
-                dial.exec_()
-                if dial.result:
-                    self.save_sequence(dial.type)
+                self.save_sequence('file')
+                # TODO reactivate when templates are back
+#                # Here ask question and call save_sequence with right kind.
+#                dial = TypeSelectionDialog(self.content)
+#                dial.exec_()
+#                if dial.result:
+#                    self.save_sequence(dial.type)
 
             elif state.sequence_type == 'Standard':
                 self._save_sequence_to_file(state.sequence_path)
 
             # Use else here as sequence_type is an enum.
             else:
+                raise NotImplementedError()
                 # Here stuff is a bit more complex as compilation checks need
                 # to be performed.
 
@@ -187,13 +190,13 @@ class SequenceEditionSpace(Workspace):
                 # separate model and view, to be used in
                 # time_sequence_compilation.
 
-                dial = TemplateSaveDialog(self.content, workspace=self,
-                                          step=1)
-                dial.exec_()
-                if dial.result:
-                    s_ = self.state
-                    self._save_sequence_to_template(s_.sequence_path,
-                                                    s_.sequence_doc)
+#                dial = TemplateSaveDialog(self.content, workspace=self,
+#                                          step=1)
+#                dial.exec_()
+#                if dial.result:
+#                    s_ = self.state
+#                    self._save_sequence_to_template(s_.sequence_path,
+#                                                    s_.sequence_doc)
 
         elif mode == 'file':
             factory = FileDialogEx.get_save_file_name
@@ -210,26 +213,25 @@ class SequenceEditionSpace(Workspace):
                 logger = logging.getLogger(__name__)
                 logger.info('Correctly saved sequence in file.')
 
-        elif mode == 'template':
-            # Here must check context is TemplateContext and compilation is ok
-            # (as template cannot be re-edited if not merged). Variable used
-            # for compilation are cached.
-            dial = TemplateSaveDialog(self.content, workspace=self)
-            dial.exec_()
-            if dial.result:
-                self._save_sequence_to_template(dial.path, dial.doc)
-                self.state.sequence_type = 'Template'
-                self.state.sequence_path = dial.path
-                self.state.sequence_doc = dial.doc
-                logger = logging.getLogger(__name__)
-                logger.info('Correctly saved sequence as template.')
+#        elif mode == 'template':
+#            # Here must check context is TemplateContext and compilation is ok
+#            # (as template cannot be re-edited if not merged). Variable used
+#            # for compilation are cached.
+#            dial = TemplateSaveDialog(self.content, workspace=self)
+#            dial.exec_()
+#            if dial.result:
+#                self._save_sequence_to_template(dial.path, dial.doc)
+#                self.state.sequence_type = 'Template'
+#                self.state.sequence_path = dial.path
+#                self.state.sequence_doc = dial.doc
+#                logger = logging.getLogger(__name__)
+#                logger.info('Correctly saved sequence as template.')
 
         else:
             mess = cleandoc('''Invalid mode for save sequence : {}. Admissible
                             values are 'default', 'file' and 'template'.''')
             raise ValueError(mess.format(mode))
 
-    # XXX catch errors to avoid crashing the app
     def load_sequence(self, mode='file'):
         """ Load an existing sequence to edit it.
 
@@ -245,28 +247,41 @@ class SequenceEditionSpace(Workspace):
             path = ''
             if self.state.sequence_path:
                 path = os.path.dirname(self.state.sequence_path)
+
             load_path = factory(self.content, current_path=path,
                                 name_filters=['*.pulse.ini'])
-
             if load_path:
-                seq = self._load_sequence_from_file(load_path)
-                self.state.sequence = seq
-                self.state.sequence_type = 'Standard'
-                self.state.sequence_path = load_path
-                logger = logging.getLogger(__name__)
-                logger.info('Sequence correctly loaded from file.')
+                try:
+                    seq = self._load_sequence_from_file(load_path)
+                except Exception:
+                    print(format_exc())
+                    core = self.workbench.get_plugin('enaml.workbench.core')
+                    cmd = 'ecpy.app.errors.signal'
+                    msg = 'Failed to rebuild sequence {} :\n\n{}'
+                    core.invoke_command(cmd,
+                                        dict(kind='error',
+                                             message=msg.format(load_path,
+                                                                format_exc())))
+                else:
+                    print('rr')
+                    self.state.sequence = seq
+                    self.state.sequence_type = 'Standard'
+                    self.state.sequence_path = load_path
+                    logger = logging.getLogger(__name__)
+                    logger.debug('Sequence correctly loaded from %s.' %
+                                 load_path)
 
-        elif mode == 'template':
-            dial = TemplateLoadDialog(self.content, manager=self.plugin)
-            dial.exec_()
-            if dial.result:
-                seq = self._load_sequence_from_template(dial.prefs)
-                self.state.sequence = seq
-                self.state.sequence_type = 'Template'
-                self.state.sequence_path = dial.t_infos.metadata['path']
-                self.state.sequence_doc = dial.t_infos.metadata['doc']
-                logger = logging.getLogger(__name__)
-                logger.info('Sequence correctly loaded from template.')
+#        elif mode == 'template':
+#            dial = TemplateLoadDialog(self.content, manager=self.plugin)
+#            dial.exec_()
+#            if dial.result:
+#                seq = self._load_sequence_from_template(dial.prefs)
+#                self.state.sequence = seq
+#                self.state.sequence_type = 'Template'
+#                self.state.sequence_path = dial.t_infos.metadata['path']
+#                self.state.sequence_doc = dial.t_infos.metadata['doc']
+#                logger = logging.getLogger(__name__)
+#                logger.info('Sequence correctly loaded from template.')
 
         else:
             mess = cleandoc('''Invalid mode for load sequence : {}. Admissible
@@ -288,24 +303,24 @@ class SequenceEditionSpace(Workspace):
                                                     ''))
         save_sequence_prefs(path, prefs)
 
-    def _save_sequence_to_template(self, path, doc):
-        seq = self.state.sequence
-        prefs = seq.preferences_from_members()
-        prefs['external_vars'] = repr(dict.fromkeys(seq.external_vars.keys(),
-                                                    ''))
-        prefs['template_vars'] = prefs.pop('external_vars')
-        del prefs['item_id']
-        del prefs['time_constrained']
-        save_sequence_prefs(path, prefs, doc)
+#    def _save_sequence_to_template(self, path, doc):
+#        seq = self.state.sequence
+#        prefs = seq.preferences_from_members()
+#        prefs['external_vars'] = repr(dict.fromkeys(seq.external_vars.keys(),
+#                                                    ''))
+#        prefs['template_vars'] = prefs.pop('external_vars')
+#        del prefs['item_id']
+#        del prefs['time_constrained']
+#        save_sequence_prefs(path, prefs, doc)
 
     def _load_sequence_from_file(self, path):
         core = self.workbench.get_plugin('enaml.workbench.core')
         cmd = 'ecpy.pulses.build_sequence'
         return core.invoke_command(cmd, {'path': path})
 
-    def _load_sequence_from_template(self, prefs):
-        prefs['external_vars'] = prefs.pop('template_vars')
-        prefs['item_id'] = 'ecpy_pulses.RootSequence'
-        core = self.workbench.get_plugin('enaml.workbench.core')
-        cmd = 'ecpy.pulses.build_sequence'
-        return core.invoke_command(cmd, {'prefs': prefs})
+#    def _load_sequence_from_template(self, prefs):
+#        prefs['external_vars'] = prefs.pop('template_vars')
+#        prefs['item_id'] = 'ecpy_pulses.RootSequence'
+#        core = self.workbench.get_plugin('enaml.workbench.core')
+#        cmd = 'ecpy.pulses.build_sequence'
+#        return core.invoke_command(cmd, {'prefs': prefs})

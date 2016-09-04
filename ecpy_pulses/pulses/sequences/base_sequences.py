@@ -14,6 +14,7 @@ from __future__ import (division, unicode_literals, print_function,
 
 from traceback import format_exc
 from copy import deepcopy
+from collections import Mapping
 
 from atom.api import (Int, Instance, Unicode, Dict, Bool, List,
                       Signal, set_default, Typed)
@@ -707,17 +708,15 @@ class RootSequence(BaseSequence):
 
         """
         config = deepcopy(config)
-        if 'context' in config:
+        seq = super(RootSequence, cls).build_from_config(config,
+                                                         dependencies)
+        if 'context' in config and isinstance(config['context'], Mapping):
             context_config = config['context']
             c_id = context_config.pop('context_id')
             c_cls = dependencies['ecpy.pulses.contexts'][c_id]
             context = c_cls()
 
             context.update_members_from_preferences(context_config)
-
-        seq = super(RootSequence, cls).build_from_config(config,
-                                                         dependencies)
-        if 'context' in config:
             seq.context = context
 
         seq._post_setattr_root(True, True)

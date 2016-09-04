@@ -95,13 +95,13 @@ SAVE_AS_DESCRIPTION =\
 to choose a file to which the sequence should be saved.'''
 
 
-def save_sequence_as_template(event):
-    """Save a sequence as a template.
-
-    """
-    workbench = event.workbench
-    plugin = workbench.get_plugin('ecpy.pulses')
-    plugin.workspace.save_sequence('template')
+#def save_sequence_as_template(event):
+#    """Save a sequence as a template.
+#
+#    """
+#    workbench = event.workbench
+#    plugin = workbench.get_plugin('ecpy.pulses')
+#    plugin.workspace.save_sequence('template')
 
 
 SAVE_AS_TEMPLATE_DESCRIPTION = save_sequence_as_template.__doc__
@@ -121,13 +121,13 @@ def load_sequence(event):
 LOAD_DESCRIPTION = load_sequence.__doc__
 
 
-def load_template(event):
-    """Load a template sequence for edition.
-
-    """
-    workbench = event.workbench
-    plugin = workbench.get_plugin('ecpy.pulses')
-    plugin.workspace.load_sequence('template')
+#def load_template(event):
+#    """Load a template sequence for edition.
+#
+#    """
+#    workbench = event.workbench
+#    plugin = workbench.get_plugin('ecpy.pulses')
+#    plugin.workspace.load_sequence('template')
 
 
 LOAD_DESCRIPTION = load_template.__doc__
@@ -156,18 +156,18 @@ enamldef SequenceSpaceMenu(PluginManifest):
             id = 'ecpy.pulses.workspace.save_as'
             description = SAVE_AS_DESCRIPTION
             handler = save_sequence_as
-        Command:
-            id = 'ecpy.pulses.workspace.save_as_template'
-            description = SAVE_AS_TEMPLATE_DESCRIPTION
-            handler = save_sequence_as_template
+#        Command:
+#            id = 'ecpy.pulses.workspace.save_as_template'
+#            description = SAVE_AS_TEMPLATE_DESCRIPTION
+#            handler = save_sequence_as_template
         Command:
             id = 'ecpy.pulses.workspace.load'
             description = LOAD_DESCRIPTION
             handler = load_sequence
-        Command:
-            id = 'ecpy.pulses.workspace.load_template'
-            description = LOAD_TEMPLATE_DESCRIPTION
-            handler = load_template
+#        Command:
+#            id = 'ecpy.pulses.workspace.load_template'
+#            description = LOAD_TEMPLATE_DESCRIPTION
+#            handler = load_template
 
     Extension:
         id = 'action'
@@ -191,21 +191,21 @@ enamldef SequenceSpaceMenu(PluginManifest):
             label = 'Save sequence as'
             command = 'ecpy.pulses.workspace.save_as'
             group = 'user'
-            before = 'save_as_template'
-        ActionItem:
-            path = '/file/save_as_template'
-            label = 'Save sequence as template'
-            command = 'ecpy.pulses.workspace.save_as_template'
-            group = 'user'
+#            before = 'save_as_template'
+#        ActionItem:
+#            path = '/file/save_as_template'
+#            label = 'Save sequence as template'
+#            command = 'ecpy.pulses.workspace.save_as_template'
+#            group = 'user'
             before = 'load'
         ActionItem:
             path = '/file/load'
             label = 'Load sequence'
             command = 'ecpy.pulses.workspace.load'
             group = 'user'
-            before = 'load_template'
-        ActionItem:
-            path = '/file/load_template'
-            label = 'Load template sequence'
-            command = 'ecpy.pulses.workspace.load_template'
-            group = 'user'
+#            before = 'load_template'
+#        ActionItem:
+#            path = '/file/load_template'
+#            label = 'Load template sequence'
+#            command = 'ecpy.pulses.workspace.load_template'
+#            group = 'user'
