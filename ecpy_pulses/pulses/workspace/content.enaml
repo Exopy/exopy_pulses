@@ -38,8 +38,6 @@ enamldef SequenceEditorDockItem(DockItem):
 
         RootSequenceView: roo:
             item << workspace.state.sequence
-            item ::
-                self.cache = {'edition_mode': True}
             core = workspace.workbench.get_plugin('enaml.workbench.core')
 
         PushButton: com:

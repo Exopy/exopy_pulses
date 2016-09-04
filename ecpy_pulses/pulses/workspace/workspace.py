@@ -57,13 +57,13 @@ class SequenceEditionSpaceState(Atom):
 
     # --- Private API ---------------------------------------------------------
 
-    def _post_setattr_sequence(self, change):
+    def _post_setattr_sequence(self, old, new):
         """Reset the known specifities of a sequence when a new one is set.
 
         """
         self.sequence_type = 'Unknown'
-        self.sequence_path = u''
-        self.sequence_doc = u''
+        self.sequence_path = ''
+        self.sequence_doc = ''
 
 
 class SequenceEditionSpace(Workspace):

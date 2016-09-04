@@ -12,10 +12,7 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
-from enaml.widgets.api import Window
-
-from ecpy.testing.util import process_app_events, handle_dialog
+from ecpy.testing.util import handle_dialog, handle_question
 
 
 pytest_plugins = str('ecpy_pulses.testing.workspace.fixtures'),
@@ -25,11 +22,11 @@ def test_workspace_lifecycle(workspace, process_and_sleep):
     """Test the workspace life cycle.
 
     """
-    ui = workspace.workbench.get_plugin('enaml.workbench.ui')
+    workbench = workspace.workbench
+    ui = workbench.get_plugin('enaml.workbench.ui')
     ui.show_window()
     process_and_sleep()
 
-    workbench = workspace.plugin.workbench
     log = workbench.get_plugin('ecpy.app.logging')
     # Check UI creation
     assert workspace.log_model
@@ -41,8 +38,8 @@ def test_workspace_lifecycle(workspace, process_and_sleep):
     # Check log handling
     assert 'ecpy.pulses.workspace' in log.handler_ids
 
-    # Test creating a new sequence
-    # XXX do it
+    w_state = workspace.state
+    plugin = workspace.plugin
 
     # Test stopping the workspace
     core = workbench.get_plugin('enaml.workbench.core')
@@ -53,7 +50,40 @@ def test_workspace_lifecycle(workspace, process_and_sleep):
     assert workbench.get_manifest('ecpy.pulses.workspace.menus') is None
     assert 'ecpy.measure.workspace' not in log.handler_ids
 
-    # Test restarting now that we have one edited sequence in state.
-#    cmd = 'enaml.workbench.ui.select_workspace'
-#    core.invoke_command(cmd, {'workspace': 'ecpy.measure.workspace'})
-#    assert len(workspace.plugin.edited_measures.measures) == 1
+    # Test restarting now that state exists.
+    cmd = 'enaml.workbench.ui.select_workspace'
+    core.invoke_command(cmd, {'workspace': 'ecpy.pulses.workspace'})
+    assert plugin.workspace.state is w_state
+
+
+def test_new_sequence(workspace, windows, process_and_sleep):
+    """Test creating a new sequence.
+
+    """
+    workbench = workspace.workbench
+    ui = workbench.get_plugin('enaml.workbench.ui')
+    ui.show_window()
+    process_and_sleep()
+
+    core = workbench.get_plugin('enaml.workbench.core')
+    old_seq = workspace.state.sequence
+
+    with handle_question('yes'):
+        cmd = 'ecpy.pulses.workspace.new'
+        core.invoke_command(cmd, dict())
+
+    assert old_seq is not workspace.state.sequence
+    old_seq = workspace.state.sequence
+
+    with handle_question('no'):
+        cmd = 'ecpy.pulses.workspace.new'
+        core.invoke_command(cmd, dict())
+
+    assert old_seq is workspace.state.sequence
+
+
+def test_save_load_sequence(workspace, windows, process_and_sleep, tmpdir):
+    """Test saving and reloading a sequence.
+
+    """
+    pass
