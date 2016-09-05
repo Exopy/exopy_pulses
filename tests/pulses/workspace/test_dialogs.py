@@ -22,7 +22,8 @@ from ecpy_pulses.pulses.sequences.base_sequences\
 
 from ecpy_pulses.testing.context import TestContext
 with enaml.imports():
-    from ecpy_pulses.pulses.workspace.dialogs import CompileDialog
+    from ecpy_pulses.pulses.workspace.dialogs import (CompileDialog,
+                                                      _VarValidator)
 
 
 @pytest.fixture
@@ -39,6 +40,15 @@ def add_children(seq, children):
     """
     for i, c in enumerate(children):
         seq.add_child_item(i, c)
+
+
+def test_var_validator():
+    """Test the variable validator.
+
+    """
+    v = _VarValidator()
+    assert v.validate('1')
+    assert not v.validate('1*')
 
 
 def test_compiling_a_working_sequence(workspace, root, process_and_sleep,
@@ -96,7 +106,7 @@ def test_compiling_a_sequence_not_compiling(workspace, process_and_sleep, root,
     root.external_vars = {'a': 1.5}
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
-    pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
+    pulse2 = Pulse(def_1='{a + {b} + 1.0', def_2='3.0')
     pulse3 = Pulse(def_1='{4_start} - 0.5',
                    def_2='{4_start}+{4_duration}-0.5')
     pulse4 = Pulse(def_1='2.0', def_2='0.5', def_mode='Start/Duration')

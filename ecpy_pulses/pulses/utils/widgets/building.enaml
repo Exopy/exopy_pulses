@@ -6,7 +6,7 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Dialog used to build a new sequence to insert in a sequznce.
 
 """
 from __future__ import (division, unicode_literals, print_function,
@@ -25,17 +25,6 @@ from ecpy.utils.transformers import ids_to_unique_names
 
 from ..normalizers import normalize_context_name
 from .browsing import SequenceSelector
-
-
-# Circular import protections
-def pulse_manager():
-    from ..plugin import PulsesManagerPlugin
-    return PulsesManagerPlugin
-
-
-def abstract_config():
-    from ..configs.base_config import AbstractConfig
-    return AbstractConfig
 
 
 enamldef BuilderView(Dialog): dial:
