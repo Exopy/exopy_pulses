@@ -25,7 +25,7 @@ pytests_plugin = str('ecpy_pulses.testing.fixtures'),
 
 
 @pytest.yield_fixture
-def workspace(pulses_workbench, windows):
+def pulses_workspace(pulses_workbench, windows):
     """Create a measure workspace.
 
     """

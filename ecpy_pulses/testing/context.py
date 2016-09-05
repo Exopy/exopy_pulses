@@ -26,5 +26,11 @@ class TestContext(BaseContext):
 
     sampling = Float(1.0)
 
+    def compile_and_transfer_sequence(self, item, driver=None):
+        """Simply evaluate and simplify the underlying sequence.
+
+        """
+        return item.evaluate_sequence()
+
     def _get_sampling_time(self):
         return self.sampling

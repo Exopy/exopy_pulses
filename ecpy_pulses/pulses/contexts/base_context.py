@@ -64,7 +64,7 @@ class BaseContext(HasPrefAtom):
     #: Name of the context class. Used for persistence purposes.
     context_id = Unicode().tag(pref=True)
 
-    def compile_and_transfer_sequence(self, items, driver):
+    def compile_and_transfer_sequence(self, items, driver=None):
         """Compile the pulse sequence and send it to the instruments.
 
         Parameters
@@ -72,8 +72,18 @@ class BaseContext(HasPrefAtom):
         items : list
             List of handable items to be compiled and transferrred.
 
-        driver : object
-            Instrument driver to use to transfer the sequence once compiled
+        driver : object, optional
+            Instrument driver to use to transfer the sequence once compiled.
+            If absent the context should do its best to assert that the
+            compilation can succeed.
+
+        Returns
+        -------
+        result : bool
+            Whether the compilation succeeded.
+
+        errors : dict
+            Errors that occured during compilation.
 
         """
         raise NotImplementedError()

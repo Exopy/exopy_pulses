@@ -18,9 +18,6 @@ import pytest
 from ecpy.testing.util import handle_question, handle_dialog
 
 
-pytest_plugins = str('ecpy_pulses.testing.workspace.fixtures'),
-
-
 def test_workspace_lifecycle(workspace, process_and_sleep):
     """Test the workspace life cycle.
 

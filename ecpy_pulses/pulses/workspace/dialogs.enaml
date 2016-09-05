@@ -61,20 +61,28 @@ enamldef CompilationWidget(Container): main:
     errors.
 
     """
+    #: Reference to the pulse sequence edition workspace
     attr workspace
+
+    #: Time that took the last compilation.
     attr elapsed_time
-    attr use_context : bool = False
+
+    #: Errors reported by the context when compiling.
     attr errors = {}
+
+    #: Event emitted at the end of a compilation attempt.
     event outcome
 
-    constraints = [vbox(cont, nb, hbox(dur_lab, dur_val, comp))]
-
-    CheckBox: cont:
-        text = 'Use context compilation'
-        checked := use_context
+    constraints = [vbox(nb, hbox(dur_lab, dur_val, comp))]
 
     Notebook: nb:
         tabs_closable = False
+
+        Page:
+            title = 'Variables'
+            DictEditor(_ValEditor): de:
+                de.mapping := workspace.state.sequence.external_vars
+                de.operations = ['move']
 
         Page:
             title = 'Errors'
@@ -82,11 +90,6 @@ enamldef CompilationWidget(Container): main:
             BasicErrorsDisplay:
                 errors << main.errors
                 kind = 'Compilation errors'
-        Page:
-            title = 'Variables'
-            DictEditor(_ValEditor): de:
-                de.mapping := workspace.state.sequence.external_vars
-                de.operations = ['move']
 
     Label: dur_lab:
         text = 'Compilation duration (µs)'
@@ -100,20 +103,20 @@ enamldef CompilationWidget(Container): main:
         clicked ::
             seq = workspace.state.sequence
             start = time()
-            res, report = seq.compile_sequence(use_context=use_context)
+            res, missings, errors = seq.context.compile_and_transfer_sequence(seq)
             stop = time()
             main.elapsed_time = (stop - start)*1e6
 
             if not res:
                 dur_val.background = 'red'
-                miss, err = report
-                mess = 'The values of those variables were never computed : {}'
-                if miss:
-                    err['Undefined variables'] = mess.format(miss)
-                main.errors = err
+                msg = 'The values of those variables were never computed : {}'
+                if missings:
+                    errors['Undefined variables'] = msg.format(missings)
+                main.errors = errors
                 outcome(False)
             else:
                 dur_val.background = 'green'
+                main.errors = {}
                 outcome(True)
 
 

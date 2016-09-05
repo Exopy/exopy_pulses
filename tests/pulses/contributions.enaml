@@ -25,7 +25,6 @@ enamldef PulsesContributions(PluginManifest):
     This is intended for testing the pulses plugin.
 
     """
-    pass
     Extension:
         id = 'context'
         point = 'ecpy.pulses.contexts'
