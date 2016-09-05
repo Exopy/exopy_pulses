@@ -719,7 +719,7 @@ class RootSequence(BaseSequence):
             context.update_members_from_preferences(context_config)
             seq.context = context
 
-        seq._post_setattr_root(True, True)
+        seq._post_setattr_root(None, seq)
         return seq
 
     def traverse(self, depth=-1):

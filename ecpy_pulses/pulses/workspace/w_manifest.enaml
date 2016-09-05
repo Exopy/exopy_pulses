@@ -104,7 +104,7 @@ to choose a file to which the sequence should be saved.'''
 #    plugin.workspace.save_sequence('template')
 
 
-SAVE_AS_TEMPLATE_DESCRIPTION = save_sequence_as_template.__doc__
+#SAVE_AS_TEMPLATE_DESCRIPTION = save_sequence_as_template.__doc__
 
 # Sequence loading
 # ================
@@ -130,7 +130,7 @@ LOAD_DESCRIPTION = load_sequence.__doc__
 #    plugin.workspace.load_sequence('template')
 
 
-LOAD_DESCRIPTION = load_template.__doc__
+#LOAD_TEMPATE_DESCRIPTION = load_template.__doc__
 
 
 # --- Menu contribution manifest ----------------------------------------------

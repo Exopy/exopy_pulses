@@ -295,8 +295,8 @@ class SequenceEditionSpace(Workspace):
             return self.content.children[0]
 
     def _save_sequence_to_file(self, path):
-        if not path.endswith('.ini'):
-            path += '.ini'
+        if not path.endswith('.pulse.ini'):
+            path += '.pulse.ini'
         seq = self.state.sequence
         prefs = seq.preferences_from_members()
         prefs['external_vars'] = repr(dict.fromkeys(seq.external_vars.keys(),

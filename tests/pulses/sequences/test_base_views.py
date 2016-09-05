@@ -29,7 +29,7 @@ def test_abstract_refresh(windows):
     """Test the refresh function of the abstract view.
 
     """
-    view = AbstractSequenceView()
+    view = AbstractSequenceView(item=BaseSequence())
     show_widget(view)
     view.hide()
     view.refresh()
@@ -40,7 +40,7 @@ def test_base_sequence_refresh(windows):
     """Test the refresh function of the base sequence view.
 
     """
-    view = BaseSequenceView()
+    view = BaseSequenceView(item=BaseSequence())
     show_widget(view)
     view.hide()
     view.refresh()

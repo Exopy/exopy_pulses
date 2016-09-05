@@ -267,7 +267,7 @@ class SequenceEditor(Container):
         new.observe('items', self._update_views)
         new.observe('items_changed', self._update_views)
 
-    def _update_views(self, change, root=True):
+    def _update_views(self, change, is_root_call=True):
         """Handler updating as needed the views when the children member is
         updated.
 
@@ -295,7 +295,7 @@ class SequenceEditor(Container):
                 # Add all of the children that were added:
                 for index, child in change.added:
                     button = ItemEditorButton(item=child, editor=self)
-                    view = root.view_for(child)
+                    view = self.root.view_for(child)
                     self._children_buttons[child] = (button, view)
                     button.set_parent(self)
                     view.set_parent(self)
@@ -308,7 +308,7 @@ class SequenceEditor(Container):
                 for _, item in change.removed:
                     self._remove_view(item)
 
-            elif change.moved and root:
+            elif change.moved and is_root_call:
                 # Simply need to relayout.
                 self.request_relayout()
 
@@ -327,7 +327,7 @@ class SequenceEditor(Container):
             # more).
             for b, w in self._children_buttons.values():
                 b.destroy()
-                root.discard_view(w.item)
+                self.root.discard_view(w.item)
 
             self._empty_button.set_parent(None)
 
@@ -341,7 +341,7 @@ class SequenceEditor(Container):
         """
         button, view = self._children_buttons.pop(item)
         button.destroy()
-        root.discard_view(w.item)
+        self.root.discard_view(item)
 
     def _default_operations(self):
         """Build the operations dictionary used by the popup menu.

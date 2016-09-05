@@ -6,7 +6,7 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Dialogs specifc to the workspace use.
 
 """
 from __future__ import (division, unicode_literals, print_function,
@@ -117,231 +117,231 @@ enamldef CompilationWidget(Container): main:
                 outcome(True)
 
 
-TYPE_EXPLANATION = \
-'''Standard mode :
-- the sequence is saved as is and can be used in the measurement program
-directly. It should have a valid context (matching the instrument to be used).
-The value of the external vars are specified in the measurement program.
-Template mode :
-- the sequence is a model that can be reused in other sequences, to make
-sequence development easier and avoid duplicating standard sequences. The only
-accessible part of a template sequence are the template vars and the
-TemplateContext which specifies how to map the real channels to the one defined
-in the template.'''
-
-
-enamldef TypeSelectionDialog(Dialog): dial:
-    """ Dialog allowing to choose how to save the edited sequence.
-
-    """
-    attr type
-    title = 'How to save sequence ?'
-    initial_size = (700, 250)
-
-    Container:
-        padding = 2
-        constraints = [vbox(doc, hbox(canc, spacer, temp, std))]
-
-        MultilineField: doc:
-            read_only = True
-            text = TYPE_EXPLANATION
-        PushButton: canc:
-            text = 'Cancel'
-            clicked :: dial.reject()
-        PushButton: temp:
-            text = 'Template'
-            clicked ::
-                dial.type = 'template'
-                dial.accept()
-        PushButton: std:
-            text = 'Standard'
-            clicked ::
-                dial.type = 'file'
-                dial.accept()
-
-
-enamldef TemplateLoadDialog(Dialog): dial:
-    """ Dialog used to load a template sequence for edition.
-
-    """
-    alias manager : selector.manager
-    attr doc = ''
-    attr prefs
-    attr t_infos
-
-    title = 'Load template.'
-
-
-    #: Reference to the sequence selector.
-    alias selector : selector
-
-    title = 'Select the sequence you want to add'
-
-    func _update():
-        if selector.selected_sequence:
-            t_infos, _ = manager.get_sequence_infos(selector.selected_sequence)
-            if t_infos is None:
-                dial.prefs = None
-                conf.doc = [Label(text=('This template has no Docs'))]
-                return
-            dial.prefs = t_infos.metadata['config']
-            dial.doc = t_infos.metadata['doc']
-            dial.t_infos = t_infos
-
-        else:
-            dial.prefs = None
-            dial.doc = []
-
-
-    initialized :: _update()
-
-    Container:
-        constraints << [hbox(selector, fie, vbox(load, cancel,spacer))]
-        SequenceSelector: selector:
-            hug_width = 'strong'
-            display_filters = False
-            selected_filter << 'Templates'
-            selected_sequence :: _update()
-
-        MultilineField: fie:
-            read_only = True
-            text << dial.doc
-
-        PushButton: load:
-            text = 'Load'
-            enabled << prefs is not None
-            clicked :: dial.accept()
-
-        PushButton: cancel:
-            text = 'Cancel'
-            clicked ::
-                dial.reject()
-
-
-def _format_path(folder, filename):
-    """ Simple formatter for template saving path.
-
-    """
-    if not filename.endswith('.temp_pulse.ini'):
-        filename += '.pulse.ini'
-    return os.path.join(folder, filename)
-
-
-WRONG_CONTEXT = \
-''' To save a sequence as a template, its context must be a TemplateContext.
-Please change this and try again.'''
-
-
-RIGHT_CONTEXT = \
-''' Right type of context found, you can continue.'''
-
-
-def _validate_context(context):
-    test = context is not None and context.context_id == 'ecpy_pulses.TemplateContext'
-    return WRONG_CONTEXT if not test else RIGHT_CONTEXT
-
-
-enamldef TemplateSaveDialog(Dialog): dial:
-    """Dialog allowing to save a sequence as a template.
-
-    """
-    #: Refrence to the workspace.
-    attr workspace
-
-    #: Path to which save the template.
-    attr path
-
-    #: Description of the template usage.
-    attr doc = ''
-
-    alias step : sta.index
-
-    attr can_proceed : bool << sta.stack_items()[step].valid
-
-
-    title = 'Save sequence as template.'
-
-    Container:
-        constraints << [vbox(sta, hbox(canc, spacer,
-                                       *prev.items + nex.items + sav.items))]
-        Stack: sta:
-
-            StackItem: c_type:
-                attr valid : bool << typ.text == RIGHT_CONTEXT
-                Container:
-                    MultilineField: typ:
-                        text << _validate_context(workspace.state.sequence.context)
-
-            StackItem: f_sel:
-                attr valid : bool = False
-                Container:
-                    padding = 2
-
-                    ObjectCombo: fol:
-                        items = workspace.plugin.templates_folders
-                        selected = (os.path.dirname(dial.path)
-                                    if dial.path else '')
-                        selected ::
-                            dial.path = _format_path(selected, fil.text)
-                            if dial.path and dial.doc:
-                                f_sel.valid = True
-                            else:
-                                f_sel.valid = False
-                    Field: fil:
-                        submit_triggers = ['lost_focus', 'return_pressed',
-                                           'auto_sync']
-                        text = (os.path.split(dial.path)[1]
-                                if dial.path else '')
-                        text ::
-                            dial.path = _format_path(fol.selected, text)
-                            if dial.path and dial.doc:
-                                f_sel.valid = True
-                            else:
-                                f_sel.valid = False
-                    GroupBox:
-                        title = 'Description'
-                        padding = 2
-                        MultilineField:
-                            text := dial.doc
-                            text ::
-                                if dial.path and dial.doc:
-                                    f_sel.valid = True
-                                else:
-                                    f_sel.valid = False
-
-            StackItem: comp:
-                attr valid : bool = False
-                CompilationWidget:
-                    workspace = dial.workspace
-                    outcome ::
-                        comp.valid = change['value']
-
-        PushButton: canc:
-            text = 'Cancel'
-            clicked :: dial.reject()
-
-        Conditional: prev:
-            condition << step != 0
-            PushButton:
-                text = 'Previous'
-                clicked ::
-                    dial.step -= 1
-
-        Conditional: nex:
-            condition << step < len(sta.stack_items())-1
-            PushButton:
-                text = 'Next'
-                enabled << can_proceed
-                clicked ::
-                    dial.step += 1
-
-        Conditional: sav:
-            condition << step == len(sta.stack_items())-1
-            PushButton:
-                text = 'Save'
-                enabled << can_proceed
-                clicked ::
-                    dial.accept()
+#TYPE_EXPLANATION = \
+#'''Standard mode :
+#- the sequence is saved as is and can be used in the measurement program
+#directly. It should have a valid context (matching the instrument to be used).
+#The value of the external vars are specified in the measurement program.
+#Template mode :
+#- the sequence is a model that can be reused in other sequences, to make
+#sequence development easier and avoid duplicating standard sequences. The only
+#accessible part of a template sequence are the template vars and the
+#TemplateContext which specifies how to map the real channels to the one defined
+#in the template.'''
+#
+#
+#enamldef TypeSelectionDialog(Dialog): dial:
+#    """ Dialog allowing to choose how to save the edited sequence.
+#
+#    """
+#    attr type
+#    title = 'How to save sequence ?'
+#    initial_size = (700, 250)
+#
+#    Container:
+#        padding = 2
+#        constraints = [vbox(doc, hbox(canc, spacer, temp, std))]
+#
+#        MultilineField: doc:
+#            read_only = True
+#            text = TYPE_EXPLANATION
+#        PushButton: canc:
+#            text = 'Cancel'
+#            clicked :: dial.reject()
+#        PushButton: temp:
+#            text = 'Template'
+#            clicked ::
+#                dial.type = 'template'
+#                dial.accept()
+#        PushButton: std:
+#            text = 'Standard'
+#            clicked ::
+#                dial.type = 'file'
+#                dial.accept()
+#
+#
+#enamldef TemplateLoadDialog(Dialog): dial:
+#    """ Dialog used to load a template sequence for edition.
+#
+#    """
+#    alias manager : selector.manager
+#    attr doc = ''
+#    attr prefs
+#    attr t_infos
+#
+#    title = 'Load template.'
+#
+#
+#    #: Reference to the sequence selector.
+#    alias selector : selector
+#
+#    title = 'Select the sequence you want to add'
+#
+#    func _update():
+#        if selector.selected_sequence:
+#            t_infos, _ = manager.get_sequence_infos(selector.selected_sequence)
+#            if t_infos is None:
+#                dial.prefs = None
+#                conf.doc = [Label(text=('This template has no Docs'))]
+#                return
+#            dial.prefs = t_infos.metadata['config']
+#            dial.doc = t_infos.metadata['doc']
+#            dial.t_infos = t_infos
+#
+#        else:
+#            dial.prefs = None
+#            dial.doc = []
+#
+#
+#    initialized :: _update()
+#
+#    Container:
+#        constraints << [hbox(selector, fie, vbox(load, cancel,spacer))]
+#        SequenceSelector: selector:
+#            hug_width = 'strong'
+#            display_filters = False
+#            selected_filter << 'Templates'
+#            selected_sequence :: _update()
+#
+#        MultilineField: fie:
+#            read_only = True
+#            text << dial.doc
+#
+#        PushButton: load:
+#            text = 'Load'
+#            enabled << prefs is not None
+#            clicked :: dial.accept()
+#
+#        PushButton: cancel:
+#            text = 'Cancel'
+#            clicked ::
+#                dial.reject()
+#
+#
+#def _format_path(folder, filename):
+#    """ Simple formatter for template saving path.
+#
+#    """
+#    if not filename.endswith('.temp_pulse.ini'):
+#        filename += '.pulse.ini'
+#    return os.path.join(folder, filename)
+#
+#
+#WRONG_CONTEXT = \
+#''' To save a sequence as a template, its context must be a TemplateContext.
+#Please change this and try again.'''
+#
+#
+#RIGHT_CONTEXT = \
+#''' Right type of context found, you can continue.'''
+#
+#
+#def _validate_context(context):
+#    test = context is not None and context.context_id == 'ecpy_pulses.TemplateContext'
+#    return WRONG_CONTEXT if not test else RIGHT_CONTEXT
+#
+#
+#enamldef TemplateSaveDialog(Dialog): dial:
+#    """Dialog allowing to save a sequence as a template.
+#
+#    """
+#    #: Refrence to the workspace.
+#    attr workspace
+#
+#    #: Path to which save the template.
+#    attr path
+#
+#    #: Description of the template usage.
+#    attr doc = ''
+#
+#    alias step : sta.index
+#
+#    attr can_proceed : bool << sta.stack_items()[step].valid
+#
+#
+#    title = 'Save sequence as template.'
+#
+#    Container:
+#        constraints << [vbox(sta, hbox(canc, spacer,
+#                                       *prev.items + nex.items + sav.items))]
+#        Stack: sta:
+#
+#            StackItem: c_type:
+#                attr valid : bool << typ.text == RIGHT_CONTEXT
+#                Container:
+#                    MultilineField: typ:
+#                        text << _validate_context(workspace.state.sequence.context)
+#
+#            StackItem: f_sel:
+#                attr valid : bool = False
+#                Container:
+#                    padding = 2
+#
+#                    ObjectCombo: fol:
+#                        items = workspace.plugin.templates_folders
+#                        selected = (os.path.dirname(dial.path)
+#                                    if dial.path else '')
+#                        selected ::
+#                            dial.path = _format_path(selected, fil.text)
+#                            if dial.path and dial.doc:
+#                                f_sel.valid = True
+#                            else:
+#                                f_sel.valid = False
+#                    Field: fil:
+#                        submit_triggers = ['lost_focus', 'return_pressed',
+#                                           'auto_sync']
+#                        text = (os.path.split(dial.path)[1]
+#                                if dial.path else '')
+#                        text ::
+#                            dial.path = _format_path(fol.selected, text)
+#                            if dial.path and dial.doc:
+#                                f_sel.valid = True
+#                            else:
+#                                f_sel.valid = False
+#                    GroupBox:
+#                        title = 'Description'
+#                        padding = 2
+#                        MultilineField:
+#                            text := dial.doc
+#                            text ::
+#                                if dial.path and dial.doc:
+#                                    f_sel.valid = True
+#                                else:
+#                                    f_sel.valid = False
+#
+#            StackItem: comp:
+#                attr valid : bool = False
+#                CompilationWidget:
+#                    workspace = dial.workspace
+#                    outcome ::
+#                        comp.valid = change['value']
+#
+#        PushButton: canc:
+#            text = 'Cancel'
+#            clicked :: dial.reject()
+#
+#        Conditional: prev:
+#            condition << step != 0
+#            PushButton:
+#                text = 'Previous'
+#                clicked ::
+#                    dial.step -= 1
+#
+#        Conditional: nex:
+#            condition << step < len(sta.stack_items())-1
+#            PushButton:
+#                text = 'Next'
+#                enabled << can_proceed
+#                clicked ::
+#                    dial.step += 1
+#
+#        Conditional: sav:
+#            condition << step == len(sta.stack_items())-1
+#            PushButton:
+#                text = 'Save'
+#                enabled << can_proceed
+#                clicked ::
+#                    dial.accept()
 
 
 enamldef CompileDialog(Dialog): dial:

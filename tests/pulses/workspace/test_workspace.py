@@ -116,10 +116,11 @@ def test_save_load_sequence(workspace, windows, process_and_sleep, tmpdir,
 
     core = workbench.get_plugin('enaml.workbench.core')
     old_seq = workspace.state.sequence
+    incomplete_path = os.path.join(str(tmpdir), 'test')
     path = os.path.join(str(tmpdir), 'test.pulse.ini')
 
     # Test saving a sequence for the first time
-    MockDialogFactory.path = path
+    MockDialogFactory.path = incomplete_path
     cmd = 'ecpy.pulses.workspace.save'
     core.invoke_command(cmd, dict(mode='default'))
 
