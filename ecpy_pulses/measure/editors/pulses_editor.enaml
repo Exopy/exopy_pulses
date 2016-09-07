@@ -1,0 +1,62 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""Task editor allowing to edit a pulse sequence to transfer.
+
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+from enaml.widgets.api import Container, ScrollArea, Page, Field
+from enaml.core.api import Conditional
+
+from ecpy.masure.editors.api import BaseEditor
+from ecpy_pulses.pulses.views.base_sequences_views import RootSequenceView
+
+
+enamldef ExternalVarsPage(Page):
+    """Notebook page to edit the list of external variables.
+
+    """
+    attr sequence
+    title = 'External variables'
+
+    Container:
+        # TODO Add a validator
+        Field:
+            tool_tip = 'List of external variables used in the sequence (a, b)'
+            text << ', '.join(sequence.external_vars.keys())
+            text ::
+                keys = [k.strip() for k in text.split(',')]
+                sequence.external_vars = dict.fromkeys(keys, '')
+
+
+enamldef PulseEditor(BaseEditor):
+    """Editor allowing to edit a pulse sequence.
+
+    """
+    title = 'Pulse editor'
+    tree_visible = False
+    react_to_unselection => (workbench):
+        if selected_task.sequence:
+            old_vars = selected_task.sequence_vars
+            new_vars = selected_task.sequence.external_vars
+            for k in old_vars:
+                if k in new_vars:
+                    new_vars[k] = old_vars[k]
+            selected_task.sequence_vars = dict(new_vars)
+
+    Container:
+        ScrollArea:
+            Container:
+                Conditional:
+                    condition << bool(selected_task and selected_task.sequence)
+                    RootSequenceView:
+                        core = workbench.get_plugin('enaml.workbench.core')
+                        item << selected_task.sequence
+                        additional_pages << [ExternalVarsPage(sequence=item)]

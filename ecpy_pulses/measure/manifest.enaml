@@ -1,0 +1,41 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""Manifest contributing specific measure editors.
+
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+from enaml.workbench.api import PluginManifest, Extension
+from ecpy.measure.editors.api import Editor
+
+
+enamldef PulseMeasureManifest(PluginManifest):
+    """Declaration of the pulse sequences related tasks.
+
+    """
+    id = 'ecpy.pulses.measure'
+
+    Extension:
+        id = 'editors'
+        point = 'ecpy.measure.editors'
+        Editor:
+            id = 'ecpy_pulses.pulse_sequence'
+            description = 'Editor allowing to edit a pulse sequence.'
+            new => (workbench, default=False):
+                with enaml.imports():
+                    from .editors.pulse_editor import PulseEditor
+                return PulseEditor(declaration=self,
+                                      workbench=workbench,
+                                      name=self.id)
+
+            is_meant_for => (workbench, selected_task):
+                from ..tasks.tasks.transfer_sequence_task\
+                    import TransferSequenceTask
+                return isinstance(selected_task, TransferSequenceTask)

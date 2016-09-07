@@ -12,7 +12,6 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
 import os
 from ast import literal_eval
 from future.builtins import str as unicode
