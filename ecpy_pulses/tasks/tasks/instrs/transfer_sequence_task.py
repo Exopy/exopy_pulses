@@ -15,7 +15,7 @@ from __future__ import (division, unicode_literals, print_function,
 from traceback import format_exc
 from pprint import pformat
 
-from atom.api import Value, Unicode, Dict, Bool
+from atom.api import Value, Unicode, Dict
 
 from ecpy.tasks.api import InstrumentTask
 
