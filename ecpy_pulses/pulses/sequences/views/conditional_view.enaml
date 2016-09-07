@@ -88,8 +88,4 @@ enamldef ConditionalSequenceView(AbstractSequenceView): view:
             title = 'Local vars'
             DictEditor(FieldFieldEditor): de:
                 de.mapping = item.local_vars
-
-            #DictEditor(VarEditor): ed:
-            #    ed.title = 'Name : formula'
-            #    ed.model = item
-            #    ed.iterable_name = 'local_vars'
+                de.operations = ['add','move','remove']

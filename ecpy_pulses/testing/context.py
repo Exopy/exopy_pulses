@@ -30,7 +30,8 @@ class TestContext(BaseContext):
         """Simply evaluate and simplify the underlying sequence.
 
         """
-        return item.evaluate_sequence()
+        seq = item.evaluate_sequence()
+        return seq.simplify_sequence()
 
     def _get_sampling_time(self):
         return self.sampling

@@ -84,7 +84,7 @@ def test_get_item_infos(workbench, template_sequence):
             assert infos and infos.cls, infos.view
 
 
-# XXX test using the commands
+# TODO test using the commands
 def test_get_item(workbench):
     """Test getting an item class and potentially view.
 

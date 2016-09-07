@@ -119,7 +119,7 @@ enamldef BaseSequenceView(AbstractSequenceView): view:
             title = 'Local vars'
             DictEditor(FieldFieldEditor): de:
                 de.mapping := item.local_vars
-#                de.operations = ['add','move','remove']
+                de.operations = ['add','move','remove']
                 #Todo_Restore Add Back autocompletion!
 
 
