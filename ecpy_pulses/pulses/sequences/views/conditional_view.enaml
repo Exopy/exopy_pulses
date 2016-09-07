@@ -19,8 +19,10 @@ from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
                                             FieldFieldCompleterEditor)
 
 from .abstract_sequence_view import AbstractSequenceView
+from .base_sequences_views import LocalVariablesEditorPage
 from .sequence_editor_view import (SequenceEditor, FoldableSequenceEditor)
 from ...utils.entry_eval import EVALUATER_TOOLTIP
+
 
 enamldef ConditionalSequenceView(AbstractSequenceView): view:
     """ View for Sequence.
@@ -83,9 +85,5 @@ enamldef ConditionalSequenceView(AbstractSequenceView): view:
                 sequence << view.item
                 root << view.root
 
-        # XXX add autocompletion
-        Page:
-            title = 'Local vars'
-            DictEditor(FieldFieldEditor): de:
-                de.mapping = item.local_vars
-                de.operations = ['add','move','remove']
+        LocalVariablesEditorPage:
+            sequence = view.item
