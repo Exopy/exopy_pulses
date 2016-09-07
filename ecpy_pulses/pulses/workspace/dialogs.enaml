@@ -116,7 +116,9 @@ enamldef CompilationWidget(Container): main:
                 outcome(False)
             else:
                 start = default_timer()
-                res, errorrs = context.compile_and_transfer_sequence(res)
+                context = seq.context
+                items = seq.simplify_sequence()
+                res, errors = context.compile_and_transfer_sequence(items)
                 stop = default_timer()
                 main.elapsed_time += (stop - start)*1e6
                 if not res:

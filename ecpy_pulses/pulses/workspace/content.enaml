@@ -42,6 +42,8 @@ enamldef SequenceEditorDockItem(DockItem):
 
         PushButton: com:
             text = 'Compile'
+            enabled << bool(workspace.state.sequence.context)
+            tool_tip = 'A context must be selected before attempting comilation'
             clicked ::
                 CompileDialog(workspace=workspace).exec_()
 
