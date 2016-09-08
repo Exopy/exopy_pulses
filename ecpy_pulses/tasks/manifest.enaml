@@ -26,7 +26,7 @@ enamldef PulsesTasksManifest(PluginManifest):
         id = 'tasks'
         point = 'ecpy.tasks.declarations'
         Tasks:
-            path = 'ecpy_pulses.tasks.tasks'
+            path = 'ecpy_pulses.tasks.tasks.instrs'
             Task:
                 task = 'transfer_sequence_task:TransferPulseSequenceTask'
                 view = ('views.transfer_sequence_task_view:'

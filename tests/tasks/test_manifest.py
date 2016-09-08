@@ -20,11 +20,11 @@ with enaml.imports():
 pytest_plugins = (str('ecpy.testing.tasks.fixtures'),)
 
 
-def test_manifest(tasks_workbench):
+def test_manifest(task_workbench):
     """Test the addition of the sequence editor.
 
     """
-    tasks_workbench.register(PulsesTasksManifest())
-    pl = tasks_workbench.get_plugin('ecpy.tasks')
+    task_workbench.register(PulsesTasksManifest())
+    pl = task_workbench.get_plugin('ecpy.tasks')
 
-    assert pl.get_task_infos('ecpy_pulses.TransferSequenceTask')
+    assert pl.get_task_infos('ecpy_pulses.TransferPulseSequenceTask')

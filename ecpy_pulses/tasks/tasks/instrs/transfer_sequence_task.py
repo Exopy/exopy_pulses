@@ -16,7 +16,7 @@ import os
 from traceback import format_exc
 from pprint import pformat
 
-from atom.api import Value, Unicode, Dict
+from atom.api import Value, Unicode, Dict, Float
 from ecpy.tasks.api import InstrumentTask
 
 
@@ -28,10 +28,10 @@ class TransferPulseSequenceTask(InstrumentTask):
     sequence_path = Unicode().tag(pref=True)
 
     #: Time stamp of the last modification of the sequence file.
-    sequence_timestamp = Unicode().tag(pref=True)
+    sequence_timestamp = Float().tag(pref=True)
 
     #: Sequence of pulse to compile and transfer to the instrument.
-    sequence = Value().tag(pref=True)
+    sequence = Value()
 
     #: Global variable to use for the sequence.
     sequence_vars = Dict().tag(pref=True)
@@ -42,7 +42,7 @@ class TransferPulseSequenceTask(InstrumentTask):
         """
         test, traceback = super(TransferPulseSequenceTask,
                                 self).check(*args, **kwargs)
-        err_path = self.task_path + '/' + self.task_name + '-'
+        err_path = self.path + '/' + self.name + '-'
 
         msg = 'Failed to evaluate {} ({}): {}'
         for k, v in self.sequence_vars.items():
@@ -50,7 +50,7 @@ class TransferPulseSequenceTask(InstrumentTask):
                 self.format_and_eval_string(v)
             except Exception:
                 test = False
-                traceback[err_path+'-'+k] = msg.format(k, v, format_exc())
+                traceback[err_path+k] = msg.format(k, v, format_exc())
 
         if test:
             res, missings, errors = self.sequence.evaluate_sequence()
@@ -58,7 +58,7 @@ class TransferPulseSequenceTask(InstrumentTask):
                 if missings:
                     msg = 'Those variables were never evaluated : %s'
                     errors['missings'] = msg % missings
-                traceback[err_path+'-compil'] = errors
+                traceback[err_path+'compil'] = errors
                 return False, traceback
 
         items = self.sequence.simplify_sequence()
@@ -66,14 +66,14 @@ class TransferPulseSequenceTask(InstrumentTask):
         res, infos, errors = context.compile_and_transfer_sequence(items)
 
         if not res:
-            traceback[err_path+'-compil'] = errors
+            traceback[err_path+'compil'] = errors
             return False, traceback
 
         if self.sequence_path:
             if not (self.sequence_timestamp ==
                     os.path.getmtime(self.sequence_path)):
                 msg = 'The sequence is outdated, consider refreshing it.'
-                errors[err_path+'-outdated'] = msg
+                traceback[err_path+'outdated'] = msg
 
         return test, traceback
 
@@ -103,6 +103,18 @@ class TransferPulseSequenceTask(InstrumentTask):
         for k, v in infos.items():
             self.write_in_database(k, v)
 
+    def register_preferences(self):
+        """Register the task preferences into the preferences system.
+
+        """
+        super(TransferPulseSequenceTask, self).register_preferences()
+
+        if self.sequence:
+            self.preferences['sequence'] =\
+                self.sequence.preferences_from_members()
+
+    update_preferences_from_members = register_preferences
+
     def traverse(self, depth=-1):
         """Reimplemented to also yield the sequence
 
@@ -123,7 +135,7 @@ class TransferPulseSequenceTask(InstrumentTask):
         builder = cls.mro()[1].build_from_config.__func__
         task = builder(cls, config, dependencies)
 
-        builder = dependencies['pulses']['sequences']['RootSequence']
+        builder = dependencies['ecpy.pulses.items']['ecpy_pulses.RootSequence']
         conf = config['sequence']
         seq = builder.build_from_config(conf, dependencies)
         task.sequence = seq
@@ -135,15 +147,30 @@ class TransferPulseSequenceTask(InstrumentTask):
         database entries.
 
         """
+        entries = self.database_entries.copy()
         if old:
             old.unobserve('context', self._update_database_entries)
+            if old.context:
+                for k in old.context.list_sequence_infos():
+                    del entries[k]
         if new:
             new.observe('context', self._update_database_entries)
+            if new.context:
+                entries.update(new.context.list_sequence_infos())
+
+        if entries != self.database_entries:
+            self.database_entries = entries
 
     def _update_database_entries(self, change):
         """Reflect in the database the sequence infos of the context.
 
         """
+        entries = self.database_entries.copy()
+        if change['oldvalue']:
+            for k in change['oldvalue'].list_sequence_infos():
+                del entries[k]
         if change['value']:
             context = change['value']
-            self.database_entries = context.list_sequence_infos()
+            entries.update(context.list_sequence_infos())
+
+        self.database_entries = entries

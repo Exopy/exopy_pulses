@@ -19,25 +19,36 @@ import pytest
 from ecpy.tasks.api import RootTask
 from ecpy.tasks.tasks.instr_task import (PROFILE_DEPENDENCY_ID,
                                          DRIVER_DEPENDENCY_ID)
+from ecpy.testing.util import handle_dialog, show_widget, handle_question
+
 with enaml.imports():
-    from ecpy.tasks.manifest import TaskManagerManifest
-    from ecpy.tasks.base_tasks_views import RootTaskView
+    from ecpy.tasks.manifest import TasksManagerManifest
+    from ecpy.tasks.tasks.base_views import RootTaskView
+
+# TODO : remove once this not needed anymore on Py2
+# (do not know why but withouteverything crashes)
+from ecpy_pulses.pulses.utils.normalizers import *
 
 from ecpy_pulses.pulses.pulse import Pulse
 from ecpy_pulses.pulses.utils.sequences_io import save_sequence_prefs
 from ecpy_pulses.pulses.sequences.base_sequences\
     import RootSequence
 from ecpy_pulses.testing.context import TestContext
-from ecpy_pulses.tasks.tasks.transfer_sequence_task\
+from ecpy_pulses.tasks.tasks.instrs.transfer_sequence_task\
     import TransferPulseSequenceTask
 with enaml.imports():
-    from ecpy_pulses.tasks.tasks.views.transfer_sequence_task_view\
-         import TransferPulseSequenceView
+    from ecpy_pulses.tasks.tasks.instrs.views.transfer_sequence_task_view\
+         import (TransferPulseSequenceView, validate_context_driver_pair,
+                 load_sequence)
     from ecpy_pulses.tasks.manifest import PulsesTasksManifest
 
+with enaml.imports():
+    from ...pulses.contributions import PulsesContributions
 
 p_id = PROFILE_DEPENDENCY_ID
 d_id = DRIVER_DEPENDENCY_ID
+
+pytest_plugins = str('ecpy_pulses.testing.fixtures'),
 
 
 class FalseStarter(object):
@@ -57,6 +68,15 @@ class FalseStarter(object):
 
     def stop(self, driver):
         FalseStarter.stop_called = True
+
+
+@pytest.fixture
+def workbench(pulses_workbench):
+    """Simply register the contributions for testing.
+
+    """
+    pulses_workbench.register(PulsesContributions())
+    return pulses_workbench
 
 
 @pytest.fixture
@@ -90,11 +110,12 @@ def task(sequence, tmpdir):
                      p_id: {'p': {'connections': {'c': {}, 'c2': {}},
                                   'settings': {'s': {}}}}}
     path = os.path.join(str(tmpdir), 'test.pulse.ini')
-    save_sequence_prefs(path, sequence.prefs_from_config())
+    save_sequence_prefs(path, sequence.preferences_from_members())
     task = TransferPulseSequenceTask(sequence=sequence, sequence_path=path,
                                      sequence_timestamp=os.path.getmtime(path),
                                      sequence_vars={'a': '1.5'},
-                                     name='Test')
+                                     name='Test',
+                                     selected_instrument=('p', 'd', 'c', 's'))
     root.add_child_task(0, task)
     return task
 
@@ -104,8 +125,13 @@ def task_view(task, workbench):
     """Transfer sequence task view for testing.
 
     """
-    workbench.register(TaskManagerManifest())
+    workbench.register(TasksManagerManifest())
     core = workbench.get_plugin('enaml.workbench.core')
+    cmd = 'ecpy.pulses.get_context_infos'
+    c_infos = core.invoke_command(cmd,
+                                  dict(context_id='ecpy_pulses.TestContext'))
+    c_infos.instruments = set(['ecpy_pulses.TestDriver'])
+    task.selected_instrument = ('p', 'ecpy_pulses.TestDriver', 'c', 's')
     root_view = RootTaskView(task=task.root, core=core)
     view = TransferPulseSequenceView(task=task, root=root_view)
     return view
@@ -124,6 +150,7 @@ def test_task_saving_building(workbench, task):
 
     """
     workbench.register(PulsesTasksManifest())
+    workbench.register(TasksManagerManifest())
     core = workbench.get_plugin('enaml.workbench.core')
     deps = core.invoke_command('ecpy.app.dependencies.analyse',
                                dict(obj=task, dependencies=['build']))
@@ -131,7 +158,8 @@ def test_task_saving_building(workbench, task):
                                dict(dependencies=deps.dependencies,
                                     kind='build'))
 
-    prefs = task.get_from_preferences()
+    task.update_preferences_from_members()
+    prefs = task.preferences
     task2 = TransferPulseSequenceTask.build_from_config(prefs,
                                                         deps.dependencies)
 
@@ -149,13 +177,13 @@ def test_update_of_task_database_entries(task):
             return {'dummy': True}
 
     task.sequence.context = FancyContext()
-    assert task.database_entries == {'dummy': True}
+    assert task.database_entries == {'instrument': '', 'dummy': True}
 
     task.sequence = sequence()
-    assert task.database_entries == {'test': True}
+    assert task.database_entries == {'instrument': '', 'test': False}
 
     task.sequence.context = FancyContext()
-    assert task.database_entries == {'dummy': True}
+    assert task.database_entries == {'instrument': '', 'dummy': True}
 
 
 def test_task_check1(task):
@@ -163,6 +191,7 @@ def test_task_check1(task):
 
     """
     res, traceback = task.check()
+    print(traceback)
     assert res
     assert not traceback
 
@@ -181,7 +210,7 @@ def test_task_check3(task):
     """Test handling an evaluation error.
 
     """
-    task.sequence.internal_vars = {}
+    task.sequence.local_vars = {}
     res, traceback = task.check()
     assert not res
     assert 'root/Test-compil' in traceback
@@ -205,7 +234,7 @@ def test_task_check5(task):
     """Test that we get a warning on outdated sequence.
 
     """
-    task.sequence_timestamp = ''
+    task.sequence_timestamp = -1
     res, traceback = task.check()
     assert res
     assert 'root/Test-outdated' in traceback
@@ -215,17 +244,17 @@ def test_task_perform1(task):
     """Test performing the task when everything goes right.
 
     """
-    assert task.get_from_database('Test-test') is False
+    assert task.get_from_database('Test_test') is False
     task.perform()
-    assert task.get_from_database('Test-test')
+    assert task.get_from_database('Test_test')
 
 
 def test_task_perform2(task):
     """Test handling error in sequence evaluation.
 
     """
-    task.sequence.internal_vars = {}
-    with pytest.raises(ValueError):
+    task.sequence.local_vars = {}
+    with pytest.raises(Exception):
         task.perform()
 
 
@@ -237,41 +266,164 @@ def test_task_perform3(task, monkeypatch):
         return False, {}, {'test': ''}
     monkeypatch.setattr(TestContext, 'compile_and_transfer_sequence',
                         fail_compil)
-    with pytest.raises(ValueError):
+    with pytest.raises(Exception):
         task.perform()
 
 
-def test_view_validate_driver_context(task_view):
+def test_view_validate_driver_context(windows, task_view):
+    """Test the validation of a context/driver pair.
+
     """
-    """
-    pass
+    task_view.task.selected_instrument = ('p', 'ecpy_pulses.TestDriver',
+                                          'c', 's')
+    with handle_dialog('accept'):
+        validate_context_driver_pair(task_view.root.core,
+                                     task_view.task.sequence.context,
+                                     task_view.task, task_view)
+
+    assert task_view.task.selected_instrument[0]
+
+    task_view.task.selected_instrument = ('p', '__dummy__',
+                                          'c', 's')
+    with handle_dialog('accept'):
+        validate_context_driver_pair(task_view.root.core,
+                                     task_view.task.sequence.context,
+                                     task_view.task, task_view)
+
+    assert not task_view.task.selected_instrument[0]
 
 
-def test_load_refresh_save(task_view, tmpdir):
+def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
+    """Test loading a sequence, refreshing, modifying and saving.
+
     """
-    """
-    pass
+    from enaml.widgets.api import FileDialogEx
+
+    @classmethod
+    def get_filename(cls, parent, path, name_filters):
+        return task_view.task.sequence_path
+    monkeypatch.setattr(FileDialogEx, 'get_open_file_name', get_filename)
+
+    task_view.task.sequence_timestamp = -1
+
+    show_widget(task_view)
+    # Check detection of outdated sequence
+    assert task_view.widgets()[4].tool_tip
+
+    old_seq = task_view.task.sequence
+    # Load
+    task_view.widgets()[2].clicked = True
+    process_and_sleep()
+    assert task_view.task.sequence is not old_seq
+
+    old_seq = task_view.task.sequence
+    # Refresh
+    with handle_question('no'):
+        task_view.widgets()[4].clicked = True
+    assert task_view.task.sequence is old_seq
+    with handle_question('yes'):
+        task_view.widgets()[4].clicked = True
+    assert task_view.task.sequence is not old_seq
+
+    old_timestamp = task_view.task.sequence_timestamp
+    # Save
+    with handle_question('no'):
+        task_view.widgets()[5].clicked = True
+    assert task_view.task.sequence_timestamp == old_timestamp
+    with handle_question('yes'):
+        task_view.widgets()[5].clicked = True
+    assert task_view.task.sequence_timestamp != old_timestamp
 
 
-def test_changing_context_sequence(task_view):
+def test_handling_error_in_loading(task_view, windows, monkeypatch):
+    """Test handling an error when re-building the sequence.
+
     """
+    from enaml.workbench.core.core_plugin import CorePlugin
+    old = CorePlugin.invoke_command
+
+    def false_invoke(self, cmd, *args, **kwargs):
+        if cmd == 'ecpy.pulses.build_sequence':
+            raise Exception()
+        else:
+            old(self, cmd, *args, **kwargs)
+
+    monkeypatch.setattr(CorePlugin, 'invoke_command', false_invoke)
+
+    with handle_dialog('accept'):
+        load_sequence(task_view.root.core, task_view.task, task_view,
+                      task_view.task.sequence_path)
+
+
+@pytest.mark.timeout(10)
+def test_changing_context_sequence(task_view, windows):
+    """Test changing the context of a sequence.
+
+    This should trigger a new validation of the driver.
+
     """
-    pass
+    show_widget(task_view)
+    task = task_view.task
+    task.selected_instrument = ('p', 'ecpy_pulses.TestDriver', 'c', 's')
+
+    task.sequence.context = None
+    assert task.selected_instrument[0]
+
+    task.selected_instrument = ('p', '__dummy__',  'c', 's')
+    with handle_question('yes'):
+        task.sequence.context = TestContext()
+    assert not task.selected_instrument[0]
+
+    # Test changing the sequence.
+    task.selected_instrument = ('p', '__dummy__',  'c', 's')
+    with handle_question('yes'):
+        task.sequence = sequence()
+    assert not task.selected_instrument[0]
+
+    # Check  the observer has been installed on the new sequence.
+    task.selected_instrument = ('p', 'ecpy_pulses.TestDriver', 'c', 's')
+
+    task.sequence.context = None
+    assert task.selected_instrument[0]
+
+    task.selected_instrument = ('p', '__dummy__',  'c', 's')
+    with handle_question('yes'):
+        task.sequence.context = TestContext()
+    assert not task.selected_instrument[0]
 
 
 def test_profile_filtering(task_view):
+    """Test filtering the valid profiles based on context specifications.
+
     """
-    """
-    pass
+    from atom.api import Atom, Value
+
+    class DInfos(Atom):
+        id = Value()
+
+    class MInfos(Atom):
+        drivers = Value()
+
+    class PInfos(Atom):
+        model = Value()
+
+    p1 = PInfos(model=MInfos(drivers=[DInfos(id='__dummy__'),
+                                      DInfos(id='ecpy_pulses.TestDriver')]))
+    p2 = PInfos(model=MInfos(drivers=[DInfos(id='dummy2')]))
+
+    assert task_view.filter_profiles({'p1': p1, 'p2': p2}) == ['p1']
 
 
 def test_drivers_filtering(task_view):
-    """
-    """
-    pass
+    """Test filtering the valid drivers based on context specifications.
 
-# XXX add tests for view
-# - test context/driver validation
-# - test load/refresh/save
-# - test sequence/context observation
-# - test profiles/drivers filtering
+    """
+    from atom.api import Atom, Value
+
+    class DInfos(Atom):
+        id = Value()
+
+    d = DInfos(id='ecpy_pulses.TestDriver')
+
+    drivers = task_view.filter_drivers([DInfos(id='__dummy__'), d])
+    assert drivers == [d]
