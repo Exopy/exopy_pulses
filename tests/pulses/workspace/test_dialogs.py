@@ -141,7 +141,11 @@ def test_compiling_a_sequence_not_compiling2(workspace, root, monkeypatch,
     """Test compiling a sequence that can be evaluated but not compiled.
 
     """
-    # XXX todo
+    def __raise(*args, **kwargs):
+        return False, {}, {'test': False}
+    from ecpy_pulses.testing.context import TestContext
+    monkeypatch.setattr(TestContext, 'compile_and_transfer_sequence',
+                        __raise)
     workbench = workspace.workbench
     ui = workbench.get_plugin('enaml.workbench.ui')
     ui.show_window()
@@ -175,5 +179,5 @@ def test_compiling_a_sequence_not_compiling2(workspace, root, monkeypatch,
     process_and_sleep()
 
     assert comp_widget.elapsed_time
-    assert not comp_widget.errors
-    assert comp_widget.widgets()[-2].background == parse_color('green')
+    assert comp_widget.errors
+    assert comp_widget.widgets()[-2].background == parse_color('red')

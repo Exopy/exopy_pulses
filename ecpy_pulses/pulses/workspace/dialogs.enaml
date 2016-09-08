@@ -121,6 +121,7 @@ enamldef CompilationWidget(Container): main:
                 stop = default_timer()
                 main.elapsed_time += (stop - start)*1e6
                 if not res:
+                    dur_val.background = 'red'
                     main.errors = errors
                     outcome(False)
                 else:
