@@ -16,7 +16,7 @@ from enaml.workbench.api import PluginManifest, Extension
 from ecpy.tasks.api import Tasks, Task
 
 
-enamldef PulseTasksManifest(PluginManifest):
+enamldef PulsesTasksManifest(PluginManifest):
     """Declaration of the pulse sequences related tasks.
 
     """

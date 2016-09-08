@@ -22,6 +22,6 @@ def list_manifests():
     """
     with enaml.imports():
         from .pulses.manifest import PulsesManagerManifest
-        from .tasks.manifest import PulseTasksManifest
-        from .measure.manifest import PulseMeasureManifest
-    return [PulsesManagerManifest, PulseTasksManifest, PulseMeasureManifest]
+        from .tasks.manifest import PulsesTasksManifest
+        from .measure.manifest import PulsesMeasureManifest
+    return [PulsesManagerManifest, PulsesTasksManifest, PulsesMeasureManifest]

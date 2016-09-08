@@ -12,11 +12,11 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+import os
 from traceback import format_exc
 from pprint import pformat
 
 from atom.api import Value, Unicode, Dict
-
 from ecpy.tasks.api import InstrumentTask
 
 
@@ -50,7 +50,7 @@ class TransferPulseSequenceTask(InstrumentTask):
                 self.format_and_eval_string(v)
             except Exception:
                 test = False
-                traceback[err_path+k] = msg.format(k, v, format_exc())
+                traceback[err_path+'-'+k] = msg.format(k, v, format_exc())
 
         if test:
             res, missings, errors = self.sequence.evaluate_sequence()
@@ -58,8 +58,7 @@ class TransferPulseSequenceTask(InstrumentTask):
                 if missings:
                     msg = 'Those variables were never evaluated : %s'
                     errors['missings'] = msg % missings
-                msg = 'Evaluation failed. Errors : {}.'.format(pformat(errors))
-                traceback[err_path+'compil'] = msg
+                traceback[err_path+'-compil'] = errors
                 return False, traceback
 
         items = self.sequence.simplify_sequence()
@@ -67,9 +66,14 @@ class TransferPulseSequenceTask(InstrumentTask):
         res, infos, errors = context.compile_and_transfer_sequence(items)
 
         if not res:
-            msg = 'Compilation failed. Errors : {}.'.format(pformat(errors))
-            traceback[err_path+'compil'] = msg
+            traceback[err_path+'-compil'] = errors
             return False, traceback
+
+        if self.sequence_path:
+            if not (self.sequence_timestamp ==
+                    os.path.getmtime(self.sequence_path)):
+                msg = 'The sequence is outdated, consider refreshing it.'
+                errors[err_path+'-outdated'] = msg
 
         return test, traceback
 

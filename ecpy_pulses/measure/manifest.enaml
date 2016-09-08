@@ -16,7 +16,7 @@ from enaml.workbench.api import PluginManifest, Extension
 from ecpy.measure.editors.api import Editor
 
 
-enamldef PulseMeasureManifest(PluginManifest):
+enamldef PulsesMeasureManifest(PluginManifest):
     """Declaration of the pulse sequences related tasks.
 
     """

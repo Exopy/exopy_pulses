@@ -33,7 +33,7 @@ class TestContext(BaseContext):
         return True, {'test': True}, {}
 
     def list_sequence_infos(self):
-        return {'test': True}
+        return {'test': False}
 
     def _get_sampling_time(self):
         return self.sampling
