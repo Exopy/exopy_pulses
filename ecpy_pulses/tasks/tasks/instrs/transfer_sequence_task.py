@@ -55,11 +55,21 @@ class TransferPulseSequenceTask(InstrumentTask):
         if test:
             res, missings, errors = self.sequence.evaluate_sequence()
             if not res:
-                test = False
-                msg = 'Those variables were never evaluated : %s'
-                errors['missings'] = msg % missings
-                msg = 'Evaluation failed. Errors : {}.'.format(errors)
+                if missings:
+                    msg = 'Those variables were never evaluated : %s'
+                    errors['missings'] = msg % missings
+                msg = 'Evaluation failed. Errors : {}.'.format(pformat(errors))
                 traceback[err_path+'compil'] = msg
+                return False, traceback
+
+        items = self.sequence.simplify_sequence()
+        context = self.sequence.context
+        res, infos, errors = context.compile_and_transfer_sequence(items)
+
+        if not res:
+            msg = 'Compilation failed. Errors : {}.'.format(pformat(errors))
+            traceback[err_path+'compil'] = msg
+            return False, traceback
 
         return test, traceback
 
@@ -79,13 +89,15 @@ class TransferPulseSequenceTask(InstrumentTask):
             raise Exception('Failed to evaluate sequence :\n' +
                             pformat(errors))
 
-        res, errors = context.compile_and_transfer_sequence(res, self.driver)
-
-        # XXX the context may need to write in the database
-
+        items = seq.simplify_sequence()
+        res, infos, errors = context.compile_and_transfer_sequence(items,
+                                                                   self.driver)
         if not res:
             raise Exception('Failed to compile sequence :\n' +
                             pformat(errors))
+
+        for k, v in infos.items():
+            self.write_in_database(k, v)
 
     def traverse(self, depth=-1):
         """Reimplemented to also yield the sequence
@@ -113,3 +125,21 @@ class TransferPulseSequenceTask(InstrumentTask):
         task.sequence = seq
 
         return task
+
+    def _post_setattr_sequence(self, old, new):
+        """Set up n observer on the sequence context to properly update the
+        database entries.
+
+        """
+        if old:
+            old.unobserve('context', self._update_database_entries)
+        if new:
+            new.observe('context', self._update_database_entries)
+
+    def _update_database_entries(self, change):
+        """Reflect in the database the sequence infos of the context.
+
+        """
+        if change['value']:
+            context = change['value']
+            self.database_entries = context.list_sequence_infos()

@@ -30,6 +30,11 @@ TIME_CONVERSION = {'s': {'s': 1, 'ms': 1e3, 'mus': 1e6, 'ns': 1e9},
 class BaseContext(HasPrefAtom):
     """Base class describing a Context
 
+    Dependind on the targetted waveform generator the context should offer the
+    possibility to name the sequence, select it after transfer, clean channels
+    for which no sequence was uploaded and immediately start running the
+    transferred sequence.
+
     """
     #: Identifier for the build dependency collector
     dep_type = Constant(DEP_TYPE).tag(pref=True)
@@ -77,13 +82,39 @@ class BaseContext(HasPrefAtom):
             If absent the context should do its best to assert that the
             compilation can succeed.
 
+        select : bool, optional
+            Should the sequence be selected for running after transfer.
+
+        clean : bool, optional
+            Should the channel that have not been updated be cleaned.
+
+        run : bool, optional
+            Should the sequence be played after the transfer.
+
         Returns
         -------
         result : bool
             Whether the compilation succeeded.
 
+        infos : dict
+            Infos about the transferred and compiled sequence. The keys
+            should match the ones listed in sequence_infos_keys.
+
         errors : dict
             Errors that occured during compilation.
+
+        """
+        raise NotImplementedError()
+
+    def list_sequence_infos(self):
+        """List the sequence infos returned after a successful completion.
+
+        Returns
+        -------
+        infos : dict
+            Dict mimicking the one returned on successful completion of
+            a compilation and transfer. The values types should match the
+            the ones found in the real infos.
 
         """
         raise NotImplementedError()

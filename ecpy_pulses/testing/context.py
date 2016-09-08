@@ -30,7 +30,10 @@ class TestContext(BaseContext):
         """Simply evaluate and simplify the underlying sequence.
 
         """
-        return True, {}
+        return True, {'test': True}, {}
+
+    def list_sequence_infos(self):
+        return {'test': True}
 
     def _get_sampling_time(self):
         return self.sampling

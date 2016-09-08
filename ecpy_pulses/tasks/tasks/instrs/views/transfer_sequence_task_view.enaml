@@ -123,6 +123,8 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
 
     initialized ::
 
+        task.observe('sequence', _install_context_observe)
+
         if task.sequence:
             if os.path.getmtime(task.sequence_path) != task.sequence_timestamp:
                 seq_re.background = 'red'
@@ -133,7 +135,7 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
             if task.sequence.context:
                 validate_context_driver_pair(task.sequence.context, task)
 
-            task.sequence.observe('sequence.context',
+            task.sequence.observe('context',
                                   _check_context_driver_compatibility)
 
     filter_profiles => (profiles):
@@ -232,6 +234,18 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
     # =========================================================================
     # --- Private API ---------------------------------------------------------
     # =========================================================================
+
+    func _install_context_observer(change):
+        """Setup an observer to validate the driver/context match on context
+        change.
+
+        """
+        if 'oldvalue' in change and change['oldvalue']:
+            change['oldvalue'].unobserve('context',
+                                         _check_context_driver_compatibility)
+        if change['value']:
+            change['value'].observe('context',
+                                    _check_context_driver_compatibility)
 
     func _check_context_driver_compatibility(change):
         """Check whether the selected driver can be used with the selected
