@@ -45,7 +45,7 @@ class BaseContext(HasPrefAtom):
     #: Time unit.
     time_unit = Enum('mus', 's', 'ms', 'ns').tag(pref=True)
 
-    #: Duration in unit of the context of a pulse. It is the responsability
+    #: Duration in unit of the context of a time step. It is the responsability
     #: of subclasses to implement a getter.
     sampling_time = Property(cached=True)
 
