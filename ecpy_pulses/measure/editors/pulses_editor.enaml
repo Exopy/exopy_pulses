@@ -15,8 +15,9 @@ from __future__ import (division, unicode_literals, print_function,
 from enaml.widgets.api import Container, ScrollArea, Page, Field
 from enaml.core.api import Conditional
 
-from ecpy.masure.editors.api import BaseEditor
-from ecpy_pulses.pulses.views.base_sequences_views import RootSequenceView
+from ecpy.measure.editors.api import BaseEditor
+from ecpy_pulses.pulses.sequences.views.base_sequences_views\
+    import RootSequenceView
 
 
 enamldef ExternalVarsPage(Page):
@@ -30,7 +31,7 @@ enamldef ExternalVarsPage(Page):
         # TODO Add a validator
         Field:
             tool_tip = 'List of external variables used in the sequence (a, b)'
-            text << ', '.join(sequence.external_vars.keys())
+            text << ', '.join(sequence.external_vars)
             text ::
                 keys = [k.strip() for k in text.split(',')]
                 sequence.external_vars = dict.fromkeys(keys, '')
@@ -40,6 +41,9 @@ enamldef PulseEditor(BaseEditor):
     """Editor allowing to edit a pulse sequence.
 
     """
+    #: Reference to the application workbench.
+    attr workbench
+
     title = 'Pulse editor'
     tree_visible = False
     react_to_unselection => (workbench):
@@ -59,4 +63,5 @@ enamldef PulseEditor(BaseEditor):
                     RootSequenceView:
                         core = workbench.get_plugin('enaml.workbench.core')
                         item << selected_task.sequence
-                        additional_pages << [ExternalVarsPage(sequence=item)]
+                        additional_pages << [
+                            ExternalVarsPage(sequence=selected_task.sequence)]

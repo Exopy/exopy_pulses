@@ -12,6 +12,7 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+import enaml
 from enaml.workbench.api import PluginManifest, Extension
 from ecpy.measure.editors.api import Editor
 
@@ -30,12 +31,12 @@ enamldef PulsesMeasureManifest(PluginManifest):
             description = 'Editor allowing to edit a pulse sequence.'
             new => (workbench, default=False):
                 with enaml.imports():
-                    from .editors.pulse_editor import PulseEditor
+                    from .editors.pulses_editor import PulseEditor
                 return PulseEditor(declaration=self,
-                                      workbench=workbench,
-                                      name=self.id)
+                                   workbench=workbench,
+                                   name=self.id)
 
             is_meant_for => (workbench, selected_task):
-                from ..tasks.tasks.transfer_sequence_task\
-                    import TransferSequenceTask
-                return isinstance(selected_task, TransferSequenceTask)
+                from ..tasks.tasks.instrs.transfer_sequence_task\
+                    import TransferPulseSequenceTask
+                return isinstance(selected_task, TransferPulseSequenceTask)

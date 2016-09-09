@@ -162,7 +162,7 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
 
         """
         if not task.sequence or not task.sequence.context:
-            return profiles
+            return drivers
 
         cmd = 'ecpy.pulses.get_context_infos'
         c_id = task.sequence.context.context_id

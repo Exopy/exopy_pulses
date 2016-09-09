@@ -166,7 +166,7 @@ class TransferPulseSequenceTask(InstrumentTask):
 
         """
         entries = self.database_entries.copy()
-        if change['oldvalue']:
+        if change.get('oldvalue'):
             for k in change['oldvalue'].list_sequence_infos():
                 del entries[k]
         if change['value']:

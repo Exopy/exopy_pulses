@@ -12,7 +12,6 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
 from ecpy_pulses.pulses.utils.normalizers import (normalize_sequence_name,
                                                   normalize_context_name,
                                                   normalize_shape_name)

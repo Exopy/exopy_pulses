@@ -25,10 +25,6 @@ with enaml.imports():
     from ecpy.tasks.manifest import TasksManagerManifest
     from ecpy.tasks.tasks.base_views import RootTaskView
 
-# TODO : remove once this not needed anymore on Py2
-# (do not know why but withouteverything crashes)
-from ecpy_pulses.pulses.utils.normalizers import *
-
 from ecpy_pulses.pulses.pulse import Pulse
 from ecpy_pulses.pulses.utils.sequences_io import save_sequence_prefs
 from ecpy_pulses.pulses.sequences.base_sequences\
@@ -311,12 +307,15 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     assert task_view.widgets()[4].tool_tip
 
     old_seq = task_view.task.sequence
+    task_view.task.sequence_vars = {'a': '1*23', 'c': '1'}
     # Load
     task_view.widgets()[2].clicked = True
     process_and_sleep()
     assert task_view.task.sequence is not old_seq
+    assert task_view.task.sequence_vars == {'a': '1*23'}
 
     old_seq = task_view.task.sequence
+    task_view.task.sequence_vars = {}
     # Refresh
     with handle_question('no'):
         task_view.widgets()[4].clicked = True
@@ -324,6 +323,7 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     with handle_question('yes'):
         task_view.widgets()[4].clicked = True
     assert task_view.task.sequence is not old_seq
+    assert task_view.task.sequence_vars == {'a': ''}
 
     old_timestamp = task_view.task.sequence_timestamp
     # Save
@@ -413,6 +413,11 @@ def test_profile_filtering(task_view):
 
     assert task_view.filter_profiles({'p1': p1, 'p2': p2}) == ['p1']
 
+    del task_view.task.sequence.context
+
+    assert (sorted(task_view.filter_profiles({'p1': p1, 'p2': p2})) ==
+            ['p1', 'p2'])
+
 
 def test_drivers_filtering(task_view):
     """Test filtering the valid drivers based on context specifications.
@@ -427,3 +432,8 @@ def test_drivers_filtering(task_view):
 
     drivers = task_view.filter_drivers([DInfos(id='__dummy__'), d])
     assert drivers == [d]
+
+    del task_view.task.sequence.context
+
+    assert len(task_view.filter_drivers([DInfos(id='__dummy__'), d])) == 2
+

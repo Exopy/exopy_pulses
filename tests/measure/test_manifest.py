@@ -14,6 +14,9 @@ from __future__ import (division, unicode_literals, print_function,
 
 import enaml
 
+from ecpy_pulses.tasks.tasks.instrs.transfer_sequence_task\
+    import TransferPulseSequenceTask
+
 with enaml.imports():
     from ecpy_pulses.measure.manifest import PulsesMeasureManifest
 
@@ -27,5 +30,15 @@ def test_manifest(measure_workbench):
     measure_workbench.register(PulsesMeasureManifest())
     pl = measure_workbench.get_plugin('ecpy.measure')
 
-    # XXX complete with editor id
-    assert '' in pl.editors
+    assert 'ecpy_pulses.pulse_sequence' in pl.editors
+
+    decls = pl.get_declarations('editor', ['ecpy_pulses.pulse_sequence'])
+    decl = decls['ecpy_pulses.pulse_sequence']
+
+    # Check the is_meant_for function
+    assert decl.is_meant_for(measure_workbench, TransferPulseSequenceTask())
+    assert not decl.is_meant_for(measure_workbench, object())
+
+    # Test editor creation
+    ed = decl.new(measure_workbench)
+    assert ed
