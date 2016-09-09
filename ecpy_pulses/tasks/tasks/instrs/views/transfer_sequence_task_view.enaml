@@ -17,6 +17,7 @@ import logging
 from traceback import format_exc
 from textwrap import fill
 
+from enaml.styling import StyleSheet, Style, Setter
 from enaml.layout.api import factory, hbox, vbox, spacer
 from enaml.core.api import Conditional, Include
 from enaml.widgets.api import (GroupBox, Label, Field, ObjectCombo, CheckBox,
@@ -32,6 +33,17 @@ from ecpy_pulses.pulses.utils.entry_eval import EVALUATER_TOOLTIP
 from ecpy_pulses.pulses.utils.sequences_io import save_sequence_prefs
 from ecpy_pulses.pulses.sequences.views.base_sequences_views\
      import instantiate_context_view
+
+
+enamldef RedButton(StyleSheet):
+    """Style sheet allowing to use a large font for the save confirmation popup
+
+    """
+    Style:
+        style_class = 'red-button'
+        Setter:
+            field = 'background'
+            value = 'red'
 
 
 enamldef VarEditor(Container):
@@ -129,7 +141,7 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
 
         if task.sequence:
             if os.path.getmtime(task.sequence_path) != task.sequence_timestamp:
-                seq_re.background = 'red'
+                seq_re.style_class = 'red-button'
                 seq_re.tool_tip = fill('The sequence appears to have been '
                                        'edited since it has been reload. '
                                        'Consider refreshing the sequence.')
@@ -182,6 +194,7 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
         clicked ::
             dir_path = os.path.dirname(task.sequence_path)
             load_sequence(view.root.core, task, parent=view, path=dir_path)
+            seq_re.style_class = ''
 
     Field: seq_name:
         visible << bool(task.sequence_path)
@@ -198,23 +211,44 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
             if btn and btn.action == 'accept':
                 load_sequence(view.root.core, task, path=task.sequence_path)
                 self.tool_tip = 'Reload the sequence from file.'
+                self.style_class = ''
 
     PushButton: seq_sav:
         enabled << bool(task.sequence_path)
         text = 'Save'
-        clicked ::
-            btn = question(self, title='Confirm save',
+        Menu:
+            Action:
+                text = 'Save'
+                triggered ::
+                    btn = question(seq_sav, title='Confirm save',
                            text='If you save any local modification will '
                                 'override the original sequence.\n'
                                 'Confirm save ?')
-            if btn and btn.action == 'accept':
-                seq = task.sequence
-                prefs = seq.preferences_from_members()
-                prefs['external_vars'] = repr(dict.fromkeys(seq.external_vars,
-                                                            '')
-                                              )
-                save_sequence_prefs(task.sequence_path, prefs)
-                task.sequence_timestamp = os.path.getmtime(task.sequence_path)
+                    if btn and btn.action == 'accept':
+                        seq = task.sequence
+                        prefs = seq.preferences_from_members()
+                        ext_vars = dict.fromkeys(seq.external_vars, '')
+                        prefs['external_vars'] = repr(ext_vars)
+                        save_sequence_prefs(task.sequence_path, prefs)
+                        tstmp = os.path.getmtime(task.sequence_path)
+                        task.sequence_timestamp = tstmp
+            Action:
+                text = 'Save as'
+                triggered ::
+                    explore = FileDialogEx.get_save_file_name
+                    path = explore(seq_sav, path=task.sequence_path,
+                                   name_filters=['*.pulse.ini'])
+                    if path:
+                        if not path.endswith('.pulse.ini'):
+                            path += '.pulse.ini'
+                        seq = task.sequence
+                        prefs = seq.preferences_from_members()
+                        ext_vars = dict.fromkeys(seq.external_vars, '')
+                        prefs['external_vars'] = repr(ext_vars)
+                        save_sequence_prefs(path, prefs)
+                        tstmp = os.path.getmtime(path)
+                        task.sequence_timestamp = tstmp
+                        task.sequence_path = path
 
     Conditional: cnd:
         condition << bool(task.sequence)

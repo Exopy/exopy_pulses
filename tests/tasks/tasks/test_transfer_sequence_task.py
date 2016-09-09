@@ -304,7 +304,7 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
 
     show_widget(task_view)
     # Check detection of outdated sequence
-    assert task_view.widgets()[4].tool_tip
+    assert task_view.widgets()[4].style_class
 
     old_seq = task_view.task.sequence
     task_view.task.sequence_vars = {'a': '1*23', 'c': '1'}
@@ -313,6 +313,7 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     process_and_sleep()
     assert task_view.task.sequence is not old_seq
     assert task_view.task.sequence_vars == {'a': '1*23'}
+    assert not task_view.widgets()[4].style_class
 
     old_seq = task_view.task.sequence
     task_view.task.sequence_vars = {}
@@ -327,12 +328,40 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
 
     old_timestamp = task_view.task.sequence_timestamp
     # Save
+    btn = task_view.widgets()[5]
+    actions = btn.menu().items()
     with handle_question('no'):
-        task_view.widgets()[5].clicked = True
+        btn.clicked = True
+        actions[0].triggered = True
     assert task_view.task.sequence_timestamp == old_timestamp
     with handle_question('yes'):
-        task_view.widgets()[5].clicked = True
+        btn.clicked = True
+        actions[0].triggered = True
     assert task_view.task.sequence_timestamp != old_timestamp
+
+    @classmethod
+    def get_save_filename1(cls, parent, path, name_filters):
+        return ''
+
+    new_path = task_view.task.sequence_path.rstrip('.pulse.ini')
+    new_path += '2'
+
+    @classmethod
+    def get_save_filename2(cls, parent, path, name_filters):
+        return new_path
+
+    old_timestamp = task_view.task.sequence_timestamp
+    # Save as
+    monkeypatch.setattr(FileDialogEx, 'get_save_file_name', get_save_filename1)
+    btn.clicked = True
+    actions[1].triggered = True
+    assert task_view.task.sequence_timestamp == old_timestamp
+
+    monkeypatch.setattr(FileDialogEx, 'get_save_file_name', get_save_filename2)
+    btn.clicked = True
+    actions[1].triggered = True
+    assert task_view.task.sequence_timestamp != old_timestamp
+    assert task_view.task.sequence_path == new_path + '.pulse.ini'
 
 
 def test_handling_error_in_loading(task_view, windows, monkeypatch):
