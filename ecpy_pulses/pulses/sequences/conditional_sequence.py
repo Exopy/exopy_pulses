@@ -28,8 +28,8 @@ class ConditionalSequence(BaseSequence):
     #: be executed
     condition = Unicode().tag(pref=True)
 
-    #: Vars that can be referenced in condition. Those are provided by other
-    #: items in the sequence.
+    #: Name of the variable which can be referenced in other items.
+    #: Those should not contain the index of the item.
     linkable_vars = set_default(['condition'])
 
     def evaluate_sequence(self, root_vars, sequence_locals, missings, errors):
@@ -74,6 +74,7 @@ class ConditionalSequence(BaseSequence):
         self._condition = cond
         local = '{}_'.format(self.index) + 'condition'
         sequence_locals[local] = cond
+        root_vars[local] = cond
 
         if cond:
             return super(ConditionalSequence,

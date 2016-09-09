@@ -52,12 +52,6 @@ class AbstractSequence(Item):
     #: pair represents the name and definition of the variable.
     local_vars = Dict(Unicode()).tag(pref=True)
 
-    #: Evaluated entries by the eval_entries method
-    evaluated_entries_cache = Dict(Unicode())
-
-    #: Cache is valid?
-    cache_valid = Bool(False)
-
     def cleanup_cache(self):
         """ Clear all internal caches.
 

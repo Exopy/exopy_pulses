@@ -6,7 +6,8 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""View for the conditional sequence.
+
 """
 from enaml.layout.api import hbox, align, spacer, vbox
 from enaml.widgets.api import (Container, Label, ScrollArea, Action, Notebook,
@@ -18,13 +19,11 @@ from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
                                             FieldFieldCompleterEditor)
 
-from .abstract_sequence_view import AbstractSequenceView
-from .base_sequences_views import LocalVariablesEditorPage
-from .sequence_editor_view import (SequenceEditor, FoldableSequenceEditor)
+from .base_sequences_views import BaseSequenceView
 from ...utils.entry_eval import EVALUATER_TOOLTIP
 
 
-enamldef ConditionalSequenceView(AbstractSequenceView): view:
+enamldef ConditionalSequenceView(BaseSequenceView): view:
     """ View for Sequence.
 
     """
@@ -34,56 +33,9 @@ enamldef ConditionalSequenceView(AbstractSequenceView): view:
                    if t_def.condition else\
                    [vbox(hbox(t_bool, cond_lab, cond_val), nb)]
 
-    CheckBox: t_bool:
-        text = 'Time'
-        checked := item.time_constrained
-        tool_tip = 'Whether to define the start and stop of the sequence.'
-
     Label: cond_lab:
         text = 'Condition'
     QtLineCompleter: cond_val:
         text := item.condition
-
-    Conditional: t_def:
-        condition << item.time_constrained
-        Container:
-            padding = 0
-            constraints = [hbox(vbox(def_lab, def_val), defs)]
-            Label: def_lab:
-                text = 'Mode'
-            ObjectCombo: def_val:
-                items << list(item.get_member('def_mode').items)
-                selected := item.def_mode
-
-        Splitter: defs:
-            SplitItem:
-                Container:
-                    padding = 0
-                    Label:
-                        text << item.def_mode.split('/')[0]
-                    QtLineCompleter:
-                        hug_width = 'ignore'
-                        text := item.def_1
-                        entries_updater << item.parent.get_accessible_vars
-                        tool_tip = EVALUATER_TOOLTIP
-            SplitItem:
-                Container:
-                    padding = 0
-                    Label:
-                        text << item.def_mode.split('/')[1]
-                    QtLineCompleter:
-                        hug_width = 'ignore'
-                        text := item.def_2
-                        entries_updater << item.parent.get_accessible_vars
-                        tool_tip = EVALUATER_TOOLTIP
-
-    Notebook: nb:
-        tabs_closable = False
-        Page:
-            title = 'Sequence'
-            FoldableSequenceEditor: editor:
-                sequence << view.item
-                root << view.root
-
-        LocalVariablesEditorPage:
-            sequence = view.item
+        entries_updater = item.get_accessible_vars
+        tool_tip = EVALUATER_TOOLTIP
