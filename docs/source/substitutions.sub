@@ -7,11 +7,48 @@
 .. Ecpy pulses substitutions
 .. ============================================================================
 
+.. |EVALUATER_TOOLTIP| replace:: :py:const:`~ecpy_pulses.pulses.utils.entry_eval.EVALUATER_TOOLTIP`
+
+.. |SequenceFilter| replace:: :py:class:`~ecpy_pulses.pulses.filters.SequenceFilter`
+
+.. Sequence configs
+.. ----------------------------------------------------------------------------
+
+.. |AbstractConfig| replace:: :py:class:`~ecpy_pulses.pulses.configs.base_config.AbstractConfig`
+
+.. |AbstractConfigView| replace:: :py:class:`~ecpy_pulses.pulses.configs.base_config_views.AbstractConfigView`
+
+.. |SequenceConfigs| replace:: :py:class:`~ecpy_pulses.pulses.declarations.SequenceConfigs`
+
+.. |SequenceConfig| replace:: :py:class:`~ecpy_pulses.pulses.declarations.SequenceConfig`
+
+.. Shapes
+.. ----------------------------------------------------------------------------
+
+.. |AbstractShape| replace:: :py:class:`~ecpy_pulses.pulses.shapes.base_shape.AbstractShape`
+
+.. |AbstractShapeView| replace:: :py:class:`~ecpy_pulses.pulses.shapes.views.base_shape_view.AbstractShapeView`
+
+.. |Shapes| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Shapes`
+
+.. |Shape| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Shape`
 
 .. Sequences
 .. ----------------------------------------------------------------------------
 
+.. |AbstractSequence| replace:: :py:class:`~ecpy_pules.pulses.sequences.base_sequences.AbstractSequence`
+
+.. |BaseSequence| replace:: :py:class:`~ecpy_pules.pulses.sequences.base_sequences.BaseSequence`
+
+.. |AbstractSequenceView| replace:: :py:class:`~ecpy_pules.pulses.sequences.views.abstract_sequence_view.AbstractSequenceView`
+
+.. |BaseSequenceView| replace:: :py:class:`~ecpy_pules.pulses.sequences.views.base_sequences_views.BaseSequence`
+
 .. |ConditionalSequence| replace:: :py:class:`~ecpy_pules.pulses.sequences.conditional_sequence.ConditionalSequence`
+
+.. |Sequences| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Sequences`
+
+.. |Sequence| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Sequence`
 
 .. ============================================================================
 .. Enaml substitutions
@@ -161,8 +198,6 @@
 .. |resources| replace:: :py:attr:`~ecpy.tasks.tasks.base_tasks.RootTask.resources`
 
 .. |ResourceHolder| replace:: :py:class:`~ecpy.tasks.tasks.shared_resources.ResourceHolder`
-
-.. |EVALUATER_TOOLTIP| replace:: :py:const:`~ecpy.tasks.tasks.string_evaluation.EVALUATER_TOOLTIP`
 
 .. |Feval| replace:: :py:class:`~ecpy.tasks.tasks.validators.Feval`
 

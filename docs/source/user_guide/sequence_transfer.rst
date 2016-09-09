@@ -25,6 +25,10 @@ of the pulse sequence. If the loaded version is outdated the refresh button will
 be red. In the same way, during enqueuing a warning will be emitted if the sequence
 is oudated.
 
+After a successful transfer the task write into the database the informations concerning
+the sequence returned by the context (this can be the name under which it is stored on
+the instrument for example).
+
 Sequence re-edition
 -------------------
 
