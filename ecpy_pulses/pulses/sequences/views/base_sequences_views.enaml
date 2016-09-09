@@ -220,7 +220,10 @@ enamldef RootSequenceView(AbstractSequenceView): view:
                                                        'parent_ui': self})
                 Include:
                     objects << ([instantiate_context_view(core, item.context)]
-                                if getattr(item, 'context') else [])
+                                if getattr(item, 'context') else []):
+
+        LocalVariablesEditorPage:
+            sequence = item
 
         Include: include:
             pass
