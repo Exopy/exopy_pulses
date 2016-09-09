@@ -32,6 +32,7 @@ with enaml.imports():
     from ecpy.app.errors.manifest import ErrorsManifest
     from ecpy.app.errors.plugin import ErrorsPlugin
     from ecpy_pulses.pulses.manifest import PulsesManagerManifest
+    from ecpy.measure.manifest import MeasureManifest
 
 
 pytests_plugin = str('ecpy.testing.fixtures'),
@@ -58,6 +59,7 @@ def pulses_workbench(monkeypatch, app_dir):
     workbench.register(ErrorsManifest())
     workbench.register(StateManifest())
     workbench.register(DependenciesManifest())
+    workbench.register(MeasureManifest())
     workbench.register(PulsesManagerManifest())
 
     yield workbench
