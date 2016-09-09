@@ -378,7 +378,7 @@ def test_register_shape_decl_cls2(collector, shape_decl):
 
     """
     tb = {}
-    shape_decl.shape = 'ecpy_pulses.pulses.shapes.base_shapes:Task'
+    shape_decl.shape = 'ecpy_pulses.pulses.shapes.base_shape:Task'
     shape_decl.register(collector, tb)
     assert 'ecpy_pulses.Task' in tb and 'attribute' in tb['ecpy_pulses.Task']
 

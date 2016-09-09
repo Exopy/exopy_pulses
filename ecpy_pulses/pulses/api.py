@@ -18,7 +18,7 @@ from .declarations import (Sequence, Sequences, Shape, Shapes,
 from .sequences.base_sequences import BaseSequence, RootSequence
 from .pulse import Pulse
 from .item import Item
-from .shapes.base_shapes import AbstractShape
+from .shapes.base_shape import AbstractShape
 from .contexts.base_context import BaseContext
 
 __all__ = ['Sequence', 'Sequences', 'Shape', 'Shapes', 'Context', 'Contexts',

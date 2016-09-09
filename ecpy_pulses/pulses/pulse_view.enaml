@@ -23,7 +23,7 @@ from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ecpy.utils.transformers import ids_to_unique_names
 from .utils.normalizers import normalize_shape_name
 from .utils.entry_eval import EVALUATER_TOOLTIP
-from .shapes.views.base_shapes_views import ModulationView
+from .shapes.views.modulation_view import ModulationView
 
 
 def default_add_displays(core, item):

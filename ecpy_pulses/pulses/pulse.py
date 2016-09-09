@@ -16,7 +16,7 @@ import numpy as np
 from atom.api import (Unicode, Enum, Typed, Property, set_default)
 from ecpy.utils.atom_util import (update_members_from_preferences)
 
-from .shapes.base_shapes import AbstractShape
+from .shapes.base_shape import AbstractShape
 from .shapes.modulation import Modulation
 from .item import Item
 

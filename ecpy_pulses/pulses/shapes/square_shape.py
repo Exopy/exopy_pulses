@@ -19,7 +19,7 @@ from atom.api import (Unicode, FloatRange)
 
 from ..utils.entry_eval import eval_entry
 
-from .base_shapes import AbstractShape
+from .base_shape import AbstractShape
 
 
 class SquareShape(AbstractShape):
