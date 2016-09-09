@@ -1,0 +1,29 @@
+package:
+  name: ecpy_pulses
+  version: {{ environ.get('GIT_DESCRIBE_TAG', '') }}
+
+source:
+  git_url: https://github.com/Ecpy/ecpy_pulses.git
+  git_tag: master
+
+build:
+  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 1) }}
+  preserve_egg_dir: True
+
+requirements:
+  build:
+    - python
+    - future
+  run:
+    - ecpy
+    - numpy
+
+test:
+  imports:
+    - ecpy_pulses
+
+about:
+  home: https://github.com/Ecpy/ecpy_pulses
+  license: BSD
+  license_file: LICENSE
+  summary: Pulse sequences generation for Ecpy

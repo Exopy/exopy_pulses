@@ -1,23 +1,82 @@
-sudo: false
+# References https://gist.github.com/dan-blanchard/7045057
+# and https://docs.travis-ci.com/user/trusty-ci-environment/
 
-language: python
-python:
-    - 2.7
+sudo: false
+dist: trusty
+
+branches:
+  only:
+    - master
+    
+#env:
+#  global:
+#    secure: "Eb+b739qXoItwfaDVcEn92AdFPVYWGb0mM0SAgTKxG7tHW1fo+9U1g8VD8llQ5sS3WRLwh1P2xl3unvZff4XqOx+ZdgHhwD4EOyxZ7S5C1x3DKSippeUzoGiQsbekidTIvrmaQu2CsB3MjKVKi/5p+p9tNjcnEuQpggECkMLPqDvt+lm0LzH25hYPsnAwK6KXf0FC6X1Y7OxaoW7saicX9Lbvab6/k0PCUPD+vT6cL1/qe/oKgjfETILmf43GU8/dZLn/4FDT0MXK2ROGHg3cMhchs/5DQCs2Rp2bK1J5zJ8zM5XI9SjrNPDXQDO1IJUyfGYmN8o2OSmMnkM/BqG78KsBzfa+4Qg7wxO36ZokuyEOhM1VN5gosEHpPa9Sm8utqRUjLkaRhXjE3rtBGS1InpLYzZVCguCaDy9eNByjVtgvVr1u5HW1ZF9G6Ba7sCGCotaYGd1w5pvkFpv/R4SoFLxMDCeQNemT/0JyBdXQsQZ3kcSXPIZd8slcmZ7EDSO+e4nZYPvB1ev5BFjsFoAhA7h3T7chVxqMrtpiGV238HopNk13Fkp9/Tt+TghFivuXv6x5rJQKKJLd5ArhaQKwHNsa/c0CUNCIftzDJ3RPWkGroGF3N8UctGmhylFalVQahqRzxcNTfjpO6RWn+/vU2FChG2uW2oUslAkMhxpsfI="
+
+
+matrix:
+  include:
+    - env: PYTHON=2.7 CONDA_PY=27
+    - env: PYTHON=3.4 CONDA_PY=34
+    - env: PYTHON=3.5 CONDA_PY=35
 
 before_install:
+
+  # Install Miniconda
+  - travis_retry wget -q https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b -p ~/anaconda
+  - export PATH=~/anaconda/bin:$PATH
+
   - SRC_DIR=$(pwd)
-  - REDIRECT_TO=/dev/null # change to /dev/stdout to unsilence travis
+
+  # Setup environment
+  - travis_retry conda update --yes conda
+  - conda install conda-build anaconda-client --yes -q
+  - conda config --add channels ecpy
+  - conda create -n travisci --yes python=$PYTHON pip
+  - source activate travisci
+  - CONDA_INSTALL="conda install --yes -q"
+  - PIP_INSTALL="pip install -q"
+
+  # Setup conda build output directory
+  - mkdir conda-bld-out
+  - cd conda-bld-out
+  - export CONDA_BLD_PATH=$(pwd)
+  - cd ..
+
+  # Install ecpy dependencies
+  - $CONDA_INSTALL pyqt numpy ecpy
+
+  # Intall test tools
+  - $CONDA_INSTALL pytest
+  - $PIP_INSTALL pytest-cov pytest-capturelog pytest-timeout
+  - $PIP_INSTALL https://github.com/MatthieuDartiailh/enaml_coverage_plugin/tarball/master
+  
+  # Install codecov report tools
+  - $PIP_INSTALL codecov
 
 install:
-  - pip install -q future
-  - pip install -q pytest pytest-cov pytest-capturelog pytest-xdist
-  - pip install -q python-coveralls
+
+  # Install ecpy_hqc_legacy
+  - cd ${SRC_DIR}
+  - conda build conda -q  # Package building does run only very minimal tests
+  - conda install ecpy_pulses --use-local --yes -q --override-channels
+  - cd ~
+
+before_script:
+# I need a (fake) display on Travis so I need to start a X server.
+- export DISPLAY=:99.0
+- /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render
 
 script:
-# Need miniconda for qt4
+  # Run the ecpy-hqc-legacy test suite
   - cd ${SRC_DIR}
-  - python setup.py install > ${REDIRECT_TO}
-  - py.test tests -m "not no_travis" -v --cov pyclibrary --cov-report term-missing
-
+  - py.test tests --cov ecpy_pulses --cov-report xml
+  
 after_success:
-  - coveralls;
+  - cd ${SRC_DIR}
+  - export PACK="$(conda build conda --output)"
+  - conda convert $PACK -p 'all' --quiet -o $CONDA_BLD_PATH 
+  - cd $CONDA_BLD_PATH
+  - source deactivate
+  - if [[ $TRAVIS_SECURE_ENV_VARS ]]; then python ../continuous-integration/anaconda-push.py; fi
