@@ -6,8 +6,8 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Provides methods to evaluate a text containing mathematical formulas and
-database entries used to define a pulse.
+"""Base class and functions to evaluate fields relying on values found in other
+objects of the sequence.
 
 """
 from __future__ import (division, unicode_literals, print_function,
@@ -15,6 +15,11 @@ from __future__ import (division, unicode_literals, print_function,
 
 from inspect import cleandoc
 from textwrap import fill
+from traceback import format_exc
+
+from atom.api import Dict
+from ecpy.utils.atom_util import tagged_members, HasPrefAtom
+
 
 EVALUATER_TOOLTIP = '\n'.join([
     fill(cleandoc("""In this field you can enter a text and
@@ -29,7 +34,15 @@ EVALUATER_TOOLTIP = '\n'.join([
     "- pi is available as Pi"])
 
 
-def eval_entry(string, seq_locals, missing_locals):
+class MissingLocalVars(Exception):
+    """Raised if some variables are found missing from the locals.
+
+    """
+    def __init__(self, missings):
+        self.missings = missings
+
+
+def eval_entry(string, seq_locals):
     """Evaluate a formula found in pulse sequence using the provided variables
 
     """
@@ -38,10 +51,9 @@ def eval_entry(string, seq_locals, missing_locals):
         elements = [el for aux in aux_strings
                     for el in aux.split('}')]
 
-        missing = [el for el in elements[1::2] if el not in seq_locals]
-        if missing:
-            missing_locals.update(set(missing))
-            return None
+        missings = [el for el in elements[1::2] if el not in seq_locals]
+        if missings:
+            raise MissingLocalVars(missings)
 
         replacement_token = ['_a{}'.format(i)
                              for i in range(len(elements[1::2]))]
@@ -59,32 +71,116 @@ def eval_entry(string, seq_locals, missing_locals):
     return eval(expr, globals(), replacement_values)
 
 
-# def exec_entry(string, seq_locals, missing_locals):
-#     """
+class HasEvaluableFields(HasPrefAtom):
+    """Object handling the formatting or evaluation of formulas based on tags.
 
-#     """
-#     aux_strings = string.split('{')
-#     if len(aux_strings) > 1:
-#         elements = [el for aux in aux_strings
-#                     for el in aux.split('}')]
+    Members should be tagged as fmt for formatting and feval for evaluation.
+    In the first case the value can be False or True depending on whether the
+    result should be stored as a global variables. In the second case, the
+    value should be a Feval instance.
 
-#         missing = [el for el in elements[1::2] if el not in seq_locals]
-#         if missing:
-#             missing_locals.update(set(missing))
-#             return None
+    Notes
+    -----
+    Feval should be imported from ecpy_pulses.pulses.api not
+    from ecpy.tasks.api
 
-#         replacement_token = ['_a{}'.format(i)
-#                              for i in xrange(len(elements[1::2]))]
-#         replacement_values = {'_a{}'.format(i): seq_locals[key]
-#                               for i, key in enumerate(elements[1::2])}
 
-#         str_to_eval = ''.join(key + '{}' for key in elements[::2])
-#         str_to_eval = str_to_eval[:-2]
+    """
 
-#         expr = str_to_eval.format(*replacement_token)
-#     else:
-#         replacement_values = {}
-#         expr = string
+    def eval_entries(self, global_vars, local_vars, missings, errors):
+        """Evaluate and format all tagged members.
 
-#     exec_(expr, locs=replacement_values)
-#     return locals()
+        The result of the evaluation is written to the _cache dictionary.
+
+        Parameters
+        ----------
+        global_vars : dict
+            Dictionary of global variables. This will be update will the valid
+            values whose tag specify they should be stored as global.
+
+        local_vars : dict
+            Dictionary of variables used for evaluation. This will be update
+            will the valid values whose tag specify they should be stored as
+            global.
+
+        missings : set
+            Set of unfound local variables.
+
+        errors : dict
+            Dict of the errors which happened when performing the evaluation.
+
+        Returns
+        -------
+        flag : bool
+            Boolean indicating whether or not the evaluation succeeded.
+
+        """
+        for member, store in tagged_members(self, 'fmt'):
+            fmt_str = getattr(self, member)
+            try:
+                fmt = fmt_str.format(**local_vars)
+                self._cache[member] = fmt
+                if store:
+                    id_ = self.format_global_vars_id(member)
+                    global_vars[id_] = fmt
+                    local_vars[id_] = fmt
+            except KeyError:
+                aux_strings = fmt_str.split('{')
+                if '{' not in fmt_str:
+                    errors[self.format_error_id(member)] = format_exc()
+                else:
+                    elements = [el for aux in aux_strings
+                                for el in aux.split('}')]
+                    absent = [el for el in elements[1::2]
+                              if el not in local_vars]
+                    if absent:
+                        missings.update(absent)
+                    else:
+                        errors[self.format_error_id(member)] = format_exc()
+            except Exception:
+                errors[self.format_error_id(member)] = format_exc()
+
+        for member, feval in tagged_members(self, 'feval'):
+            try:
+                val, store = feval.evaluate(self, member, local_vars)
+                res, msg = feval.validate(self, val)
+                if not res:
+                    errors[self.format_error_id(member)] = msg
+                else:
+                    self._cache[member] = val
+                    if store:
+                        id_ = self.format_global_vars_id(member)
+                        global_vars[id_] = val
+                        local_vars[id_] = val
+            except MissingLocalVars as e:
+                missings.update(e.missings)
+            except Exception:
+                errors[self.format_error_id(member)] = format_exc()
+
+    def clean_cached_values(self):
+        """Clean all the cached values.
+
+        """
+        self._cached.clear()
+
+    def format_global_vars_id(self, member):
+        """Format the id under which to store a value in the global and local
+        variables used for evaluation.
+
+        """
+        raise NotImplementedError()
+
+    def format_error_id(self, member):
+        """Format the name under which to log that an error occured when
+        formatting/evaluating a formula.
+
+        """
+        raise NotImplementedError()
+
+    # =========================================================================
+    # --- Private API ---------------------------------------------------------
+    # =========================================================================
+
+    #: Dictionary in which the values computed by the eval_entries method are
+    #: stored.
+    _cache = Dict()
