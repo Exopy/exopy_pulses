@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015 by Ecpy Authors, see AUTHORS for more details.
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -12,12 +12,12 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-from traceback import format_exc
+from numbers import Real
 
 import numpy as np
-from atom.api import (Unicode, FloatRange)
+from atom.api import Unicode
 
-from ..utils.entry_eval import eval_entry
+from ..utils.validators import Feval
 
 from .base_shape import AbstractShape
 
@@ -26,14 +26,18 @@ class SquareShape(AbstractShape):
     """ Basic square pulse with a variable amplitude.
 
     """
+    #: Amplitude of the pulse this should be a number between -1.0 and 1.0
+    amplitude = Unicode('1.0').tag(pref=True, feval=Feval(types=Real))
 
-    amplitude = Unicode('1.0').tag(pref=True)
-
-    def eval_entries(self, sequence_locals, missing, errors, index):
+    def eval_entries(self, root_vars, sequence_locals, missing, errors):
         """ Evaluate the amplitude of the pulse.
 
         Parameters
         ----------
+        root_vars : dict
+            Global variables. As shapes and modulation cannot update them an
+            empty dict is passed.
+
         sequence_locals : dict
             Known locals variables for the pulse sequence.
 
@@ -43,32 +47,21 @@ class SquareShape(AbstractShape):
         errors : dict
             Errors which occurred when trying to compile the pulse sequence.
 
-        index : int
-            Index of the pulse to which this shape object belongs.
-
         Returns
         -------
         result : bool
             Flag indicating whether or not the evaluation succeeded.
 
         """
-        prefix = '{}_'.format(index) + 'shape_'
+        res = super(SquareShape, self).eval_entries(root_vars, sequence_locals,
+                                                    missing, errors)
 
-        # Computing amplitude
-        amp = None
-        try:
-            amp = eval_entry(self.amplitude, sequence_locals, missing)
-        except Exception:
-            errors[prefix + 'amplitude'] = format_exc()
+        if res:
+            if not (-1.0 <= self._cache['amplitude'] <= 1.0):
+                msg = 'Shape amplitude must be between -1 and 1.'
+                errors[self.format_error_id('amplitude')] = msg
 
-        if amp is not None:
-            self._amplitude = amp
-            return True
-
-        else:
-            msg = 'Failed to format amplitude : {}'.format(self.amplitude)
-            errors[prefix + 'amplitude'] = msg
-            return False
+        return res
 
     def compute(self, time, unit):
         """ Computes the shape of the pulse at a given time.
@@ -87,8 +80,4 @@ class SquareShape(AbstractShape):
             Amplitude of the pulse.
 
         """
-        return self._amplitude * np.ones(len(time))
-
-    # --- Private API ---------------------------------------------------------
-
-    _amplitude = FloatRange(-1.0, 1.0, 1.0)
+        return self._cached['amplitude'] * np.ones(len(time))
