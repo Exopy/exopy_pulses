@@ -71,12 +71,14 @@ class Pulse(Item):
                                                   missings, errors)
 
         if self.kind == 'Analogical':
-            success &= self.modulation.eval_entries(sequence_locals,
-                                                    missings, errors,
-                                                    self.index)
+            # Shapes are not allowed to modify global vars hence the empty
+            # dict
+            self
+            success &= self.modulation.eval_entries({}, sequence_locals,
+                                                    missings, errors)
 
-            success &= self.shape.eval_entries(sequence_locals,
-                                               missings, errors, self.index)
+            success &= self.shape.eval_entries({}, sequence_locals,
+                                               missings, errors)
 
         return success
 
@@ -143,6 +145,15 @@ class Pulse(Item):
 
             if self.shape:
                 yield self.shape
+
+    def clean_cached_values(self):
+        """Also clean modualtion and shape if necessary.
+
+        """
+        super(Pulse, self).clean_cached_values()
+        if self.kind == 'Analogical':
+            self.modulation.clean_cached_values()
+            self.shape.clean_cached_values()
 
     # --- Private API ---------------------------------------------------------
 
