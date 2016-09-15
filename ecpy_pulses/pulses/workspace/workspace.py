@@ -254,7 +254,6 @@ class SequenceEditionSpace(Workspace):
                 try:
                     seq = self._load_sequence_from_file(load_path)
                 except Exception:
-                    print(format_exc())
                     core = self.workbench.get_plugin('enaml.workbench.core')
                     cmd = 'ecpy.app.errors.signal'
                     msg = 'Failed to rebuild sequence {} :\n\n{}'
@@ -263,7 +262,6 @@ class SequenceEditionSpace(Workspace):
                                              message=msg.format(load_path,
                                                                 format_exc())))
                 else:
-                    print('rr')
                     self.state.sequence = seq
                     self.state.sequence_type = 'Standard'
                     self.state.sequence_path = load_path
