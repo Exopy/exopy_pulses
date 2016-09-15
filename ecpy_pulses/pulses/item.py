@@ -12,12 +12,13 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+from numbers import Real
 
 from atom.api import (Int, Unicode, List, Bool, Float, Enum, ForwardTyped,
-                      Constant, Dict, Value)
-from ecpy.utils.atom_util import HasPrefAtom
+                      Constant, Value)
 
-from .utils.entry_eval import eval_entry
+from .utils.entry_eval import HasEvaluableFields
+from .utils.validators import Feval
 
 
 def sequence():
@@ -28,7 +29,7 @@ def sequence():
 DEP_TYPE = 'ecpy.pulses.items'
 
 
-class Item(HasPrefAtom):
+class Item(HasEvaluableFields):
     """ Base component of a pulse Sequence
 
     """
@@ -68,12 +69,12 @@ class Item(HasPrefAtom):
     #: String representing the item first element of definition : according
     #: to the selected mode it evaluated value will either be used for the
     #: start instant, or duration of the item.
-    def_1 = Unicode().tag(pref=True)
+    def_1 = Unicode().tag(pref=True, feval=Feval(types=Real))
 
     #: String representing the item second element of definition : according
     #: to the selected mode it evaluated value will either be used for the
     #: duration, or stop instant of the item.
-    def_2 = Unicode().tag(pref=True)
+    def_2 = Unicode().tag(pref=True, feval=Feval(types=Real))
 
     #: Actual start instant of the item with respect to the beginning of the
     #: root sequence. The unit of this time depends of the setting of the
@@ -88,9 +89,6 @@ class Item(HasPrefAtom):
     #: root sequence. The unit of this time depends of the setting of the
     #: context.
     stop = Float()
-
-    #: Evaluated entries by the eval_entries method
-    eval_entries = Dict()
 
     def eval_entries(self, root_vars, sequence_locals, missings, errors):
         """ Attempt to eval the  def_1 and def_2 parameters of the item.
@@ -117,11 +115,8 @@ class Item(HasPrefAtom):
             Boolean indicating whether or not the evaluation succeeded.
 
         """
-        # Flag indicating good completion.
-
-        #: TODO Should only do this at the right and needed times
-
-        success = True
+        res = super(Item, self).eval_entries(root_vars, sequence_locals,
+                                             missings, errors)
 
         # Reference to the sequence context.
         context = self.root.context
@@ -131,60 +126,59 @@ class Item(HasPrefAtom):
         par2 = self.def_mode.split('/')[1].lower()
         prefix = '{}_'.format(self.index)
 
-        # Evaluation of the first parameter.
-        d1 = None
-        try:
-            d1 = eval_entry(self.def_1, sequence_locals, missings)
-            d1 = context.check_time(d1)
-        except Exception as e:
-            errors[prefix + par1] = repr(e)
+        # Validation of the first parameter.
+        if 'def_1' in self._cache:
+            d1 = self._cache('def_1')
+            try:
+                d1 = context.check_time(d1)
+            except Exception as e:
+                errors[prefix + par1] = repr(e)
 
-        # Check the value makes sense as a start time or duration.
-        if d1 is not None and d1 >= 0 and (par1 == 'start' or d1 != 0):
-            setattr(self, par1, d1)
-            root_vars[prefix + par1] = d1
-            sequence_locals[prefix + par1] = d1
-        elif d1 is None:
-            success = False
-        else:
-            success = False
-            if par1 == 'start':
-                m = 'Got a strictly negative value for start: {}'.format(d1)
-
+            # Check the value makes sense as a start time or duration.
+            if d1 is not None and d1 >= 0 and (par1 == 'start' or d1 != 0):
+                setattr(self, par1, d1)
+                root_vars[prefix + par1] = d1
+                sequence_locals[prefix + par1] = d1
+            elif d1 is None:
+                res = False
             else:
-                m = 'Got a negative value for duration: {}'.format(d1)
+                res = False
+                if par1 == 'start':
+                    m = 'Got a strictly negative value for start: {}'
+                else:
+                    m = 'Got a negative value for duration: {}'
 
-            errors[prefix + par1] = m
+                errors[prefix + par1] = m.format(d1)
 
-        # Evaluation of the second parameter.
-        d2 = None
-        try:
-            d2 = eval_entry(self.def_2, sequence_locals, missings)
-            d2 = context.check_time(d2)
-        except Exception as e:
-            errors[prefix + par2] = repr(e)
+        # Validation of the second parameter.
+        if 'def_2' in self._cache:
+            d2 = self._cache('def_2')
+            try:
+                d2 = context.check_time(d2)
+            except Exception as e:
+                errors[prefix + par2] = repr(e)
 
-        # Check the value makes sense as a duration or stop time.
-        if d2 is not None and d2 > 0 and (par2 == 'duration' or d1 is None or
-                                          d2 > d1):
-            setattr(self, par2, d2)
-            root_vars[prefix + par2] = d2
-            sequence_locals[prefix + par2] = d2
-        elif d2 is None:
-            success = False
-        else:
-            success = False
-            if par2 == 'stop' and d2 <= 0.0:
-                m = 'Got a negative or null value for stop: {}'.format(d2)
-            elif par2 == 'stop':
-                m = 'Got a stop smaller than start: {} < {}'.format(d1, d2)
-            elif d2 <= 0.0:
-                m = 'Got a negative value for duration: {}'.format(d2)
+            # Check the value makes sense as a duration or stop time.
+            if (d2 is not None and d2 > 0 and
+                    (par2 == 'duration' or d1 is None or d2 > d1)):
+                setattr(self, par2, d2)
+                root_vars[prefix + par2] = d2
+                sequence_locals[prefix + par2] = d2
+            elif d2 is None:
+                res = False
+            else:
+                res = False
+                if par2 == 'stop' and d2 <= 0.0:
+                    m = 'Got a negative or null value for stop: {}'.format(d2)
+                elif par2 == 'stop':
+                    m = 'Got a stop smaller than start: {} < {}'.format(d1, d2)
+                elif d2 <= 0.0:
+                    m = 'Got a negative value for duration: {}'.format(d2)
 
-            errors[prefix + par2] = m
+                errors[prefix + par2] = m
 
         # Computation of the third parameter.
-        if success:
+        if res:
             if self.def_mode == 'Start/Duration':
                 self.stop = d1 + d2
                 root_vars[prefix + 'stop'] = self.stop
@@ -198,7 +192,7 @@ class Item(HasPrefAtom):
                 root_vars[prefix + 'start'] = self.start
                 sequence_locals[prefix + 'start'] = self.start
 
-        return success
+        return res
 
     def traverse(self, depth=-1):
         """Yield an item and all of its components.
@@ -214,6 +208,26 @@ class Item(HasPrefAtom):
 
         """
         yield self
+
+    def format_global_vars_id(self, member):
+        """Format the id under which a value is added in the global vars.
+
+        def_1 and def_2 are not added so no special case here.
+
+        """
+        return '{}_{}'.format(self.index, member)
+
+    def format_error_id(self, member):
+        """Create the error id for a member.
+
+        Special case def1 and 2 to provide a clearer error id.
+
+        """
+        if member in ('def_1', 'def_2'):
+            ind = 0 if member == 'def_1' else 1
+            member = self.def_mode.split('/')[ind].lower
+
+        return '{}_{}'.format(self.index, member)
 
     # --- Private API ---------------------------------------------------------
 
