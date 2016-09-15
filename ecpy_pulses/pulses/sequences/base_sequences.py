@@ -668,7 +668,9 @@ class RootSequence(BaseSequence):
             except Exception:
                 errors['root_seq_duration'] = format_exc()
 
-        res = self._evaluate_items(root_vars, root_vars, missings, errors)
+        res = self.context.eval_entries(root_vars, root_vars, missings, errors)
+
+        res &= self._evaluate_items(root_vars, root_vars, missings, errors)
 
         if not res:
             return False, missings, errors
