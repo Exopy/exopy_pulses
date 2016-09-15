@@ -66,6 +66,10 @@ class AbstractShape(HasEvaluableFields):
         msg = 'Shapes cannot store values as global (from pulse {})'
         raise RuntimeError(msg.format(self.index))
 
+    # =========================================================================
+    # --- Private API ---------------------------------------------------------
+    # =========================================================================
+
     def _default_shape_id(self):
         """Compute the shape id.
 

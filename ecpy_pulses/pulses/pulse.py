@@ -155,7 +155,9 @@ class Pulse(Item):
             self.modulation.clean_cached_values()
             self.shape.clean_cached_values()
 
+    # =========================================================================
     # --- Private API ---------------------------------------------------------
+    # =========================================================================
 
     def _get_waveform(self):
         """ Getter for the waveform property.

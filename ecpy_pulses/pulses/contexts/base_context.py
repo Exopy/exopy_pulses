@@ -15,7 +15,7 @@ from __future__ import (division, unicode_literals, print_function,
 from atom.api import (Enum, Unicode, Bool, Float, Property, Tuple, List,
                       Constant)
 
-from ecpy.utils.atom_util import HasPrefAtom
+from ..utils.entry_eval import HasEvaluableFields
 
 DEP_TYPE = 'ecpy.pulses.contexts'
 
@@ -27,7 +27,7 @@ TIME_CONVERSION = {'s': {'s': 1, 'ms': 1e3, 'mus': 1e6, 'ns': 1e9},
                    'ns': {'s': 1e-9, 'ms': 1e-6, 'mus': 1e-3, 'ns': 1}}
 
 
-class BaseContext(HasPrefAtom):
+class BaseContext(HasEvaluableFields):
     """Base class describing a Context
 
     Dependind on the targetted waveform generator the context should offer the
@@ -71,6 +71,9 @@ class BaseContext(HasPrefAtom):
 
     def compile_and_transfer_sequence(self, items, driver=None):
         """Compile the pulse sequence and send it to the instruments.
+
+        By the time this method is called the entries should be evaluated
+        and values are stored in the _cached dict.
 
         Parameters
         ----------
@@ -154,6 +157,23 @@ class BaseContext(HasPrefAtom):
             if abs(time - rectified_time) > self.tolerance:
                 raise ValueError('Time does not fit the instrument resolution')
             return time
+
+    def format_error_id(self, member):
+        """Format the error id for the given member.
+
+        """
+        return 'context_{}'.format(member)
+
+    def format_global_vars_id(self, member):
+        """Shapes are not allowed to store in the global namespace so raise.
+
+        """
+        msg = 'Context cannot store values as global.'
+        raise RuntimeError(msg)
+
+    # =========================================================================
+    # --- Private API ---------------------------------------------------------
+    # =========================================================================
 
     def _default_context_id(self):
         """ Default value the context class member.
