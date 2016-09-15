@@ -178,7 +178,7 @@ class Item(HasEvaluableFields):
                 errors[prefix + par2] = m
 
         # Computation of the third parameter.
-        if res:
+        if 'def_1' in self._cache and 'def_2' in self._cache and res:
             if self.def_mode == 'Start/Duration':
                 self.stop = d1 + d2
                 root_vars[prefix + 'stop'] = self.stop
