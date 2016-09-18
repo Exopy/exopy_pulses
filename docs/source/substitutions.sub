@@ -11,6 +11,10 @@
 
 .. |SequenceFilter| replace:: :py:class:`~ecpy_pulses.pulses.filters.SequenceFilter`
 
+.. |HasEvaluableFields| replace:: :py:class:`~ecpy_pulses.pulses.utils.entry_eval.HasEvaluableFields`
+
+.. |Feval| replace:: :py:class:`~ecpy_pulses.pulses.utils.validators.Feval`
+
 .. Sequence configs
 .. ----------------------------------------------------------------------------
 

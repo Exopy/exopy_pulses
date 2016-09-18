@@ -9,10 +9,43 @@ Synthesis of pulse sequences in Ecpy is centered around the notion of sequence
 and pulse. Those two elements are used describe the sequence to synthetyse,
 while the actual synthesis is actually carried out by the context.
 
-The following sections will present how to contribute new shapes for
-analogical pulses and new sequences.
+The following sections will present how to contribute new shapes for analogical
+pulses, new sequences and new configuration objects for sequences. The case of
+context will be treated in detail in another setion.
 
 .. contents::
+
+Object with evaluable fields
+----------------------------
+
+Sequence, pulses, shapes and contexts can all have formula fileds that can
+be either formatted or formatted and evaluated. In those fields, variables
+such as the start, stop, and duration of any pulse can be referenced in between
+curly brackets.
+
+The handling of the evaluation is automated by their common base class |HasEvaluableFields|.
+All members tagged with either 'fmt' or 'feval' will be automatically formatted/formatted and
+evaluated when the eval_entries method is called. In case of success, the result will be
+stored in the *_cache* dictionary of the object. For formatted values, the value of the
+'fmt' metadata should be either **True** or **False** depending on whether the
+formatted value should be stored in the global variables avalaible to other object
+when evaluating their entries or not. For feval values, the value of the 'feval'
+metadata should be a |Feval| instance (which is reminiscent of the system used
+for tasks). |Feval| can be subclassed to customize when to perform the evaluation
+and how to check the resulting value. By default, a tuple of types can be
+specified. For values which should be stored as globals, the **store_global**
+member should be set to **True**.
+
+.. note::
+
+    Shapes and contexts cannot store values in the global namespace.
+
+.. note::
+
+    Even if the name is identical to the objects used for tasks, the
+    Feval object sused in both cases are different. For pulses related
+    object, it should be imported from *ecpy_pulses.pulses.api*.
+
 
 Creating a new shape
 -------------------
@@ -39,7 +72,10 @@ be passed as a tuple/list.
 
 .. code-block:: python
 
+    from numbers import Real
+
     from atom.api import Unicode, Int
+    from ecpy_pulses.pulses.api import Feval
 
     class MyShape(AbstractShape):
         """MyShape description.
@@ -50,23 +86,15 @@ be passed as a tuple/list.
         #: my_int description
         my_int = Int(1).tag(pref=True)  # Integer with a default value of 1
 
-        #: my_text description
-        my_text = Unicode().tag(pref=True)
-# XXX go_on (eval_entries and compute)
+        #: my_formula description
+        my_formula = Unicode().tag(pref=True, feval=Feval(types=Real))
 
-You will also need to implement two methods :
-
-- **eval_entries** : this method should evaluate all the formulas to check
-  their validity. The results can be cached for further evaluation.
-  It takes as input the dict of the locals variables a set of values reported
-  as missing, a dict storing the errors that may have occured when trying to
-  evaluate a formula and the index of the pulse the shape is linked to. It
-  should never raise but report the errors using the provide dictionary.
-  It should return indicating whether or not the evaluation was successful.
+You will also need to implement one method :
 
 - **compute** : this method should evaluate and return the shape of the pulse at the
   provided times (taking into account the unit in which the time is expressed).
-  It should return an array.
+  It should return an array. As mentioned before values computed by **eval_entries**
+  can be found in the **_cache** dictionary.
 
 Creating the view
 ^^^^^^^^^^^^^^^^^
@@ -183,7 +211,10 @@ sequence wish to share a computed value with the other items, it should set the
 
 .. code-block:: python
 
+    from numbers import Real
+
     from atom.api import Unicode, Int
+    from ecpy_pulses.pulses.api import Feval
 
     class MySequence(BaseSequence):
         """MySequence description.
@@ -195,17 +226,11 @@ sequence wish to share a computed value with the other items, it should set the
         my_int = Int(1).tag(pref=True)  # Integer with a default value of 1
 
         #: my_text description
-        my_text = Unicode().tag(pref=True)
+        my_val = Unicode().tag(pref=True, feval=Feval(store_global=True))
 
-        linkable_vars = set_default(['val'])
+        linkable_vars = set_default(['my_val'])
 
-Sequences should at least implement the following two methods :
-
-- **evaluate_sequence** : this method should evaluate all the parameters and
-  ask to their children to do the same (handled by the |BaseSequence| method).
-  the newly computed values declared as linkable should be added to the root_vars
-  and sequence_locals dictionary. The missings and errors argument have the same
-  goal as in a shape **eval_entries**. The return value has the same meaning.
+Sequences should at least implement the following method :
 
 - **simplify_sequence**: this method should a return a list of items that the
   context declares it can handle as declared in its **supported_sequences**
