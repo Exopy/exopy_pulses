@@ -50,6 +50,15 @@ def test_check_time(context):
     assert context.check_time(0.101) == 0.101
 
 
+def test_getting_error_and_gloabl_vars_ids(context):
+    """Test getting the id used for variables.
+
+    """
+    assert context.format_error_id('value') == 'context_value'
+    with pytest.raises(RuntimeError):
+        context.format_global_vars_id('value')
+
+
 def test_context_id(context):
     """Test getting the context id.
 

@@ -145,10 +145,12 @@ class BaseContext(HasEvaluableFields):
         sampling frequency.
 
         """
+        print('Rectifying :', time)
         if time is None or time < 0:
             return time
 
         rectified_time = self.sampling_time*round(time/self.sampling_time)
+        print('Rectified :', rectified_time)
 
         if self.rectify_time:
             return rectified_time

@@ -60,6 +60,7 @@ class SquareShape(AbstractShape):
             if not (-1.0 <= self._cache['amplitude'] <= 1.0):
                 msg = 'Shape amplitude must be between -1 and 1.'
                 errors[self.format_error_id('amplitude')] = msg
+                res = False
 
         return res
 
@@ -80,4 +81,4 @@ class SquareShape(AbstractShape):
             Amplitude of the pulse.
 
         """
-        return self._cached['amplitude'] * np.ones(len(time))
+        return self._cache['amplitude'] * np.ones(len(time))

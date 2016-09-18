@@ -115,7 +115,12 @@ class HasEvaluableFields(HasPrefAtom):
             Boolean indicating whether or not the evaluation succeeded.
 
         """
-        for member, store in tagged_members(self, 'fmt'):
+        res = True
+        cache = self._cache
+
+        for member, store in tagged_members(self, 'fmt').items():
+            if member in cache:
+                continue
             fmt_str = getattr(self, member)
             try:
                 fmt = fmt_str.format(**local_vars)
@@ -124,27 +129,31 @@ class HasEvaluableFields(HasPrefAtom):
                     id_ = self.format_global_vars_id(member)
                     global_vars[id_] = fmt
                     local_vars[id_] = fmt
+            # This can only occur if a {} field was found and an entry is
+            # missing
             except KeyError:
+                res = False
                 aux_strings = fmt_str.split('{')
-                if '{' not in fmt_str:
-                    errors[self.format_error_id(member)] = format_exc()
-                else:
-                    elements = [el for aux in aux_strings
-                                for el in aux.split('}')]
-                    absent = [el for el in elements[1::2]
-                              if el not in local_vars]
-                    if absent:
-                        missings.update(absent)
-                    else:
-                        errors[self.format_error_id(member)] = format_exc()
+                elements = [el for aux in aux_strings
+                            for el in aux.split('}')]
+                absent = [el for el in elements[1::2]
+                          if el not in local_vars]
+                missings.update(absent)
             except Exception:
+                res = False
                 errors[self.format_error_id(member)] = format_exc()
 
-        for member, feval in tagged_members(self, 'feval'):
+        for member, m in tagged_members(self, 'feval').items():
+            feval = m.metadata['feval']
+            if member in cache:
+                continue
+            if not feval.should_test(self, member):
+                continue
             try:
                 val, store = feval.evaluate(self, member, local_vars)
-                res, msg = feval.validate(self, val)
-                if not res:
+                valid, msg = feval.validate(self, val)
+                if not valid:
+                    res = False
                     errors[self.format_error_id(member)] = msg
                 else:
                     self._cache[member] = val
@@ -153,15 +162,19 @@ class HasEvaluableFields(HasPrefAtom):
                         global_vars[id_] = val
                         local_vars[id_] = val
             except MissingLocalVars as e:
+                res = False
                 missings.update(e.missings)
             except Exception:
+                res = False
                 errors[self.format_error_id(member)] = format_exc()
+
+        return res
 
     def clean_cached_values(self):
         """Clean all the cached values.
 
         """
-        self._cached.clear()
+        self._cache.clear()
 
     def format_global_vars_id(self, member):
         """Format the id under which to store a value in the global and local

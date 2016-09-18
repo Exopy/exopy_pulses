@@ -23,7 +23,7 @@ from ecpy.utils.container_change import ContainerChange
 from ecpy.utils.atom_util import (update_members_from_preferences)
 
 from ..contexts.base_context import BaseContext
-from ..utils.entry_eval import eval_entry
+from ..utils.entry_eval import eval_entry, MissingLocalVars
 from ..utils.validators import SkipEmpty
 from ..item import Item
 from ..pulse import Pulse
@@ -64,17 +64,16 @@ class AbstractSequence(Item):
     #: duration, or stop instant of the item.
     def_2 = Unicode().tag(pref=True, feval=SkipEmpty(types=Real))
 
-    def cleanup_cache(self):
+    def clean_cached_values(self):
         """ Clear all internal caches.
 
         This should be called before evaluating a sequence.
 
         """
-        self.clean_cached_values()
+        super(AbstractSequence, self).clean_cached_values()
         self._evaluated = []
         for i in self.items:
-            if isinstance(i, AbstractSequence):
-                i.cleanup_cache()
+            i.clean_cached_values()
 
     def evaluate_sequence(self, root_vars, sequence_locals, missing, errors):
         """Evaluate the sequence vars and all the underlying items.
@@ -317,15 +316,17 @@ class BaseSequence(AbstractSequence):
 
         # Local vars computation.
         for name, formula in self.local_vars.items():
-            if name not in self._cached:
+            if name not in self._cache:
                 try:
-                    val = eval_entry(formula, sequence_locals, missings)
-                    self._cahed[name] = val
+                    val = eval_entry(formula, sequence_locals)
+                    self._cache[name] = val
+                except MissingLocalVars as e:
+                    missings.update(e.missings)
                 except Exception:
                     errors[prefix + name] = format_exc()
 
         local_namespace = sequence_locals.copy()
-        local_namespace.update(self._cached)
+        local_namespace.update(self._cache)
 
         res = self._evaluate_items(root_vars, local_namespace, missings,
                                    errors)
@@ -642,7 +643,7 @@ class RootSequence(BaseSequence):
 
         """
         # First make sure the cache is clean
-        self.cleanup_cache()
+        self.clean_cached_values()
 
         missings = set()
         errors = {}
@@ -650,21 +651,24 @@ class RootSequence(BaseSequence):
 
         # Local vars computation.
         for name, formula in self.local_vars.items():
-            if name not in self._cached:
+            if name not in self._cache:
                 try:
-                    val = eval_entry(formula, root_vars, missings)
-                    self._cached[name] = val
+                    val = eval_entry(formula, root_vars)
+                    self._cache[name] = val
+                except MissingLocalVars as e:
+                    missings.update(e.missings)
                 except Exception:
                     errors['root_' + name] = format_exc()
 
-        root_vars.update(self._cached)
+        root_vars.update(self._cache)
 
         if self.time_constrained:
             try:
-                duration = eval_entry(self.sequence_duration, root_vars,
-                                      missings)
+                duration = eval_entry(self.sequence_duration, root_vars)
                 self.stop = self.duration = duration
                 root_vars['sequence_end'] = duration
+            except MissingLocalVars as e:
+                    missings.update(e.missings)
             except Exception:
                 errors['root_seq_duration'] = format_exc()
 

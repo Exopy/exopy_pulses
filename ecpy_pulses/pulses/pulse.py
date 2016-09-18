@@ -73,7 +73,6 @@ class Pulse(Item):
         if self.kind == 'Analogical':
             # Shapes are not allowed to modify global vars hence the empty
             # dict
-            self
             success &= self.modulation.eval_entries({}, sequence_locals,
                                                     missings, errors)
 

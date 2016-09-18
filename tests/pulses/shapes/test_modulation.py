@@ -14,6 +14,7 @@ The view is tested as part of the pulse view.
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+import pytest
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
@@ -29,7 +30,7 @@ def test_eval_modulation1():
     missing = set()
     errors = {}
 
-    assert modulation.eval_entries(root_vars, missing, errors, 0)
+    assert modulation.eval_entries({}, root_vars, missing, errors)
     assert missing == set()
     assert errors == {}
     assert_array_equal(modulation.compute(np.zeros(1), 'mus'), 1.0)
@@ -47,7 +48,7 @@ def test_eval_modulation2():
     missing = set()
     errors = {}
 
-    assert modulation.eval_entries(root_vars, missing, errors, 0)
+    assert modulation.eval_entries({}, root_vars, missing, errors)
     assert missing == set()
     assert errors == {}
     assert_array_equal(modulation.compute(np.array([0, 0.25]), 'mus'),
@@ -68,7 +69,7 @@ def test_eval_modulation2bis():
     missing = set()
     errors = {}
 
-    assert modulation.eval_entries(root_vars, missing, errors, 0)
+    assert modulation.eval_entries({}, root_vars, missing, errors)
     assert missing == set()
     assert errors == {}
     assert_array_almost_equal(modulation.compute(np.array([0, 0.25]), 'mus'),
@@ -89,9 +90,8 @@ def test_eval_modulation3():
     missing = set()
     errors = {}
 
-    assert not modulation.eval_entries(root_vars, missing, errors, 0)
+    assert not modulation.eval_entries({}, root_vars, missing, errors)
     assert missing == set('a')
-    assert '0_mod_frequency' in errors
 
 
 def test_eval_modulation4():
@@ -108,9 +108,8 @@ def test_eval_modulation4():
     missing = set()
     errors = {}
 
-    assert not modulation.eval_entries(root_vars, missing, errors, 0)
+    assert not modulation.eval_entries({}, root_vars, missing, errors)
     assert missing == set('a')
-    assert '0_mod_phase' in errors
 
 
 def test_eval_modulation5():
@@ -127,9 +126,9 @@ def test_eval_modulation5():
     missing = set()
     errors = {}
 
-    assert not modulation.eval_entries(root_vars, missing, errors, 0)
+    assert not modulation.eval_entries({}, root_vars, missing, errors)
     assert missing == set()
-    assert '0_mod_frequency' in errors
+    assert '0_modulation_frequency' in errors
 
 
 def test_eval_modulation6():
@@ -146,6 +145,15 @@ def test_eval_modulation6():
     missing = set()
     errors = {}
 
-    assert not modulation.eval_entries(root_vars, missing, errors, 0)
+    assert not modulation.eval_entries({}, root_vars, missing, errors)
     assert missing == set()
-    assert '0_mod_phase' in errors
+    assert '0_modulation_phase' in errors
+
+
+def test_global_id():
+    """Test that formatting a global id does raise.
+
+    """
+    shape = Modulation()
+    with pytest.raises(RuntimeError):
+        shape.format_global_vars_id('r')

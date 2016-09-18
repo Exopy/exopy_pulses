@@ -52,15 +52,12 @@ class Feval(Atom):
 
         """
         str_value = getattr(obj, member)
-        if not self.should_test(obj, str_value):
-            return None, False
-
         val = eval_entry(str_value, loc_vars)
 
         return val, self.store_global
 
-    def should_test(self, obj, str_value):
-        """Should the value actually be tested given its value and the object.
+    def should_test(self, obj, member):
+        """Should the value stored in the member actually be tested.
 
         """
         return True
@@ -81,8 +78,8 @@ class SkipEmpty(Feval):
     """Specialized validator skipping empty fields.
 
     """
-    def should_test(self, obj, str_value):
+    def should_test(self, obj, member):
         """Only test if a formula is provided.
 
         """
-        return bool(str_value)
+        return bool(getattr(obj, member))

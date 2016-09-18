@@ -116,20 +116,20 @@ class Modulation(HasEvaluableFields):
             return 1
 
         unit_corr = 2 * Pi * FREQ_TIME_UNIT_MAP[unit][self.frequency_unit]
-        phase = self._cached['phase']
+        phase = self._cache['phase']
         if self.phase_unit == 'deg':
             phase *= Pi / 180
 
         if self.kind == 'sin':
-            return np.sin(unit_corr * self._cached['frequency'] * time + phase)
+            return np.sin(unit_corr * self._cache['frequency'] * time + phase)
         else:
-            return np.cos(unit_corr * self._cached['frequency'] * time + phase)
+            return np.cos(unit_corr * self._cache['frequency'] * time + phase)
 
     def format_error_id(self, member):
         """Assemble the id used to report an evaluation error.
 
         """
-        return '{}_modualtion_{}'.format(self.index, member)
+        return '{}_modulation_{}'.format(self.index, member)
 
     def format_global_vars_id(self, member):
         """Modulation is not allowed to store in the global namespace so raise.

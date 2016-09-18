@@ -24,7 +24,7 @@ class ConditionalSequence(BaseSequence):
     """
     #: Condition to be evaluated. If this evaluates to true then sub-items will
     #: be executed
-    condition = Unicode().tag(pref=True, feval=Feval(store=True))
+    condition = Unicode().tag(pref=True, feval=Feval(store_global=True))
 
     #: Name of the variable which can be referenced in other items.
     #: Those should not contain the index of the item.
@@ -78,7 +78,7 @@ class ConditionalSequence(BaseSequence):
         """Inline the sequences not supported by the context.
 
         """
-        if self._cached['condition']:
+        if self._cache['condition']:
             return super(ConditionalSequence, self).simplify_sequence()
         else:
             return []

@@ -20,7 +20,7 @@ from .pulse import Pulse
 from .item import Item
 from .shapes.base_shape import AbstractShape
 from .contexts.base_context import BaseContext
-from .utils.entry_eval import Feval
+from .utils.validators import Feval
 
 __all__ = ['Sequence', 'Sequences', 'Shape', 'Shapes', 'Context', 'Contexts',
            'SequenceConfig', 'SequenceConfigs', 'BaseSequence', 'RootSequence',

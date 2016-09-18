@@ -127,55 +127,55 @@ class Item(HasEvaluableFields):
         prefix = '{}_'.format(self.index)
 
         # Validation of the first parameter.
+        d1 = self._cache.get('def_1')
         if 'def_1' in self._cache:
-            d1 = self._cache('def_1')
             try:
                 d1 = context.check_time(d1)
             except Exception as e:
+                res = False
                 errors[prefix + par1] = repr(e)
-
-            # Check the value makes sense as a start time or duration.
-            if d1 is not None and d1 >= 0 and (par1 == 'start' or d1 != 0):
-                setattr(self, par1, d1)
-                root_vars[prefix + par1] = d1
-                sequence_locals[prefix + par1] = d1
-            elif d1 is None:
-                res = False
             else:
-                res = False
-                if par1 == 'start':
-                    m = 'Got a strictly negative value for start: {}'
+                # Check the value makes sense as a start time or duration.
+                if d1 >= 0 and (par1 == 'start' or d1 != 0):
+                    setattr(self, par1, d1)
+                    root_vars[prefix + par1] = d1
+                    sequence_locals[prefix + par1] = d1
                 else:
-                    m = 'Got a negative value for duration: {}'
+                    res = False
+                    if par1 == 'start':
+                        m = 'Got a strictly negative value for start: {}'
+                    else:
+                        m = 'Got a negative value for duration: {}'
 
-                errors[prefix + par1] = m.format(d1)
+                    errors[prefix + par1] = m.format(d1)
 
         # Validation of the second parameter.
         if 'def_2' in self._cache:
-            d2 = self._cache('def_2')
+            d2 = self._cache['def_2']
             try:
                 d2 = context.check_time(d2)
             except Exception as e:
+                res = False
                 errors[prefix + par2] = repr(e)
-
-            # Check the value makes sense as a duration or stop time.
-            if (d2 is not None and d2 > 0 and
-                    (par2 == 'duration' or d1 is None or d2 > d1)):
-                setattr(self, par2, d2)
-                root_vars[prefix + par2] = d2
-                sequence_locals[prefix + par2] = d2
-            elif d2 is None:
-                res = False
             else:
-                res = False
-                if par2 == 'stop' and d2 <= 0.0:
-                    m = 'Got a negative or null value for stop: {}'.format(d2)
-                elif par2 == 'stop':
-                    m = 'Got a stop smaller than start: {} < {}'.format(d1, d2)
-                elif d2 <= 0.0:
-                    m = 'Got a negative value for duration: {}'.format(d2)
+                # Check the value makes sense as a duration or stop time.
+                if (d2 > 0 and (par2 == 'duration' or d1 is None or d2 > d1)):
+                    setattr(self, par2, d2)
+                    root_vars[prefix + par2] = d2
+                    sequence_locals[prefix + par2] = d2
+                else:
+                    res = False
+                    if par2 == 'stop' and d2 <= 0.0:
+                        msg = 'Got a negative or null value for stop: {}'
+                        args = (d2,)
+                    elif par2 == 'stop':
+                        msg = 'Got a stop smaller than start: {} < {}'
+                        args = (d1, d2)
+                    elif d2 <= 0.0:
+                        msg = 'Got a negative value for duration: {}'
+                        args = (d2,)
 
-                errors[prefix + par2] = m
+                    errors[prefix + par2] = msg.format(*args)
 
         # Computation of the third parameter.
         if 'def_1' in self._cache and 'def_2' in self._cache and res:
@@ -225,7 +225,7 @@ class Item(HasEvaluableFields):
         """
         if member in ('def_1', 'def_2'):
             ind = 0 if member == 'def_1' else 1
-            member = self.def_mode.split('/')[ind].lower
+            member = self.def_mode.split('/')[ind].lower()
 
         return '{}_{}'.format(self.index, member)
 
