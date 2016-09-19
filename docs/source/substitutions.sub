@@ -54,6 +54,17 @@
 
 .. |Sequence| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Sequence`
 
+.. Contexts
+.. ----------------------------------------------------------------------------
+
+.. |BaseContext| replace:: :py:class:`~ecpy_pulses.pulses.contexts.base_context.BaseContext`
+
+.. |BaseContextView| replace: :py:class:`~ecpy_pulses.pulses.contexts.views.base_context_view.BaseContextView`
+
+.. |Contexts| replace: :py:class:`~ecpy_pulses.pulses.declarations.Contexts`
+
+.. |Context| replace: :py:class:`~ecpy_pulses.pulses.declarations.Context`
+
 .. ============================================================================
 .. Enaml substitutions
 .. ============================================================================

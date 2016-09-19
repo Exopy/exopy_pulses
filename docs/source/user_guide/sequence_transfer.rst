@@ -16,6 +16,12 @@ The transfer task (|TranfserPulseSequenceTask|) allow to load a sequence from a 
 and to specify the value of the external variables as functions of the task database
 values. It also allows to parametrize the context.
 
+.. note::
+
+    The context only has access to the sequence variables not to the task tree
+    variables. An easy workaround is to define an external variables matching
+    the task variable.
+
 The chosen instrument must match the selected context. If it is not so, a dialog
 will notify you that you should choose a new driver.
 

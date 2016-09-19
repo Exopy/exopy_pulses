@@ -22,7 +22,7 @@ enamldef BaseContextView(Container): view:
     #: Reference to the context obect being edited through this view.
     attr context
 
-    #: Refrence to the view of the root of the sequence.
+    #: Reference to the view of the root of the sequence.
     attr root
 
     hug_height = 'strong'

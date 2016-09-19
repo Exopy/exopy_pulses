@@ -132,7 +132,7 @@ the relevant section in the Ecpy documentation.
 At this point your shape is ready to be registered in Ecpy, however writing a
 bunch of unit tests for your shape making sure it works as expected and will go
 on doing so is good idea. Give a look at :doc:`testing` for more details about
-writing tests and checking that your tests do cover all th possible cases.
+writing tests and checking that your tests do cover all the possible cases.
 
 
 Registering your shape
@@ -144,8 +144,8 @@ an extension to 'ecpy.pulses.shapes' providing |Shapes| and/or |Shape|
 objects.
 
 Let's say we need to declare a single shape named 'MyShape'. The name of our
-extension package (see :doc:`glossary`) is named 'my_ecpy_plugin'.
-Let's look at the example below:
+extension package (see the glossary section in Ecpy documentation) is named
+ 'my_ecpy_plugin'. Let's look at the example below:
 
 .. code-block:: enaml
 
@@ -271,7 +271,7 @@ Registering your sequence
 Registering a sequence is quite similar to registering a shape.
 
 Let's say we need to declare a sequence named *MySequence*. The name of our
-extension package (see :doc:`glossary`) is 'my_ecpy_plugin'.
+extension package (see the glossary section in Ecpy documentation) is 'my_ecpy_plugin'.
 Let's look at the example below:
 
 .. code-block:: enaml
