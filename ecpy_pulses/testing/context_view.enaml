@@ -6,20 +6,17 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Extension package for the Ecpy application.
+"""View for the TestContext.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-import enaml
+from ..pulses.contexts.views.base_context_view import BaseContextView
 
 
-def list_manifests():
-    """List the manifest that should be regsitered when the main Ecpy app is
-    started.
+enamldef TestContextView(BaseContextView):
+    """View for the base context.
 
     """
-    with enaml.imports():
-        from .manifest import PulsesManagerManifest
-    return [PulsesManagerManifest]
+    pass

@@ -42,3 +42,29 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 docs/build
+
+# Os Specific
+.DS_STORE
+sequence_views.enaml
+
+Pulses_project.sublime-workspace
+
+Pulses_project.sublime-project
+
+new.enaml
+
+.idea/workspace.xml
+
+.idea/vcs.xml
+
+.idea/modules.xml
+
+.idea/misc.xml
+
+.idea/encodings.xml
+
+.idea/ecpy_pulses.iml
+
+.idea/.name
+
+.spyderproject

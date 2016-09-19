@@ -1,0 +1,33 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""Contribution to ecpy.pulses plugin for testing.
+
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+from enaml.workbench.api import PluginManifest, Extension
+
+from ecpy_pulses.pulses.declarations import (Sequences, Sequence,
+                                             SequenceConfigs, SequenceConfig,
+                                             Contexts, Context, Shapes, Shape)
+
+
+enamldef PulsesContributions(PluginManifest):
+    """Plugin contributing some extensions to pulses.
+
+    This is intended for testing the pulses plugin.
+
+    """
+    Extension:
+        id = 'context'
+        point = 'ecpy.pulses.contexts'
+        Context:
+            context = 'ecpy_pulses.testing.context:TestContext'
+            view = 'ecpy_pulses.testing.context_view:TestContextView'

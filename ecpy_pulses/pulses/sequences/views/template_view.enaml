@@ -1,0 +1,85 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+from enaml.core.api import Include
+from enaml.layout.api import hbox, align, spacer, vbox
+from enaml.widgets.api import (Container, Label, Form, Notebook, Page,
+                               CheckBox, ObjectCombo, Splitter, SplitItem)
+from ecpy.utils.widgets.qt_completers import QtLineCompleter
+from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
+                                            FieldFieldCompleterEditor)
+
+from ...utils.entry_eval import EVALUATER_TOOLTIP
+from .abstract_sequence_view import AbstractSequenceView
+from .base_sequences_views import instantiate_context_view
+
+
+enamldef TemplateSequenceView(AbstractSequenceView): view:
+    """ View for Sequence.
+
+    """
+    alias def_lab:_def_lab
+    alias defs:_defs
+    alias nb:_nb
+
+    attr cache
+    attr core
+
+    constraints << [vbox(hbox(vbox(_def_lab, _def_val), _defs), _nb)]
+
+    Label: _def_lab:
+        text = 'Mode'
+    ObjectCombo: _def_val:
+        items << list(item.get_member('def_mode').items)
+        selected := item.def_mode
+
+    Splitter: _defs:
+        SplitItem:
+            Container:
+                padding = 0
+                Label:
+                    text << item.def_mode.split('/')[0]
+                QtLineCompleter:
+                    hug_width = 'ignore'
+                    text := item.def_1
+                    entries_updater << item.parent.get_accessible_vars
+                    tool_tip = EVALUATER_TOOLTIP
+        SplitItem:
+            Container:
+                padding = 0
+                Label:
+                    text << item.def_mode.split('/')[1]
+                QtLineCompleter:
+                    hug_width = 'ignore'
+                    text := item.def_2
+                    entries_updater << item.parent.get_accessible_vars
+                    tool_tip = EVALUATER_TOOLTIP
+
+    Notebook: _nb:
+        tabs_closable = False
+
+        Page:
+            title = 'Template vars'
+            DictEditor(FieldFieldEditor): de:
+                de.mapping = item.template_vars
+                #TODO Restore tooltip copmpleters
+
+            #DictEditor(VarEditor): ed:
+            #    ed.title = 'Name : formula'
+            #    ed.model = item
+            #    ed.iterable_name = 'template_vars'
+
+        Page:
+            title = 'Context'
+            Include:
+                objects << [instantiate_context_view(core, item.context, cache)]

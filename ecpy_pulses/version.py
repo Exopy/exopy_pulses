@@ -11,6 +11,7 @@
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
+
 from collections import namedtuple
 
 # The major release number. Differences in the major number indicate
@@ -28,7 +29,7 @@ MINOR = 1
 MICRO = 0
 
 # The status indicate if this is a development or pre-release version
-STATUS = ''
+STATUS = 'a1'
 
 #: A namedtuple of the version info for the current release.
 version_info = namedtuple('version_info', 'major minor micro status')

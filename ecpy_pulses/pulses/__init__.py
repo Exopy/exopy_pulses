@@ -11,15 +11,3 @@
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
-
-import enaml
-
-
-def list_manifests():
-    """List the manifest that should be regsitered when the main Ecpy app is
-    started.
-
-    """
-    with enaml.imports():
-        from .manifest import PulsesManagerManifest
-    return [PulsesManagerManifest]

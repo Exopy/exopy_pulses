@@ -6,20 +6,25 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Extension package for the Ecpy application.
+"""Load the standard fixtures to test the workspace.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+import pytest
 import enaml
 
+with enaml.imports():
+    from ..contributions import PulsesContributions
 
-def list_manifests():
-    """List the manifest that should be regsitered when the main Ecpy app is
-    started.
+pytest_plugins = str('ecpy_pulses.testing.workspace.fixtures'),
+
+
+@pytest.fixture
+def workspace(pulses_workspace):
+    """Simply register the contributions for testing.
 
     """
-    with enaml.imports():
-        from .manifest import PulsesManagerManifest
-    return [PulsesManagerManifest]
+    pulses_workspace.workbench.register(PulsesContributions())
+    return pulses_workspace

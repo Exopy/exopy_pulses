@@ -1,0 +1,142 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""Dialog used to build a new sequence to insert in a sequznce.
+
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+from inspect import getdoc
+
+from atom.api import (Atom, Instance, Str, observe, ForwardTyped, Bool,
+                      Value)
+from enaml.core.api import Include
+from enaml.layout.api import hbox, spacer, vbox
+from enaml.widgets.api import (PushButton, Container, Dialog,
+                               Label, MultilineField)
+from ecpy.utils.widgets.qt_list_str_widget import QtListStrWidget
+from ecpy.utils.transformers import ids_to_unique_names
+
+from ..normalizers import normalize_context_name
+from .browsing import SequenceSelector
+
+
+enamldef BuilderView(Dialog): dial:
+    """ Simple Dialog to add a sequence to an existing sequence.
+
+    """
+    #: Reference to the sequence manager (aka: the plugin).
+    alias manager : selector.manager
+
+    #: Config object corresponding to the currently selected sequence.
+    attr config
+
+    #: Reference to the root sequence into which the built sequence will be
+    #: inserted.
+    attr root
+
+    #: Reference to the sequence selector.
+    alias selector : selector
+
+    title = 'Select the sequence you want to add'
+
+    func _update():
+        if selector.selected_sequence:
+            config, view = manager.get_config(selector.selected_sequence)
+            if config is None:
+                dial.config = None
+                conf.objects = [Label(text=('No configuration view was'+
+                                            'found for this sequence'))]
+                return
+            config.root = root
+            dial.config = config
+            conf.objects = [view]
+        else:
+            dial.config = None
+            conf.objects = []
+
+
+    initialized :: _update()
+
+    Container:
+        constraints << [hbox(selector,
+                             *tuple(list(conf.objects) + [vbox(ok,
+                                                            cancel,
+                                                            spacer)]))]
+        SequenceSelector: selector:
+            hug_width = 'strong'
+            selected_sequence :: _update()
+
+        Include: conf:
+            pass
+
+        PushButton: ok:
+            text = 'Ok'
+            enabled << config.ready if config else False
+            clicked ::
+                dial.accept()
+
+        PushButton: cancel:
+            text = 'Cancel'
+            clicked ::
+                dial.reject()
+
+
+enamldef ContextBuilderView(Dialog): dial:
+    """ Simple dialog to choose the context to add to a sequence.
+
+    """
+    #: Reference to the sequence manager (aka: the plugin)
+    attr manager
+
+    #: Reference to the currently selected context's class.
+    attr context
+
+    #: List of avaible contexts loaded at creation of this view
+    attr contexts = manager.contexts
+
+    #: Mapping from sanitized names to class names
+    attr _context_map << (ids_to_unique_names(contexts,
+                                              normalize_context_name)
+                          if contexts else {})
+
+
+    func _update():
+        sc = _context_map[selector.selected_item]
+        if sc:
+            context_infos = manager.get_context_infos(sc)
+            if context_infos:
+                dial.context = context_infos.cls
+
+    initialized ::
+        _update()
+
+    title = 'Select the context you want to use.'
+
+    Container:
+        constraints << [hbox(selector, doc, vbox(ok, cancel, spacer))]
+
+        QtListStrWidget: selector:
+            items << sorted(dial._context_map)
+            selected_item ::
+                _update()
+
+        MultilineField: doc:
+            text << getdoc(context) if context else ''
+
+        PushButton: ok:
+            text = 'Ok'
+            enabled << bool(context)
+            clicked ::
+                dial.accept()
+
+        PushButton: cancel:
+            text = 'Cancel'
+            clicked ::
+                dial.reject()

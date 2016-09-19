@@ -6,20 +6,15 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Extension package for the Ecpy application.
+"""Test importing from the api
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-import enaml
 
-
-def list_manifests():
-    """List the manifest that should be regsitered when the main Ecpy app is
-    started.
+def test_ecpy_pulses_api():
+    """Test importing from the api.
 
     """
-    with enaml.imports():
-        from .manifest import PulsesManagerManifest
-    return [PulsesManagerManifest]
+    import ecpy_pulses.pulses.api

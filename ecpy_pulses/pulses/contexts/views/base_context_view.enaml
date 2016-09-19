@@ -6,20 +6,23 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Extension package for the Ecpy application.
+"""Base view for all contexts.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-import enaml
+from enaml.widgets.api import (Label, ObjectCombo, Container)
 
 
-def list_manifests():
-    """List the manifest that should be regsitered when the main Ecpy app is
-    started.
+enamldef BaseContextView(Container): view:
+    """Base class for all Context views.
 
     """
-    with enaml.imports():
-        from .manifest import PulsesManagerManifest
-    return [PulsesManagerManifest]
+    #: Reference to the context obect being edited through this view.
+    attr context
+
+    #: Refrence to the view of the root of the sequence.
+    attr root
+
+    hug_height = 'strong'
