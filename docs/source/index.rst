@@ -1,7 +1,7 @@
 .. Ecpy pulses documentation master file
 
 Welcome to Ecpy pulses' documentation!
-================================
+======================================
 
 Ecpy pulses adds pulse sequences synthesis capabilities
 

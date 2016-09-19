@@ -19,6 +19,6 @@ Submodules
 .. toctree::
 
    entry_eval
+   validators
    normalizers
    sequences_io
-

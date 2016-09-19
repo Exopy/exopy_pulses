@@ -1,5 +1,5 @@
-ecpy_pulses package
-===================
+API docs
+========
 
 .. automodule:: ecpy_pulses
     :members:

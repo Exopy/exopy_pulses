@@ -48,7 +48,7 @@ member should be set to **True**.
 
 
 Creating a new shape
--------------------
+--------------------
 
 Creating a new shape is a three step process :
 
@@ -145,7 +145,7 @@ objects.
 
 Let's say we need to declare a single shape named 'MyShape'. The name of our
 extension package (see the glossary section in Ecpy documentation) is named
- 'my_ecpy_plugin'. Let's look at the example below:
+'my_ecpy_plugin'. Let's look at the example below:
 
 .. code-block:: enaml
 
@@ -207,7 +207,7 @@ children item is required which should be quite uncommon.
 
 The declaration of parameters is similar to the one used for shape. If the
 sequence wish to share a computed value with the other items, it should set the
- value of the **linkable_vars** member.
+value of the **linkable_vars** member.
 
 .. code-block:: python
 
@@ -250,19 +250,19 @@ core plugin and several useful methods.
 
 .. code-block:: enaml
 
-    enamldef MySequenceView(BaseSequenceView):
+enamldef MySequenceView(BaseSequenceView):
 
-        constraints << [vbox(hbox(t_bool, cond_lab, cond_val),
-                         hbox(*t_def.items), nb)]\
-                   if t_def.condition else\
-                   [vbox(hbox(t_bool, cond_lab, cond_val), nb)]
+    constraints << ([vbox(hbox(t_bool, cond_lab, cond_val),
+                          hbox(*t_def.items), nb)]
+                    if t_def.condition else
+                    [vbox(hbox(t_bool, cond_lab, cond_val), nb)])
 
-        Label: cond_lab:
-            text = 'Condition'
-        QtLineCompleter: cond_val:
-            text := item.condition
-            entries_updater = item.get_accessible_vars
-            tool_tip = EVALUATER_TOOLTIP
+    Label: cond_lab:
+        text = 'Condition'
+    QtLineCompleter: cond_val:
+        text := item.condition
+        entries_updater = item.get_accessible_vars
+        tool_tip = EVALUATER_TOOLTIP
 
 
 Registering your sequence

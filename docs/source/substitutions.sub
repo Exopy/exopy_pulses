@@ -11,9 +11,15 @@
 
 .. |SequenceFilter| replace:: :py:class:`~ecpy_pulses.pulses.filters.SequenceFilter`
 
+.. |SubclassSequenceFilter| replace:: :py:class:`~ecpy_pulses.pulses.filters.SubclassSequenceFilter`
+
+.. |MetadataSequenceFilter| replace:: :py:class:`~ecpy_pulses.pulses.filters.MetadataSequenceFilter`
+
 .. |HasEvaluableFields| replace:: :py:class:`~ecpy_pulses.pulses.utils.entry_eval.HasEvaluableFields`
 
 .. |Feval| replace:: :py:class:`~ecpy_pulses.pulses.utils.validators.Feval`
+
+.. |TransferPulseSequenceTask| replace:: :py:class:`~ecpy_pulses.tasks.tasks.instrs.transfer_sequence_task.TransferPulseSequenceTask`
 
 .. Sequence configs
 .. ----------------------------------------------------------------------------
@@ -59,11 +65,11 @@
 
 .. |BaseContext| replace:: :py:class:`~ecpy_pulses.pulses.contexts.base_context.BaseContext`
 
-.. |BaseContextView| replace: :py:class:`~ecpy_pulses.pulses.contexts.views.base_context_view.BaseContextView`
+.. |BaseContextView| replace:: :py:class:`~ecpy_pulses.pulses.contexts.views.base_context_view.BaseContextView`
 
-.. |Contexts| replace: :py:class:`~ecpy_pulses.pulses.declarations.Contexts`
+.. |Contexts| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Contexts`
 
-.. |Context| replace: :py:class:`~ecpy_pulses.pulses.declarations.Context`
+.. |Context| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Context`
 
 .. ============================================================================
 .. Enaml substitutions
@@ -103,159 +109,6 @@
 
 .. |DockItem| replace:: :py:class:`~enaml.widgets.dock_item.DockItem`
 
-.. ============================================================================
-.. Ecpy substitutions
-.. ============================================================================
-
-.. App substitutions
-.. ----------------------------------------------------------------------------
-
-.. |AppStartup| replace:: :py:class:`~ecpy.app.app_extensions.AppStartup`
-
-.. |AppClosing| replace:: :py:class:`~ecpy.app.app_extensions.AppClosing`
-
-.. |AppClosed| replace:: :py:class:`~ecpy.app.app_extensions.AppClosed`
-
-.. |BuildDependency| replace:: :py:class:`~ecpy.app.dependencies.dependencies.BuildDependency`
-
-.. |RuntimeDependencyCollector| replace:: :py:class:`~ecpy.app.dependencies.dependencies.RuntimeDependecyCollector`
-
-.. |RuntimeDependencyAnalyser| replace:: :py:class:`~ecpy.app.dependencies.dependencies.RuntimeDependecyAnalyser`
-
-.. |Preferences| replace:: :py:class:`~ecpy.app.preferences.preferences.Preferences`
-
-.. |HasPreferencesPlugin| replace:: :py:class:`~ecpy.utils.plugin_tools.HasPrefPlugin`
-
-.. |State| replace:: :py:class:`~ecpy.app.states.state.State`
-
-.. |ErrorHandler| replace:: :py:class:`~ecpy.app.errors.errors.ErrorHandler`
-
-.. |LogManifest| replace:: :py:class:`~ecpy.app.log.manifest.LogManifest`
-
-.. |ArgParser| replace:: :py:class:`~ecpy.__main__.ArgParser`
-
-.. Measure substitutions
-.. ----------------------------------------------------------------------------
-
-.. |BaseMeasureTool| replace:: :py:class:`~ecpy.measure.base_tool.BaseMeasureTool`
-
-.. |BaseToolDeclaration| replace:: :py:class:`~ecpy.measure.base_tool.BaseToolDeclaration`
-
-.. |BasePreHook| replace:: :py:class:`~ecpy.measure.hooks.base_hooks.BasePreHook`
-
-.. |PreExecutionHook| replace:: :py:class:`~ecpy.measure.hooks.base_hooks.PreExecutionHook`
-
-.. |BaseMonitor| replace:: :py:class:`~ecpy.measure.monitors.base_monitor.BaseMonitor`
-
-.. |Monitor| replace:: :py:class:`~ecpy.measure.monitors.base_monitor.BaseMonitor`
-
-.. |BasePostHook| replace:: :py:class:`~ecpy.measure.hooks.base_hooks.BasePostHook`
-
-.. |PostExecutionHook| replace:: :py:class:`~ecpy.measure.hooks.base_hooks.PostExecutionHook`
-
-.. |BaseEditor| replace:: :py:class:`~ecpy.measure.editors.base_editor.BaseEditor`
-
-.. |Editor| replace:: :py:class:`~ecpy.measure.editors.base_editor.Editor`
-
-.. |BaseEngine| replace:: :py:class:`~ecpy.measure.engines.base_engine.BaseEngine`
-
-.. |Engine| replace:: :py:class:`~ecpy.measure.engines.base_engine.Engine`
-
-
-.. Instruments substitutions
-.. ----------------------------------------------------------------------------
-
-.. |Drivers| replace:: :py:class:`~ecpy.instruments.drivers.driver_decl.Drivers`
-
-.. |Driver| replace:: :py:class:`~ecpy.instruments.drivers.driver_decl.Driver`
-
-.. |InstrUser| replace:: :py:class:`~ecpy.instrument.user.InstrUser`
-
-.. |Starter| replace:: :py:class:`~ecpy.instruments.starters.base_starter.Starter`
-
-.. |BaseStarter| replace:: :py:class:`~ecpy.instruments.starters.base_starter.BaseStarter`
-
-.. |Connection| replace:: :py:class:`~ecpy.instruments.connections.base_connection.Connection`
-
-.. |BaseConnection| replace:: :py:class:`~ecpy.instruments.connections.base_connection.BaseConnection`
-
-.. |Settings| replace:: :py:class:`~ecpy.instruments.settings.base_settings.Settings`
-
-.. |BaseSettings| replace:: :py:class:`~ecpy.instruments.settings.base_settings.BaseSettings`
-
-.. |ManufacturerAlias| replace:: :py:class:`~ecpy.instruments.manufacturer_aliases.ManufacturerAlias`
-
-.. Tasks substitutions
-.. ----------------------------------------------------------------------------
-
-.. |BaseTask| replace:: :py:class:`~ecpy.tasks.tasks.base_tasks.BaseTask`
-
-.. |parallel| replace:: :py:attr:`~ecpy.tasks.tasks.base_tasks.SimpleTask.parallel`
-
-.. |wait| replace:: :py:attr:`~ecpy.tasks.tasks.base_tasks.SimpleTask.wait`
-
-.. |SimpleTask| replace:: :py:class:`~ecpy.tasks.tasks.base_tasks.SimpleTask`
-
-.. |ComplexTask| replace:: :py:class:`~ecpy.tasks.tasks.base_tasks.ComplexTask`
-
-.. |RootTask| replace:: :py:class:`~ecpy.tasks.tasks.base_tasks.RootTask`
-
-.. |write_in_database| replace:: :py:meth:`~ecpy.tasks.tasks.base_tasks.BaseTask.write_in_database`
-
-.. |format_string| replace:: :py:meth:`~ecpy.tasks.tasks.base_tasks.BaseTask.format_string`
-
-.. |format_and_eval_string| replace:: :py:meth:`~ecpy.tasks.tasks.base_tasks.BaseTask.format_and_eval_string`
-
-.. |perform| replace:: :py:meth:`~ecpy.tasks.tasks.base_tasks.BaseTask.perform`
-
-.. |database_entries| replace:: :py:attr:`~ecpy.tasks.tasks.base_tasks.BaseTask.database_entries`
-
-.. |resources| replace:: :py:attr:`~ecpy.tasks.tasks.base_tasks.RootTask.resources`
-
-.. |ResourceHolder| replace:: :py:class:`~ecpy.tasks.tasks.shared_resources.ResourceHolder`
-
-.. |Feval| replace:: :py:class:`~ecpy.tasks.tasks.validators.Feval`
-
-.. |BaseTaskView| replace:: :py:class:`~ecpy.tasks.tasks.base_views.BaseTaskView`
-
-.. |InstrumentTask| replace:: :py:class:`~ecpy.tasks.tasks.instr_task.InstrumentTask`
-
-.. |InstrTaskView| replace:: :py:class:`~ecpy.tasks.tasks.instr_view.InstrTaskView`
-
-.. |InterfaceableTaskMixin| replace:: :py:class:`~ecpy.tasks.tasks.task_interfaces.InterfaceableTaskMixin`
-
-.. |Tasks| replace:: :py:class:`~ecpy.tasks.declarations.Tasks`
-
-.. |Task| replace:: :py:class:`~ecpy.tasks.declarations.Task`
-
-.. |TaskInterface| replace:: :py:class:`~ecpy.tasks.tasks.task_interfaces.TaskInterface`
-
-.. |IInterface| replace:: :py:class:`~ecpy.tasks.tasks.task_interfaces.IInterface`
-
-.. |InterfaceableInterfaceMixin| replace:: :py:class:`~ecpy.tasks.tasks.task_interfaces.InterfaceableInterfaceMixin`
-
-.. |Interface| replace:: :py:class:`~ecpy.tasks.declarations.Interface`
-
-.. |Interfaces| replace:: :py:class:`~ecpy.tasks.declarations.Interfaces`
-
-.. |LoopTask| replace:: :py:class:`~ecpy.tasks.tasks.logic.loop_task.LoopTask`
-
-.. |TaskFilter| replace:: :py:class:`~ecpy.tasks.filters.TaskFilter`
-
-.. |SubclassTaskFilter| replace:: :py:class:`~ecpy.tasks.filters.SubclassTaskFilter`
-
-.. |MetadataTaskFilter| replace:: :py:class:`~ecpy.tasks.filters.MetadataTaskFilter`
-
-.. |GroupTaskFilter| replace:: :py:class:`~ecpy.tasks.filters.GroupTaskFilter`
-
-.. |PyTaskConfig| replace:: :py:class:`~ecpy.tasks.configs.base_configs.PyTaskConfig`
-
-.. |PyConfigView| replace:: :py:class:`~ecpy.tasks.configs.base_config_views.PyConfigView`
-
-.. |TaskConfigs| replace:: :py:class:`~ecpy.tasks.declarations.TaskConfigs`
-
-.. |TaskConfig| replace:: :py:class:`~ecpy.tasks.declarations.TaskConfig`
-
 
 .. Utils substitutions
 .. ----------------------------------------------------------------------------
@@ -264,8 +117,3 @@
 
 .. |QtTextCompleter| replace:: :py:class:`~ecpy.utils.widgets.qt_completers.QtTextCompleter`
 
-
-.. Testing substitutions
-.. ----------------------------------------------------------------------------
-
-.. |handle_dialog| replace:: :py:func:`~ecpy.testing.util.handle_dialog`

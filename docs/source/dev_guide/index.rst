@@ -14,6 +14,7 @@ own section.
 
     pulses
     context
+    testing
 
 .. note::
 

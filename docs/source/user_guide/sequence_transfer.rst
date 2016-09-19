@@ -12,7 +12,7 @@ describe the interaction between the sequence and the transfer task.
 Transfer task
 -------------
 
-The transfer task (|TranfserPulseSequenceTask|) allow to load a sequence from a file
+The transfer task (|TransferPulseSequenceTask|) allow to load a sequence from a file
 and to specify the value of the external variables as functions of the task database
 values. It also allows to parametrize the context.
 

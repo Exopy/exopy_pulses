@@ -23,7 +23,6 @@ Submodules
 
 .. toctree::
 
-   api
    declarations
    dependencies_analysis
    filters

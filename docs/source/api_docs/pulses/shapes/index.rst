@@ -18,7 +18,7 @@ Submodules
 
 .. toctree::
 
-   base_shapes
+   base_shape
    modulation
    square_shape
 

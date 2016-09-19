@@ -153,11 +153,11 @@ class SequenceEditionSpace(Workspace):
         ----------
         mode : {'default', 'file', 'template'}
             - default : save the sequence by using the state to determine the
-            procedure to use.
+              procedure to use.
             - file : save the sequence as a standard sequence and prompt the
-            user to select a file.
+              user to select a file.
             - template : save the sequence as a template sequence, prompt the
-            user to choose a template name and give a documentation.
+              user to choose a template name and give a documentation.
 
         """
         if mode == 'default':

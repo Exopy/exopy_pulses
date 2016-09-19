@@ -1,4 +1,4 @@
-.. _context
+.. _context:
 
 .. include:: ../substitutions.sub
 
@@ -83,7 +83,6 @@ be passed as a tuple/list.
 
 You will also need to implement two methods :
 
-# XXX
 - **compile_and_transfer_sequence**: this method does the heavy work of conversion
   and transfer. When called the entries of the context have been evaluated and are
   available in the *_cache* member. The passed list of items is guaranteed to be
@@ -91,6 +90,7 @@ You will also need to implement two methods :
   declare it supports a specific sequence, the sequence items are not simplified.
   If the driver is None, the context should do its best to validate that the
   sequence can be compiled.
+
 - **list_sequence_infos**: return a dict matching the infos returned are a successful
   compilation. Those infos can for example contain the names under which the sequence
   is stored for each channel.
@@ -134,7 +134,7 @@ writing tests and checking that your tests do cover all the possible cases.
 
 
 Registering your context
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 The last thing you need to do is to declare your shape in a plugin manifest so
 that the main application can find it. To do so your plugin should contribute

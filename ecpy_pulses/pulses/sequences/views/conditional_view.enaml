@@ -27,11 +27,10 @@ enamldef ConditionalSequenceView(BaseSequenceView): view:
     """ View for Sequence.
 
     """
-
-    constraints << [vbox(hbox(t_bool, cond_lab, cond_val),
-                         hbox(*t_def.items), nb)]\
-                   if t_def.condition else\
-                   [vbox(hbox(t_bool, cond_lab, cond_val), nb)]
+    constraints << ([vbox(hbox(t_bool, cond_lab, cond_val),
+                          hbox(*t_def.items), nb)]
+                    if t_def.condition else
+                    [vbox(hbox(t_bool, cond_lab, cond_val), nb)])
 
     Label: cond_lab:
         text = 'Condition'

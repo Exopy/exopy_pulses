@@ -11,6 +11,6 @@ Submodules
 
 .. toctree::
 
-   base_shapes_views
+   base_shape_view
    square_shape_view
-
+   modulation_view
