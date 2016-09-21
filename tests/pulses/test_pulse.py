@@ -56,6 +56,31 @@ def test_eval_pulse1(pulse):
     assert_array_equal(pulse.waveform, np.ones(1))
 
 
+def test_eval_pulse_validation_fail(pulse):
+    """Test evaluating the entries of a pulse when everything is ok.
+    Start/Stop mode, meaningless start.
+
+    """
+    pulse.root.context.rectify_time = False
+    pulse.def_1 = '1.0*2.1'
+    pulse.def_2 = '5.1*{a}/{b} + {c}'
+
+    root_vars = {'a': 2.0, 'b': 10.0, 'c': 1.0}
+    missing = set()
+    errors = {}
+
+    seq_locals = root_vars.copy()
+    assert not pulse.eval_entries(root_vars, seq_locals,
+                                  missing, errors)
+
+    assert missing == set()
+    assert '0_start' in errors
+    assert '0_start' not in root_vars
+    assert '0_duration' not in root_vars
+    assert '0_start' not in seq_locals
+    assert '0_duration' not in seq_locals
+
+
 def test_eval_pulse2(pulse):
     """Test evaluating the entries of a pulse when everything is ok.
     Start/Stop mode, meaningless start.
@@ -421,6 +446,11 @@ def test_eval_pulse16(pulse):
     pulse.shape = SquareShape(amplitude='0.5')
     pulse.kind = 'Analogical'
 
+    pulse.modulation.frequency = '0.0'
+    pulse.modulation.phase = '0.0'
+    pulse.modulation.kind = 'cos'
+    pulse.modulation.activated = True
+
     root_vars = {'a': 2.0, 'b': 5.0, 'c': 1.0}
     missing = set()
     errors = {}
@@ -431,6 +461,10 @@ def test_eval_pulse16(pulse):
     assert missing == set()
     assert errors == {}
     assert_array_equal(pulse.waveform, 0.5*np.ones(1))
+
+    pulse.clean_cached_values()
+    assert not pulse.modulation._cache
+    assert not pulse.shape._cache
 
 
 def test_eval_pulse17(pulse):
@@ -456,7 +490,7 @@ def test_eval_pulse17(pulse):
                                   missing, errors)
 
     assert missing == set()
-    assert '0_mod_frequency' in errors
+    assert '0_modulation_frequency' in errors
 
 
 def test_eval_pulse18(pulse):

@@ -18,13 +18,13 @@ import enaml
 from .sequences.base_sequences import AbstractSequence
 from .configs.base_config import AbstractConfig
 from .contexts.base_context import BaseContext
-from .shapes.base_shapes import AbstractShape
+from .shapes.base_shape import AbstractShape
 from .pulse import Pulse
 
 with enaml.imports():
     from .sequences.views.abstract_sequence_view import AbstractSequenceView
     from .configs.base_config_views import AbstractConfigView
-    from .shapes.views.base_shapes_views import AbstractShapeView
+    from .shapes.views.base_shape_view import AbstractShapeView
     from .contexts.views.base_context_view import BaseContextView
     from .pulse_view import PulseView
 

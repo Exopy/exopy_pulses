@@ -15,7 +15,7 @@ from __future__ import (division, unicode_literals, print_function,
 from atom.api import (Enum, Unicode, Bool, Float, Property, Tuple, List,
                       Constant)
 
-from ecpy.utils.atom_util import HasPrefAtom
+from ..utils.entry_eval import HasEvaluableFields
 
 DEP_TYPE = 'ecpy.pulses.contexts'
 
@@ -27,8 +27,13 @@ TIME_CONVERSION = {'s': {'s': 1, 'ms': 1e3, 'mus': 1e6, 'ns': 1e9},
                    'ns': {'s': 1e-9, 'ms': 1e-6, 'mus': 1e-3, 'ns': 1}}
 
 
-class BaseContext(HasPrefAtom):
+class BaseContext(HasEvaluableFields):
     """Base class describing a Context
+
+    Dependind on the targetted waveform generator the context should offer the
+    possibility to name the sequence, select it after transfer, clean channels
+    for which no sequence was uploaded and immediately start running the
+    transferred sequence.
 
     """
     #: Identifier for the build dependency collector
@@ -40,7 +45,7 @@ class BaseContext(HasPrefAtom):
     #: Time unit.
     time_unit = Enum('mus', 's', 'ms', 'ns').tag(pref=True)
 
-    #: Duration in unit of the context of a pulse. It is the responsability
+    #: Duration in unit of the context of a time step. It is the responsability
     #: of subclasses to implement a getter.
     sampling_time = Property(cached=True)
 
@@ -67,6 +72,9 @@ class BaseContext(HasPrefAtom):
     def compile_and_transfer_sequence(self, items, driver=None):
         """Compile the pulse sequence and send it to the instruments.
 
+        By the time this method is called the entries should be evaluated
+        and values are stored in the _cached dict.
+
         Parameters
         ----------
         items : list
@@ -77,13 +85,39 @@ class BaseContext(HasPrefAtom):
             If absent the context should do its best to assert that the
             compilation can succeed.
 
+        select : bool, optional
+            Should the sequence be selected for running after transfer.
+
+        clean : bool, optional
+            Should the channel that have not been updated be cleaned.
+
+        run : bool, optional
+            Should the sequence be played after the transfer.
+
         Returns
         -------
         result : bool
             Whether the compilation succeeded.
 
+        infos : dict
+            Infos about the transferred and compiled sequence. The keys
+            should match the ones listed in sequence_infos_keys.
+
         errors : dict
             Errors that occured during compilation.
+
+        """
+        raise NotImplementedError()
+
+    def list_sequence_infos(self):
+        """List the sequence infos returned after a successful completion.
+
+        Returns
+        -------
+        infos : dict
+            Dict mimicking the one returned on successful completion of
+            a compilation and transfer. The values types should match the
+            the ones found in the real infos.
 
         """
         raise NotImplementedError()
@@ -123,6 +157,23 @@ class BaseContext(HasPrefAtom):
             if abs(time - rectified_time) > self.tolerance:
                 raise ValueError('Time does not fit the instrument resolution')
             return time
+
+    def format_error_id(self, member):
+        """Format the error id for the given member.
+
+        """
+        return 'context_{}'.format(member)
+
+    def format_global_vars_id(self, member):
+        """Shapes are not allowed to store in the global namespace so raise.
+
+        """
+        msg = 'Context cannot store values as global.'
+        raise RuntimeError(msg)
+
+    # =========================================================================
+    # --- Private API ---------------------------------------------------------
+    # =========================================================================
 
     def _default_context_id(self):
         """ Default value the context class member.

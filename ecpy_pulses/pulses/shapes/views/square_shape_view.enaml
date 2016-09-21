@@ -18,9 +18,9 @@ from enaml.widgets.api import (Label, GroupBox)
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ...utils.entry_eval import EVALUATER_TOOLTIP
 
-from .base_shapes_views import AbstractShapeView
+from .base_shape_view import AbstractShapeView
 
-enamldef SquareShapeView(AbstractShapeView):
+enamldef SquareShapeView(AbstractShapeView): view:
     """ View for a square pulse.
 
     """
@@ -33,5 +33,6 @@ enamldef SquareShapeView(AbstractShapeView):
             text = 'Amplitude'
         QtLineCompleter: amp_val:
             text := shape.amplitude
+            entries_updater = item.parent.get_accessible_vars
             tool_tip = ('Relative amplitude of the pulse (should be between '
                         '-1.0 and 1.0)')

@@ -6,7 +6,7 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Base classes for pulse sequences.
 
 """
 from __future__ import (division, unicode_literals, print_function,
@@ -15,6 +15,7 @@ from __future__ import (division, unicode_literals, print_function,
 from traceback import format_exc
 from copy import deepcopy
 from collections import Mapping
+from numbers import Real
 
 from atom.api import (Int, Instance, Unicode, Dict, Bool, List,
                       Signal, set_default, Typed)
@@ -22,7 +23,8 @@ from ecpy.utils.container_change import ContainerChange
 from ecpy.utils.atom_util import (update_members_from_preferences)
 
 from ..contexts.base_context import BaseContext
-from ..utils.entry_eval import eval_entry
+from ..utils.entry_eval import eval_entry, MissingLocalVars
+from ..utils.validators import SkipEmpty
 from ..item import Item
 from ..pulse import Pulse
 
@@ -34,7 +36,7 @@ class AbstractSequence(Item):
     child support : only construction is supported, indexing is not handled
     nor is child insertion, deletion or displacement (This is because
     TemplateSequence inherits from AbstractSequence, while everything else
-    inherits from Sequence which supports insertion/deletion/displacement).
+    inherits from BaseSequence which supports insertion/deletion/displacement).
 
     """
 
@@ -52,23 +54,26 @@ class AbstractSequence(Item):
     #: pair represents the name and definition of the variable.
     local_vars = Dict(Unicode()).tag(pref=True)
 
-    #: Evaluated entries by the eval_entries method
-    evaluated_entries_cache = Dict(Unicode())
+    #: String representing the item first element of definition : according
+    #: to the selected mode it evaluated value will either be used for the
+    #: start instant, or duration of the item.
+    def_1 = Unicode().tag(pref=True, feval=SkipEmpty(types=Real))
 
-    #: Cache is valid?
-    cache_valid = Bool(False)
+    #: String representing the item second element of definition : according
+    #: to the selected mode it evaluated value will either be used for the
+    #: duration, or stop instant of the item.
+    def_2 = Unicode().tag(pref=True, feval=SkipEmpty(types=Real))
 
-    def cleanup_cache(self):
+    def clean_cached_values(self):
         """ Clear all internal caches.
 
         This should be called before evaluating a sequence.
 
         """
-        self._evaluated_vars = {}
+        super(AbstractSequence, self).clean_cached_values()
         self._evaluated = []
         for i in self.items:
-            if isinstance(i, AbstractSequence):
-                i.cleanup_cache()
+            i.clean_cached_values()
 
     def evaluate_sequence(self, root_vars, sequence_locals, missing, errors):
         """Evaluate the sequence vars and all the underlying items.
@@ -181,14 +186,11 @@ class AbstractSequence(Item):
 
     # --- Private API ---------------------------------------------------------
 
-    #: Dict of all already evaluated vars.
-    _evaluated_vars = Dict()
-
     #: List of already evaluated items.
     _evaluated = List()
 
     def _evaluate_items(self, root_vars, sequence_locals, missings, errors):
-        """Compile the sequence in a flat list of pulses.
+        """Evaluate all the children item of the sequence
 
         Parameters
         ----------
@@ -212,7 +214,7 @@ class AbstractSequence(Item):
 
         """
 
-        # Inplace modification of compile will update self._evaluated.
+        # Inplace modification during evaluation will update self._evaluated.
         if not self._evaluated:
             self._evaluated = [None for i in self.items if i.enabled]
         evaluated = self._evaluated
@@ -264,8 +266,6 @@ class AbstractSequence(Item):
             # If no var was found missing during last pass (and as no error
             # occured) it means the compilation succeeded.
             elif not miss:
-                # Clean the evaluated items once the evaluation is over.
-                self.cleanup_cache()
                 return True
 
 
@@ -316,15 +316,17 @@ class BaseSequence(AbstractSequence):
 
         # Local vars computation.
         for name, formula in self.local_vars.items():
-            if name not in self._evaluated_vars:
+            if name not in self._cache:
                 try:
-                    val = eval_entry(formula, sequence_locals, missings)
-                    self._evaluated_vars[name] = val
+                    val = eval_entry(formula, sequence_locals)
+                    self._cache[name] = val
+                except MissingLocalVars as e:
+                    missings.update(e.missings)
                 except Exception:
                     errors[prefix + name] = format_exc()
 
         local_namespace = sequence_locals.copy()
-        local_namespace.update(self._evaluated_vars)
+        local_namespace.update(self._cache)
 
         res = self._evaluate_items(root_vars, local_namespace, missings,
                                    errors)
@@ -432,7 +434,7 @@ class BaseSequence(AbstractSequence):
 
             #: If we update linkable vars on this item then we need to inform
             #: the root of this.
-            child.observe('linkable_vars', self.root._update_linkable_vars)
+            child.observe('linkable_vars', self.root._update_global_vars)
             if isinstance(child, BaseSequence):
                 child.observe('_last_index', self._item_last_index_updated)
 
@@ -483,7 +485,7 @@ class BaseSequence(AbstractSequence):
             child.index = 0
 
         if self.has_root:
-            child.unobserve('linkable_vars', self.root._update_linkable_vars)
+            child.unobserve('linkable_vars', self.root._update_global_vars)
 
             if isinstance(child, BaseSequence):
                 child.unobserve('_last_index', self._item_last_index_updated)
@@ -531,6 +533,9 @@ class BaseSequence(AbstractSequence):
             self.linkable_vars = ['start', 'stop', 'duration']
         else:
             self.linkable_vars = []
+            # This ensures that the SkipEmpty will indeed skip evaluation
+            del self.def_1
+            del self.def_2
 
     def _recompute_indexes(self, first_index=0, free_index=None):
         """ Recompute the item indexes and update the vars of the root_seq.
@@ -637,31 +642,39 @@ class RootSequence(BaseSequence):
             Dict describing the errors that occured during evaluation.
 
         """
+        # First make sure the cache is clean
+        self.clean_cached_values()
+
         missings = set()
         errors = {}
         root_vars = self.external_vars.copy()
 
         # Local vars computation.
         for name, formula in self.local_vars.items():
-            if name not in self._evaluated_vars:
+            if name not in self._cache:
                 try:
-                    val = eval_entry(formula, root_vars, missings)
-                    self._evaluated_vars[name] = val
+                    val = eval_entry(formula, root_vars)
+                    self._cache[name] = val
+                except MissingLocalVars as e:
+                    missings.update(e.missings)
                 except Exception:
                     errors['root_' + name] = format_exc()
 
-        root_vars.update(self._evaluated_vars)
+        root_vars.update(self._cache)
 
         if self.time_constrained:
             try:
-                duration = eval_entry(self.sequence_duration, root_vars,
-                                      missings)
+                duration = eval_entry(self.sequence_duration, root_vars)
                 self.stop = self.duration = duration
                 root_vars['sequence_end'] = duration
+            except MissingLocalVars as e:
+                missings.update(e.missings)
             except Exception:
                 errors['root_seq_duration'] = format_exc()
 
-        res = self._evaluate_items(root_vars, root_vars, missings, errors)
+        res = self.context.eval_entries(root_vars, root_vars, missings, errors)
+
+        res &= self._evaluate_items(root_vars, root_vars, missings, errors)
 
         if not res:
             return False, missings, errors
@@ -767,21 +780,21 @@ class RootSequence(BaseSequence):
             link_vars.remove('sequence_end')
             self.linkable_vars = link_vars
 
-    def _update_linkable_vars(self, change):
-        """Update the linkable vars each time the linkable vars of an item is
+    def _update_global_vars(self, change):
+        """Update the global vars each time the linkable vars of an item is
         updated.
 
         """
         # Don't want this to happen on member init.
         if change['type'] == 'update':
-            link_vars = self.global_vars
+            glob_vars = self.global_vars
             item = change['object']
             prefix = '{}_{{}}'.format(item.index)
             added = set(change['value']) - set(change.get('oldvalue', []))
             removed = set(change.get('oldvalue', [])) - set(change['value'])
-            link_vars.extend([prefix.format(var)
+            glob_vars.extend([prefix.format(var)
                               for var in added])
             for var in removed:
                 r = prefix.format(var)
-                if r in link_vars:
-                    link_vars.remove(r)
+                if r in glob_vars:
+                    glob_vars.remove(r)

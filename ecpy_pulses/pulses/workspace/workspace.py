@@ -153,11 +153,11 @@ class SequenceEditionSpace(Workspace):
         ----------
         mode : {'default', 'file', 'template'}
             - default : save the sequence by using the state to determine the
-            procedure to use.
+              procedure to use.
             - file : save the sequence as a standard sequence and prompt the
-            user to select a file.
+              user to select a file.
             - template : save the sequence as a template sequence, prompt the
-            user to choose a template name and give a documentation.
+              user to choose a template name and give a documentation.
 
         """
         if mode == 'default':
@@ -254,7 +254,6 @@ class SequenceEditionSpace(Workspace):
                 try:
                     seq = self._load_sequence_from_file(load_path)
                 except Exception:
-                    print(format_exc())
                     core = self.workbench.get_plugin('enaml.workbench.core')
                     cmd = 'ecpy.app.errors.signal'
                     msg = 'Failed to rebuild sequence {} :\n\n{}'
@@ -263,7 +262,6 @@ class SequenceEditionSpace(Workspace):
                                              message=msg.format(load_path,
                                                                 format_exc())))
                 else:
-                    print('rr')
                     self.state.sequence = seq
                     self.state.sequence_type = 'Standard'
                     self.state.sequence_path = load_path

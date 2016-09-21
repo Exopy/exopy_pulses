@@ -70,7 +70,7 @@ class AbstractConfig(Atom):
 
 
 class SequenceConfig(AbstractConfig):
-    """Root class for all Sequence Config Objects.
+    """Standard config object for sequences.
 
     """
     #: Name of the sequence used to make the sequence easier to read.

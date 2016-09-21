@@ -15,6 +15,7 @@ from __future__ import (division, unicode_literals, print_function,
 import pytest
 
 from ecpy_pulses.pulses.pulse import Pulse
+from ecpy_pulses.pulses.shapes.square_shape import SquareShape
 from ecpy_pulses.pulses.sequences.base_sequences\
     import RootSequence, BaseSequence
 
@@ -44,7 +45,9 @@ def test_sequence_compilation1(root):
     root.external_vars = {'a': 1.5}
     root.local_vars = {'b': '2*{a}'}
 
-    pulse1 = Pulse(def_1='1.0', def_2='{a}')
+    pulse1 = Pulse(def_1='1.0', def_2='{a}', kind='Analogical',
+                   shape=SquareShape(amplitude='0.5',
+                                     _cache={'amplitude': 1.0}))
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
     pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='10 + {b}')
     add_children(root, (pulse1, pulse2, pulse3))
@@ -57,6 +60,7 @@ def test_sequence_compilation1(root):
     assert pulses[0].start == 1.0
     assert pulses[0].stop == 1.5
     assert pulses[0].duration == 0.5
+    assert pulses[0].shape._cache['amplitude'] == 0.5
     assert pulses[1].start == 2.5
     assert pulses[1].stop == 3.0
     assert pulses[1].duration == 0.5
@@ -234,7 +238,7 @@ def test_sequence_compilation6bis(root):
     root.time_constrained = True
     root.sequence_duration = '10.0'
     root.external_vars = {'a': 1.5}
-    root.local_vars = {'b': '2*{a}+'}
+    root.local_vars = {'b': '2*{a}+', 'c': '{dummy}'}
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -243,7 +247,29 @@ def test_sequence_compilation6bis(root):
 
     res, missings, errors = root.evaluate_sequence()
     assert not res
+    assert 'dummy' in missings
     assert 'root_b' in errors
+
+
+def test_sequence_compilation6ter(root):
+    """Test compiling a flat sequence with evaluation errors.
+    wrong string value
+
+    """
+    root.external_vars = {'a': 1.5}
+    root.time_constrained = True
+    root.sequence_duration = '10.0*{dummy}'
+
+    pulse1 = Pulse(def_1='1.0', def_2='{a}')
+    pulse2 = Pulse(def_1='{a} +* 1.0', def_2='3.0')
+    pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='10.0')
+    add_children(root, (pulse1, pulse2, pulse3))
+
+    res, missings, errors = root.evaluate_sequence()
+    assert not res
+    assert 'dummy' in missings
+    assert len(errors) == 1
+    assert '2_start' in errors
 
 
 def test_sequence_compilation7(root):
@@ -458,6 +484,7 @@ def test_sequence_compilation12(root):
     add_children(root, (pulse1, sequence1, pulse5))
 
     res, missings, errors = root.evaluate_sequence()
+    print(missings, errors)
     pulses = root.simplify_sequence()
     assert res
     assert len(pulses) == 5
@@ -495,7 +522,7 @@ def test_sequence_compilation13(root):
     pulse4 = Pulse(def_1='2.0', def_2='0.5', def_mode='Start/Duration')
     pulse5 = Pulse(def_1='3.0', def_2='0.5', def_mode='Start/Duration')
 
-    sequence2 = BaseSequence(local_vars={'b': '2**'})
+    sequence2 = BaseSequence(local_vars={'b': '2**', 'c': '{dummy}'})
     sequence2.add_child_item(0, pulse3)
     sequence1 = BaseSequence()
     add_children(sequence1, (pulse2, sequence2, pulse4))
@@ -504,8 +531,9 @@ def test_sequence_compilation13(root):
 
     res, missings, errors = root.evaluate_sequence()
     assert not res
-    assert len(missings) == 1
+    assert len(missings) == 2
     assert 'b' in missings
+    assert 'dummy' in missings
     assert '4_b' in errors
 
 

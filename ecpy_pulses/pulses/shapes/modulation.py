@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015 by Ecpy Authors, see AUTHORS for more details.
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Modulation to overlap on the shape of the pulse.
 
 """
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 from math import pi as Pi
-from traceback import format_exc
+from numbers import Real
 
 import numpy as np
-from atom.api import (Unicode, Enum, Float, Bool, Constant)
+from atom.api import Unicode, Enum, Bool, Constant, Int
 
-from ecpy.utils.atom_util import HasPrefAtom
-from ..utils.entry_eval import eval_entry
+from ..utils.validators import Feval
+from ..utils.entry_eval import HasEvaluableFields
 
 FREQ_TIME_UNIT_MAP = {'s': {'Hz': 1, 'kHz': 1000, 'MHz': 1e6, 'GHz': 1e9},
                       'ms': {'Hz': 1e-3, 'kHz': 1, 'MHz': 1e3, 'GHz': 1e6},
@@ -29,7 +29,7 @@ FREQ_TIME_UNIT_MAP = {'s': {'Hz': 1, 'kHz': 1000, 'MHz': 1e6, 'GHz': 1e9},
 DEP_TYPE = 'ecpy.pulses.modulation'
 
 
-class Modulation(HasPrefAtom):
+class Modulation(HasEvaluableFields):
     """ Modulation to apply to the pulse.
 
     Only sinusoidal and cosinusoidal modulations are supported. As the
@@ -50,22 +50,29 @@ class Modulation(HasPrefAtom):
     kind = Enum('sin', 'cos').tag(pref=True)
 
     #: Frequency of modulation to use.
-    frequency = Unicode().tag(pref=True)
+    frequency = Unicode().tag(pref=True, feval=Feval(types=Real))
 
     #: Unit of the frequency use for the modulation.
     frequency_unit = Enum('MHz', 'GHz', 'kHz', 'Hz').tag(pref=True)
 
     #: Phase to use in the modulation.
-    phase = Unicode('0.0').tag(pref=True)
+    phase = Unicode('0.0').tag(pref=True, feval=Feval(types=Real))
 
     #: Unit of the phase used in the modulation.
     phase_unit = Enum('rad', 'deg').tag(pref=True)
 
-    def eval_entries(self, sequence_locals, missing, errors, index):
+    #: Index of the parent pulse. This is set whe evaluating the entries.
+    index = Int()
+
+    def eval_entries(self, root_vars, sequence_locals, missing, errors):
         """ Evaluate amplitude, frequency, and phase.
 
         Parameters
         ----------
+        root_vars : dict
+            Global variables. As shapes and modulation cannot update them an
+            empty dict is passed.
+
         sequence_locals : dict
             Known locals variables for the pulse sequence.
 
@@ -74,9 +81,6 @@ class Modulation(HasPrefAtom):
 
         errors : dict
             Errors which occurred when trying to compile the pulse sequence.
-
-        index : int
-            Index of the pulse to which this Modulation object belongs.
 
         Returns
         -------
@@ -87,43 +91,8 @@ class Modulation(HasPrefAtom):
         if not self.activated:
             return True
 
-        prefix = '{}_'.format(index) + 'mod_'
-        eval_success = True
-
-        # Computing frequency
-        freq = None
-        try:
-            freq = eval_entry(self.frequency, sequence_locals, missing)
-        except Exception:
-            eval_success = False
-            errors[prefix + 'frequency'] = format_exc()
-
-        if freq is not None:
-            self._frequency = freq
-        else:
-            eval_success = False
-            m = 'Failed to evaluate {} expression: {}'.format('frequency',
-                                                              self.frequency)
-            errors[prefix + 'frequency'] = m
-
-        # Computing phase
-        phase = None
-        try:
-            phase = eval_entry(self.phase, sequence_locals, missing)
-            self._phase = phase
-        except Exception:
-            eval_success = False
-            errors[prefix + 'phase'] = format_exc()
-
-        if phase is not None:
-            self._phase = phase
-        else:
-            eval_success = False
-            m = 'Failed to evaluate {} expression: {}'.format('phase',
-                                                              self.phase)
-            errors[prefix + 'phase'] = m
-
-        return eval_success
+        return super(Modulation, self).eval_entries(root_vars, sequence_locals,
+                                                    missing, errors)
 
     def compute(self, time, unit):
         """ Computes the modulation impact at a given time.
@@ -147,22 +116,29 @@ class Modulation(HasPrefAtom):
             return 1
 
         unit_corr = 2 * Pi * FREQ_TIME_UNIT_MAP[unit][self.frequency_unit]
-        phase = self._phase
+        phase = self._cache['phase']
         if self.phase_unit == 'deg':
             phase *= Pi / 180
 
         if self.kind == 'sin':
-            return np.sin(unit_corr * self._frequency * time + phase)
+            return np.sin(unit_corr * self._cache['frequency'] * time + phase)
         else:
-            return np.cos(unit_corr * self._frequency * time + phase)
+            return np.cos(unit_corr * self._cache['frequency'] * time + phase)
+
+    def format_error_id(self, member):
+        """Assemble the id used to report an evaluation error.
+
+        """
+        return '{}_modulation_{}'.format(self.index, member)
+
+    def format_global_vars_id(self, member):
+        """Modulation is not allowed to store in the global namespace so raise.
+
+        """
+        msg = 'Modulation cannot store values as global (from pulse {})'
+        raise RuntimeError(msg.format(self.index))
 
     # --- Private API ---------------------------------------------------------
-
-    #: Computed frequency (cached)
-    _frequency = Float()
-
-    #: Computed phase (cached)
-    _phase = Float()
 
     def _default_modulation_id(self):
         """Compute the class id.

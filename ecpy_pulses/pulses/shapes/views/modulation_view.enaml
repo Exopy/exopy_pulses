@@ -6,7 +6,7 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Base classes for shape views.
+"""View for the Modulation class..
 
 """
 from __future__ import (division, unicode_literals, print_function,
@@ -19,17 +19,6 @@ from enaml.widgets.api import (Container, Label, GroupBox, SplitItem,
 
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ...utils.entry_eval import EVALUATER_TOOLTIP
-
-
-enamldef AbstractShapeView(SplitItem):
-    """ Abstract class from which all ShapeViews must inherit.
-
-    """
-    #: Reference to the item which owns the shape.
-    attr item
-
-    #: Shape edited through this view.
-    attr shape
 
 
 enamldef ModulationView(SplitItem):
@@ -85,5 +74,3 @@ enamldef ModulationView(SplitItem):
                     ObjectCombo: phase_un:
                         items = list(modulation.get_member('phase_unit').items)
                         selected := modulation.phase_unit
-
-

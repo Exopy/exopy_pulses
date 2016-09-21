@@ -38,6 +38,21 @@ def instantiate_context_view(core, context):
         return view(context=context)
 
 
+enamldef LocalVariablesEditorPage(Page):
+    """Page used to edit the local variable of a sequence.
+
+    """
+    #: Refrence to the sequence whose locals are edited.
+    attr sequence
+
+    title = 'Local vars'
+    DictEditor(FieldFieldCompleterEditor): de:
+        de.mapping := item.local_vars
+        de.operations = ['add','move','remove']
+        de.attributes = {'entries_updater': item.get_accessible_vars,
+                         'evaluater_tooltip': EVALUATER_TOOLTIP}
+
+
 enamldef BaseSequenceView(AbstractSequenceView): view:
     """ View for Sequence.
 
@@ -114,13 +129,8 @@ enamldef BaseSequenceView(AbstractSequenceView): view:
                 sequence := view.item
                 root << view.root
 
-        # XXX set up completion
-        Page:
-            title = 'Local vars'
-            DictEditor(FieldFieldEditor): de:
-                de.mapping := item.local_vars
-#                de.operations = ['add','move','remove']
-                #Todo_Restore Add Back autocompletion!
+        LocalVariablesEditorPage:
+            sequence = view.item
 
 
 enamldef RootSequenceView(AbstractSequenceView): view:
@@ -211,6 +221,9 @@ enamldef RootSequenceView(AbstractSequenceView): view:
                 Include:
                     objects << ([instantiate_context_view(core, item.context)]
                                 if getattr(item, 'context') else [])
+
+        LocalVariablesEditorPage:
+            sequence = item
 
         Include: include:
             pass

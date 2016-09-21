@@ -106,6 +106,7 @@ def normalize_context_name(name):
     return package + '.' + aux if package else aux
 
 
+# TODO would be nicer with regex but I never managed to get the regex right.
 def normalize_shape_name(name):
     """Normalize shape names.
 
@@ -145,3 +146,7 @@ def normalize_shape_name(name):
                     aux += char
 
     return package + '.' + aux if package else aux
+
+
+__all__ = ['normalize_context_name', 'normalize_sequence_name',
+           'normalize_shape_name']

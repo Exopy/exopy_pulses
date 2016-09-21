@@ -41,6 +41,7 @@ def test_conditional_sequence_compilation1(root):
     add_children(root, [pulse1, sequence1, pulse5])
 
     res, missings, errors = root.evaluate_sequence()
+    print(missings, errors)
     assert res
     pulses = root.simplify_sequence()
     assert res

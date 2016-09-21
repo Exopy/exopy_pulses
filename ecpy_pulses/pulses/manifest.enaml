@@ -508,7 +508,8 @@ enamldef PulsesManagerManifest(PluginManifest):
         ActionItem:
                 path = '/workspace/pulses'
                 label = 'Pulses'
-                shortcut = 'Ctrl+3'
+                shortcut = 'Ctrl+2'
+                after = 'measure'
                 group = 'spaces'
                 command = 'enaml.workbench.ui.select_workspace'
                 parameters = {'workspace': 'ecpy.pulses.workspace'}

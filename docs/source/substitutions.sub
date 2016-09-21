@@ -1,0 +1,119 @@
+..
+   This file holds some common substitutions (mainly for referencing code).
+   To use it add the directive include:: substitutions.rst at the beginning of
+   the file.
+
+.. ============================================================================
+.. Ecpy pulses substitutions
+.. ============================================================================
+
+.. |EVALUATER_TOOLTIP| replace:: :py:const:`~ecpy_pulses.pulses.utils.entry_eval.EVALUATER_TOOLTIP`
+
+.. |SequenceFilter| replace:: :py:class:`~ecpy_pulses.pulses.filters.SequenceFilter`
+
+.. |SubclassSequenceFilter| replace:: :py:class:`~ecpy_pulses.pulses.filters.SubclassSequenceFilter`
+
+.. |MetadataSequenceFilter| replace:: :py:class:`~ecpy_pulses.pulses.filters.MetadataSequenceFilter`
+
+.. |HasEvaluableFields| replace:: :py:class:`~ecpy_pulses.pulses.utils.entry_eval.HasEvaluableFields`
+
+.. |Feval| replace:: :py:class:`~ecpy_pulses.pulses.utils.validators.Feval`
+
+.. |TransferPulseSequenceTask| replace:: :py:class:`~ecpy_pulses.tasks.tasks.instrs.transfer_sequence_task.TransferPulseSequenceTask`
+
+.. Sequence configs
+.. ----------------------------------------------------------------------------
+
+.. |AbstractConfig| replace:: :py:class:`~ecpy_pulses.pulses.configs.base_config.AbstractConfig`
+
+.. |AbstractConfigView| replace:: :py:class:`~ecpy_pulses.pulses.configs.base_config_views.AbstractConfigView`
+
+.. |SequenceConfigs| replace:: :py:class:`~ecpy_pulses.pulses.declarations.SequenceConfigs`
+
+.. |SequenceConfig| replace:: :py:class:`~ecpy_pulses.pulses.declarations.SequenceConfig`
+
+.. Shapes
+.. ----------------------------------------------------------------------------
+
+.. |AbstractShape| replace:: :py:class:`~ecpy_pulses.pulses.shapes.base_shape.AbstractShape`
+
+.. |AbstractShapeView| replace:: :py:class:`~ecpy_pulses.pulses.shapes.views.base_shape_view.AbstractShapeView`
+
+.. |Shapes| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Shapes`
+
+.. |Shape| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Shape`
+
+.. Sequences
+.. ----------------------------------------------------------------------------
+
+.. |AbstractSequence| replace:: :py:class:`~ecpy_pules.pulses.sequences.base_sequences.AbstractSequence`
+
+.. |BaseSequence| replace:: :py:class:`~ecpy_pules.pulses.sequences.base_sequences.BaseSequence`
+
+.. |AbstractSequenceView| replace:: :py:class:`~ecpy_pules.pulses.sequences.views.abstract_sequence_view.AbstractSequenceView`
+
+.. |BaseSequenceView| replace:: :py:class:`~ecpy_pules.pulses.sequences.views.base_sequences_views.BaseSequence`
+
+.. |ConditionalSequence| replace:: :py:class:`~ecpy_pules.pulses.sequences.conditional_sequence.ConditionalSequence`
+
+.. |Sequences| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Sequences`
+
+.. |Sequence| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Sequence`
+
+.. Contexts
+.. ----------------------------------------------------------------------------
+
+.. |BaseContext| replace:: :py:class:`~ecpy_pulses.pulses.contexts.base_context.BaseContext`
+
+.. |BaseContextView| replace:: :py:class:`~ecpy_pulses.pulses.contexts.views.base_context_view.BaseContextView`
+
+.. |Contexts| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Contexts`
+
+.. |Context| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Context`
+
+.. ============================================================================
+.. Enaml substitutions
+.. ============================================================================
+
+.. |Workbench| replace:: :py:class:`~enaml.workbench.workbench.Workbench`
+
+.. |PluginManifest| replace:: :py:class:`~enaml.workbench.plugin_manifest.PluginManifest`
+
+.. |Plugin| replace:: :py:class:`~enaml.workbench.plugin.Plugin`
+
+.. |Plugin.start| replace:: :py:meth:`~enaml.workbench.plugin.Plugin.start`
+
+.. |Plugin.stop| replace:: :py:meth:`~enaml.wokbench.plugin.Plugin.stop`
+
+.. |ExtensionPoint| replace:: :py:class:`~enaml.workbench.extension_point.ExtensionPoint`
+
+.. |Extension| replace:: :py:class:`~enaml.workbench.extension.Extension`
+
+.. |CorePlugin| replace:: :py:class:`~enaml.workbench.core.plugin.CorePlugin`
+
+.. |invoke_command| replace:: :py:class:`~enaml.workbench.core.plugin.CorePlugin.invoke_command`
+
+.. |Command| replace:: :py:class:`~enaml.workbench.core.command.Command`
+
+.. |ExecutionEvent| replace:: :py:class:`~enaml.workbench.core.execution_event.ExecutionEvent`
+
+.. |EventClose| replace:: :py:class:`~enaml.widgets.window.EventClose`
+
+.. |EventClose.reject| replace:: :py:class:`~enaml.widgets.window.EventClose.reject`
+
+.. |MenuItem| replace:: :py:class:`~enaml.workbench.ui.menu_item.MenuItem`
+
+.. |ActionItem| replace:: :py:class:`~enaml.workbench.ui.action_item.ActionItem`
+
+.. |Container| replace:: :py:class:`~enaml.widgets.container.Container`
+
+.. |DockItem| replace:: :py:class:`~enaml.widgets.dock_item.DockItem`
+
+
+.. Utils substitutions
+.. ----------------------------------------------------------------------------
+
+.. |QtLineCompleter| replace:: :py:class:`~ecpy.utils.widgets.qt_completers.QtLineCompleter`
+
+.. |QtTextCompleter| replace:: :py:class:`~ecpy.utils.widgets.qt_completers.QtTextCompleter`
+

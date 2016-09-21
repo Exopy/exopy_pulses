@@ -15,10 +15,6 @@ from __future__ import (division, unicode_literals, print_function,
 import enaml
 import pytest
 
-# TODO : remove once this not needed anymore on Py2
-# (do not know why but withouteverything crashes)
-from ecpy_pulses.pulses.utils.normalizers import *
-
 with enaml.imports():
     from .contributions import PulsesContributions
 

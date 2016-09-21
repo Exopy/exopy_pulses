@@ -12,11 +12,10 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
 import os
 from ast import literal_eval
 from future.builtins import str as unicode
-from time import time
+from timeit import default_timer
 from enaml.core.api import Conditional
 from enaml.layout.api import hbox, vbox, spacer
 from enaml.validator import Validator
@@ -82,7 +81,7 @@ enamldef CompilationWidget(Container): main:
             title = 'Variables'
             DictEditor(_ValEditor): de:
                 de.mapping := workspace.state.sequence.external_vars
-                de.operations = ['move']
+                de.operations = []
 
         Page:
             title = 'Errors'
@@ -102,9 +101,9 @@ enamldef CompilationWidget(Container): main:
         text = 'Compile'
         clicked ::
             seq = workspace.state.sequence
-            start = time()
-            res, missings, errors = seq.context.compile_and_transfer_sequence(seq)
-            stop = time()
+            start = default_timer()
+            res, missings, errors = seq.evaluate_sequence()
+            stop = default_timer()
             main.elapsed_time = (stop - start)*1e6
 
             if not res:
@@ -115,9 +114,20 @@ enamldef CompilationWidget(Container): main:
                 main.errors = errors
                 outcome(False)
             else:
-                dur_val.background = 'green'
-                main.errors = {}
-                outcome(True)
+                start = default_timer()
+                context = seq.context
+                items = seq.simplify_sequence()
+                res, _, errors = context.compile_and_transfer_sequence(items)
+                stop = default_timer()
+                main.elapsed_time += (stop - start)*1e6
+                if not res:
+                    dur_val.background = 'red'
+                    main.errors = errors
+                    outcome(False)
+                else:
+                    dur_val.background = 'green'
+                    main.errors = {}
+                    outcome(True)
 
 
 #TYPE_EXPLANATION = \

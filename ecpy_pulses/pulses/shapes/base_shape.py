@@ -12,16 +12,15 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+from atom.api import Unicode, Constant, Int
 
-from atom.api import (Unicode, Constant)
-
-from ecpy.utils.atom_util import HasPrefAtom
+from ..utils.entry_eval import HasEvaluableFields
 
 #: Id used to identify dependencies type.
 DEP_TYPE = 'ecpy.pulses.shapes'
 
 
-class AbstractShape(HasPrefAtom):
+class AbstractShape(HasEvaluableFields):
     """Base class for all shapes.
 
     """
@@ -31,30 +30,8 @@ class AbstractShape(HasPrefAtom):
     #: Id of the shape used to query it from the plugin.
     shape_id = Unicode().tag(pref=True)
 
-    def eval_entries(self, sequence_locals, missing, errors, index):
-        """ Evaluate the entries defining the shape.
-
-        Parameters
-        ----------
-        sequence_locals : dict
-            Known locals variables for the pulse sequence.
-
-        missing : set
-            Set of variables missing to evaluate some entries in the sequence.
-
-        errors : dict
-            Errors which occurred when trying to compile the pulse sequence.
-
-        index : int
-            Index of the pulse to which this shape object belongs.
-
-        Returns
-        -------
-        result : bool
-            Flag indicating whether or not the evaluation succeeded.
-
-        """
-        raise NotImplementedError('')
+    #: Index of the parent pulse. This is set whe evaluating the entries.
+    index = Int()
 
     def compute(self, time, unit):
         """ Computes the shape of the pulse at a given time.
@@ -75,6 +52,23 @@ class AbstractShape(HasPrefAtom):
 
         """
         raise NotImplementedError('')
+
+    def format_error_id(self, member):
+        """Assemble the id used to report an evaluation error.
+
+        """
+        return '{}_shape_{}'.format(self.index, member)
+
+    def format_global_vars_id(self, member):
+        """Shapes are not allowed to store in the global namespace so raise.
+
+        """
+        msg = 'Shapes cannot store values as global (from pulse {})'
+        raise RuntimeError(msg.format(self.index))
+
+    # =========================================================================
+    # --- Private API ---------------------------------------------------------
+    # =========================================================================
 
     def _default_shape_id(self):
         """Compute the shape id.

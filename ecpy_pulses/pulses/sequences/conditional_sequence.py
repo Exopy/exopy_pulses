@@ -12,12 +12,10 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-from traceback import format_exc
-
 from atom.api import Unicode, Bool, set_default
 
 from .base_sequences import BaseSequence
-from ..utils.entry_eval import eval_entry
+from ..utils.validators import Feval
 
 
 class ConditionalSequence(BaseSequence):
@@ -26,10 +24,10 @@ class ConditionalSequence(BaseSequence):
     """
     #: Condition to be evaluated. If this evaluates to true then sub-items will
     #: be executed
-    condition = Unicode().tag(pref=True)
+    condition = Unicode().tag(pref=True, feval=Feval(store_global=True))
 
-    #: Vars that can be referenced in condition. Those are provided by other
-    #: items in the sequence.
+    #: Name of the variable which can be referenced in other items.
+    #: Those should not contain the index of the item.
     linkable_vars = set_default(['condition'])
 
     def evaluate_sequence(self, root_vars, sequence_locals, missings, errors):
@@ -61,38 +59,33 @@ class ConditionalSequence(BaseSequence):
             Boolean indicating whether or not the evaluation succeeded.
 
         """
-        cond = None
-        try:
-            cond = bool(eval_entry(self.condition,
-                                   sequence_locals, missings))
-        except Exception:
-            errors['{}_'.format(self.index) + 'condition'] = format_exc()
+        res = self.eval_entries(root_vars, sequence_locals, missings, errors)
 
-        if cond is None:
+        # If the condition is False the sequence will do nothing so consider
+        # it a success.
+        if 'condition' in self._cache and not self._cache['condition']:
+            return True
+
+        if not res:
             return False
 
-        self._condition = cond
-        local = '{}_'.format(self.index) + 'condition'
-        sequence_locals[local] = cond
-
-        if cond:
+        if self._cache['condition']:
             return super(ConditionalSequence,
                          self).evaluate_sequence(root_vars, sequence_locals,
                                                  missings, errors)
-
-        else:
-            return True
 
     def simplify_sequence(self):
         """Inline the sequences not supported by the context.
 
         """
-        if self._condition:
+        if self._cache['condition']:
             return super(ConditionalSequence, self).simplify_sequence()
         else:
             return []
 
+    # =========================================================================
     # --- Private API ---------------------------------------------------------
+    # =========================================================================
 
     #: Cached value of the computed condition.
     _condition = Bool()
