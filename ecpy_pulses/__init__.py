@@ -12,8 +12,6 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-import enaml
-
 # HINT workaround a completely stupid bug in Py2
 from ecpy_pulses.pulses.utils.normalizers import (normalize_sequence_name,
                                                   normalize_context_name,
@@ -25,6 +23,7 @@ def list_manifests():
     started.
 
     """
+    import enaml
     with enaml.imports():
         from .pulses.manifest import PulsesManagerManifest
         from .tasks.manifest import PulsesTasksManifest
