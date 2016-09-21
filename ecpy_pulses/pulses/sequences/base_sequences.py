@@ -668,7 +668,7 @@ class RootSequence(BaseSequence):
                 self.stop = self.duration = duration
                 root_vars['sequence_end'] = duration
             except MissingLocalVars as e:
-                    missings.update(e.missings)
+                missings.update(e.missings)
             except Exception:
                 errors['root_seq_duration'] = format_exc()
 

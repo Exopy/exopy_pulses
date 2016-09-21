@@ -57,7 +57,7 @@ class SquareShape(AbstractShape):
                                                     missing, errors)
 
         if res:
-            if not (-1.0 <= self._cache['amplitude'] <= 1.0):
+            if not -1.0 <= self._cache['amplitude'] <= 1.0:
                 msg = 'Shape amplitude must be between -1 and 1.'
                 errors[self.format_error_id('amplitude')] = msg
                 res = False

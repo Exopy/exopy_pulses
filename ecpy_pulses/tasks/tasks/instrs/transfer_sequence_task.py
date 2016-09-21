@@ -69,6 +69,9 @@ class TransferPulseSequenceTask(InstrumentTask):
             traceback[err_path+'compil'] = errors
             return False, traceback
 
+        for k, v in infos.items():
+            self.write_in_database(k, v)
+
         if self.sequence_path:
             if not (self.sequence_timestamp ==
                     os.path.getmtime(self.sequence_path)):

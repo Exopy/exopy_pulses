@@ -159,7 +159,7 @@ class Item(HasEvaluableFields):
                 errors[prefix + par2] = repr(e)
             else:
                 # Check the value makes sense as a duration or stop time.
-                if (d2 > 0 and (par2 == 'duration' or d1 is None or d2 > d1)):
+                if d2 > 0 and (par2 == 'duration' or d1 is None or d2 > d1):
                     setattr(self, par2, d2)
                     root_vars[prefix + par2] = d2
                     sequence_locals[prefix + par2] = d2

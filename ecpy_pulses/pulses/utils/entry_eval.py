@@ -39,6 +39,7 @@ class MissingLocalVars(Exception):
 
     """
     def __init__(self, missings):
+        super(MissingLocalVars, self).__init__()
         self.missings = missings
 
 
