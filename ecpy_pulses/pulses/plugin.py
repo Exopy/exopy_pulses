@@ -361,7 +361,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
         if modulation_id == 'ecpy_pulses.Modulation':
             return Modulation
         else:
-            None
+            return None
 
     def get_config(self, sequence_id):
         """ Access the proper config for a sequence.
