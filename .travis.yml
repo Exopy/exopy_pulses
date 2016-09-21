@@ -45,7 +45,7 @@ before_install:
   - cd ..
 
   # Install ecpy dependencies
-  - $CONDA_INSTALL pyqt numpy ecpy
+  - $CONDA_INSTALL pyqt4 numpy ecpy
 
   # Intall test tools
   - $CONDA_INSTALL pytest
