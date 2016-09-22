@@ -61,7 +61,7 @@ copyright = u'2015-2016, Ecpy team'
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-from ecpy.version import version_info
+from ecpy_pulses.version import version_info
 
 # The short X.Y version.
 version = '{0}.{1}'.format(*version_info)
