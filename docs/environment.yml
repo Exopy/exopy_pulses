@@ -1,6 +1,7 @@
 channels: !!python/tuple
 - !!python/unicode 'ecpy'
 - !!python/unicode 'defaults'
+
 dependencies:
 - alabaster=0.7.9=py35_0
 - babel=2.3.4=py35_0
@@ -53,5 +54,4 @@ dependencies:
 - xz=5.2.2=0
 - yaml=0.1.6=0
 - zlib=1.2.8=3
-prefix: /home/marul/anaconda2/envs/rtd
 
