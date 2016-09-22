@@ -1,7 +1,7 @@
 .. _user_guide:
 
-User guide for Ecpy
-===================
+User guide for Ecpy pulses
+==========================
 
 Ecpy high quality graphical user interface should make it quite intuitive to
 work with. However it can take some time to discover all its capabilities (who wants
