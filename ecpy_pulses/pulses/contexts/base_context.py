@@ -69,7 +69,8 @@ class BaseContext(HasEvaluableFields):
     #: Name of the context class. Used for persistence purposes.
     context_id = Unicode().tag(pref=True)
 
-    def compile_and_transfer_sequence(self, items, driver=None):
+    def compile_and_transfer_sequence(self, items, sequence_duration=None,
+                                      driver=None):
         """Compile the pulse sequence and send it to the instruments.
 
         By the time this method is called the entries should be evaluated
@@ -80,19 +81,13 @@ class BaseContext(HasEvaluableFields):
         items : list
             List of handable items to be compiled and transferrred.
 
+        sequence_duration : float, optional
+            Optional fixed duration of the sequence.
+
         driver : object, optional
             Instrument driver to use to transfer the sequence once compiled.
             If absent the context should do its best to assert that the
             compilation can succeed.
-
-        select : bool, optional
-            Should the sequence be selected for running after transfer.
-
-        clean : bool, optional
-            Should the channel that have not been updated be cleaned.
-
-        run : bool, optional
-            Should the sequence be played after the transfer.
 
         Returns
         -------

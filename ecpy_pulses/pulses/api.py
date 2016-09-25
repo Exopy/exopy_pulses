@@ -19,10 +19,10 @@ from .sequences.base_sequences import BaseSequence, RootSequence
 from .pulse import Pulse
 from .item import Item
 from .shapes.base_shape import AbstractShape
-from .contexts.base_context import BaseContext
+from .contexts.base_context import BaseContext, TIME_CONVERSION
 from .utils.validators import Feval, SkipEmpty
 
 __all__ = ['Sequence', 'Sequences', 'Shape', 'Shapes', 'Context', 'Contexts',
            'SequenceConfig', 'SequenceConfigs', 'BaseSequence', 'RootSequence',
            'Pulse', 'Item', 'BaseContext', 'AbstractShape', 'Feval',
-           'SkipEmpty']
+           'SkipEmpty', 'TIME_CONVERSION']

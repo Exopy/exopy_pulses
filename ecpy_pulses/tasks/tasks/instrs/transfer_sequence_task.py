@@ -97,7 +97,9 @@ class TransferPulseSequenceTask(InstrumentTask):
                             pformat(errors))
 
         items = seq.simplify_sequence()
+        duration = seq.duration if seq.duration else None
         res, infos, errors = context.compile_and_transfer_sequence(items,
+                                                                   duration,
                                                                    self.driver)
         if not res:
             raise Exception('Failed to compile sequence :\n' +
