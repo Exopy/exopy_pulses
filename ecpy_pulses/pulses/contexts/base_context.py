@@ -69,20 +69,18 @@ class BaseContext(HasEvaluableFields):
     #: Name of the context class. Used for persistence purposes.
     context_id = Unicode().tag(pref=True)
 
-    def compile_and_transfer_sequence(self, items, sequence_duration=None,
-                                      driver=None):
+    def compile_and_transfer_sequence(self, sequence, driver=None):
         """Compile the pulse sequence and send it to the instruments.
 
-        By the time this method is called the entries should be evaluated
-        and values are stored in the _cached dict.
+        When this method is called the sequence has not yet been evaluated nor
+        simplified. If the context does not need any special controls on those
+        it can call the preprocess_sequence method to carry out those two
+        operations.
 
         Parameters
         ----------
-        items : list
-            List of handable items to be compiled and transferrred.
-
-        sequence_duration : float, optional
-            Optional fixed duration of the sequence.
+        sequence : RootSequence
+            Sequence to compile and transfer.
 
         driver : object, optional
             Instrument driver to use to transfer the sequence once compiled.
@@ -116,6 +114,32 @@ class BaseContext(HasEvaluableFields):
 
         """
         raise NotImplementedError()
+
+    def preprocess_sequence(self, sequence):
+        """Evaluate and simplify a sequence in the standard way.
+
+        Parameters
+        ----------
+        sequence : RootSequence
+            Sequence to preprocess.
+
+        Returns
+        -------
+        items : list
+            List of simple items ready to be compiled.
+
+        errors : dict
+            Errors that occured during evaluation and simplification.
+
+        """
+        res, missings, errors = sequence.evaluate_sequence()
+        if not res:
+            msg = 'The following variables were never computed : %s'
+            errors['Unknown variables'] = msg % missings
+            return [], errors
+
+        items = sequence.simplify_sequence()
+        return items, errors
 
     def len_sample(self, duration):
         """Compute the number of points used to describe a lapse of time.

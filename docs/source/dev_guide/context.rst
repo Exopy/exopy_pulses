@@ -84,16 +84,23 @@ be passed as a tuple/list.
 You will also need to implement two methods :
 
 - **compile_and_transfer_sequence**: this method does the heavy work of conversion
-  and transfer. When called the entries of the context have been evaluated and are
-  available in the *_cache* member. The passed list of items is guaranteed to be
-  composed only of object the context can handle. Note however that if a context
-  declare it supports a specific sequence, the sequence items are not simplified.
-  If the driver is None, the context should do its best to validate that the
-  sequence can be compiled.
+  and transfer. The passed sequence should be considered unevaluated. If the
+  context does not need any control over the evaluation and simplification
+  steps it can simply call the **preprocess_sequence** method to get a list
+  of simplified items. During this step, the entries of the context are evaluated
+  and are afterwards available in the *_cache* member. The returned list of items
+  is guaranteed to be composed only of object the context can handle. Note however
+  that if a context declare it supports a specific sequence, the sequence items are
+  not simplified. If the driver is None, the context should do its best to validate
+  that the sequence can be compiled.
+
+.. note::
+
+    If the sequence declare a fixed duration the context should honor it.
 
 - **list_sequence_infos**: return a dict matching the infos returned are a successful
   compilation. Those infos can for example contain the names under which the sequence
-  is stored for each channel.
+  is stored for each channel. The keys should not depend on the sequence.
 
 Creating the view
 ^^^^^^^^^^^^^^^^^

@@ -101,34 +101,20 @@ enamldef CompilationWidget(Container): main:
         text = 'Compile'
         clicked ::
             seq = workspace.state.sequence
+            context = seq.context
             start = default_timer()
-            res, missings, errors = seq.evaluate_sequence()
+            res, infos, errors = context.compile_and_transfer_sequence(seq)
             stop = default_timer()
             main.elapsed_time = (stop - start)*1e6
 
             if not res:
                 dur_val.background = 'red'
-                msg = 'The values of those variables were never computed : {}'
-                if missings:
-                    errors['Undefined variables'] = msg.format(missings)
                 main.errors = errors
                 outcome(False)
             else:
-                start = default_timer()
-                context = seq.context
-                items = seq.simplify_sequence()
-                res, _, errors = context.compile_and_transfer_sequence(items)
-                stop = default_timer()
-                main.elapsed_time += (stop - start)*1e6
-                if not res:
-                    dur_val.background = 'red'
-                    main.errors = errors
-                    outcome(False)
-                else:
-                    dur_val.background = 'green'
-                    main.errors = {}
-                    outcome(True)
-
+                dur_val.background = 'green'
+                main.errors = {}
+                outcome(True)
 
 #TYPE_EXPLANATION = \
 #'''Standard mode :

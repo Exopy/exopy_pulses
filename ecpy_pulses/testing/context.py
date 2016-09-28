@@ -26,10 +26,13 @@ class TestContext(BaseContext):
 
     sampling = Float(1.0)
 
-    def compile_and_transfer_sequence(self, items, driver=None):
+    def compile_and_transfer_sequence(self, sequence, driver=None):
         """Simply evaluate and simplify the underlying sequence.
 
         """
+        items, errors = self.preprocess_sequence(sequence)
+        if not items:
+            return False, {}, errors
         return True, {'test': True}, {}
 
     def list_sequence_infos(self):
