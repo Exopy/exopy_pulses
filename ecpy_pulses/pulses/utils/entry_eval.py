@@ -16,7 +16,12 @@ from __future__ import (division, unicode_literals, print_function,
 from inspect import cleandoc
 from textwrap import fill
 from traceback import format_exc
+from math import (cos, sin, tan, acos, asin, atan, sqrt, log10,
+                  exp, log, cosh, sinh, tanh, atan2)
+from cmath import pi as Pi
+import cmath as cm
 
+import numpy as np
 from atom.api import Dict
 from ecpy.utils.atom_util import tagged_members, HasPrefAtom
 

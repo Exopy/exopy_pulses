@@ -12,12 +12,17 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-
+from math import exp, pi as Pi
+import cmath as cm
+                        
+import numpy as np
 from atom.api import Unicode
 
 from ecpy_pulses.pulses.utils.entry_eval import HasEvaluableFields
 from ecpy_pulses.pulses.utils.validators import Feval, SkipEmpty
 
+
+FORMULA = 'Pi*np.array(cm.sqrt(exp(2*{feval2}))).real'
 
 class EvalFmtTest(HasEvaluableFields):
     """Test class for HasEvaluableFields.
@@ -29,7 +34,7 @@ class EvalFmtTest(HasEvaluableFields):
 
     feval1 = Unicode('2*{feval1}').tag(feval=Feval(store_global=True))
 
-    feval2 = Unicode('2*{feval2}').tag(feval=Feval(types=(int, float)))
+    feval2 = Unicode(FORMULA).tag(feval=Feval(types=(int, float)))
 
     feval3 = Unicode('').tag(feval=SkipEmpty(types=int))
 
@@ -54,7 +59,10 @@ def test_automatic_evaluation():
     assert 'fmt1' in glob and 'feval1' in glob
     assert 'fmt2' not in glob and 'feval2' not in glob
     assert glob['fmt1'] == '+r' and glob['feval1'] == 2
-    for k, v in dict(fmt1='+r', fmt2='+t', feval1=2, feval2=4).items():
+    
+    formula_val = eval(FORMULA.format(**loc))
+    for k, v in dict(fmt1='+r', fmt2='+t', feval1=2,
+                     feval2=formula_val).items():
         assert obj._cache[k] == v
         if k in glob:
             assert loc[k] == v
