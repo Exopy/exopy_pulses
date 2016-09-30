@@ -51,8 +51,9 @@ def test_automatic_evaluation():
     errors = {}
 
     assert obj.eval_entries(glob, loc, missings, errors)
-    assert 'fmt2' in glob and 'feval1' in glob
-    assert glob['fmt2'] == '+t' and glob['feval1'] == 2
+    assert 'fmt1' in glob and 'feval1' in glob
+    assert 'fmt2' not in glob and 'feval2' not in glob
+    assert glob['fmt1'] == '+r' and glob['feval1'] == 2
     for k, v in dict(fmt1='+r', fmt2='+t', feval1=2, feval2=4).items():
         assert obj._cache[k] == v
         if k in glob:

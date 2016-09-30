@@ -119,14 +119,14 @@ class HasEvaluableFields(HasPrefAtom):
         res = True
         cache = self._cache
 
-        for member, store in tagged_members(self, 'fmt').items():
+        for member, m in tagged_members(self, 'fmt').items():
             if member in cache:
                 continue
             fmt_str = getattr(self, member)
             try:
                 fmt = fmt_str.format(**local_vars)
                 self._cache[member] = fmt
-                if store:
+                if m.metadata['fmt']:
                     id_ = self.format_global_vars_id(member)
                     global_vars[id_] = fmt
                     local_vars[id_] = fmt
