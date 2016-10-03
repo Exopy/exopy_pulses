@@ -234,7 +234,7 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
                 text = 'Save as'
                 triggered ::
                     explore = FileDialogEx.get_save_file_name
-                    path = explore(seq_sav, path=task.sequence_path,
+                    path = explore(seq_sav, current_path=task.sequence_path,
                                    name_filters=['*.pulse.ini'])
                     if path:
                         if not path.endswith('.pulse.ini'):

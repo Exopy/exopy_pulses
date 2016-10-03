@@ -22,6 +22,7 @@ from ecpy.tasks.tasks.instr_task import (PROFILE_DEPENDENCY_ID,
 from ecpy.testing.util import handle_dialog, show_widget, handle_question
 
 with enaml.imports():
+    from ecpy.instruments.manifest import InstrumentManagerManifest
     from ecpy.tasks.manifest import TasksManagerManifest
     from ecpy.tasks.tasks.base_views import RootTaskView
 
@@ -139,6 +140,25 @@ def test_task_traversal(task):
     """
     components = list(task.traverse())
     assert task.sequence in components
+    
+def test_dependencies_analysis(workbench, task):
+    """Test analysing dependencies.
+    
+    We must ensure that instruments are there as this task does not rely on the
+    common mechanism.
+    
+    """
+    workbench.register(PulsesTasksManifest())
+    workbench.register(TasksManagerManifest())
+    workbench.register(InstrumentManagerManifest())
+    core = workbench.get_plugin('enaml.workbench.core')
+    build, runtime = core.invoke_command('ecpy.app.dependencies.analyse',
+                                         dict(obj=task, 
+                                              dependencies=['build', 
+                                                            'runtime']))
+    print(runtime.errors)
+    assert not build.errors and not runtime.errors
+    assert len(runtime.dependencies) == 2
 
 
 def test_task_saving_building(workbench, task):
@@ -162,6 +182,16 @@ def test_task_saving_building(workbench, task):
     assert task2.sequence
     assert task2.sequence.context
     assert task2.sequence.items
+
+    # Try to build a task missing a sequence.
+    del task.sequence
+    task.update_preferences_from_members()
+    prefs = task.preferences
+    del deps.dependencies['ecpy.pulses.items']
+    task3 = TransferPulseSequenceTask.build_from_config(prefs,
+                                                        deps.dependencies)
+
+    assert not task3.sequence
 
 
 def test_update_of_task_database_entries(task):
@@ -296,7 +326,7 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     from enaml.widgets.api import FileDialogEx
 
     @classmethod
-    def get_filename(cls, parent, path, name_filters):
+    def get_filename(cls, parent, current_path, name_filters):
         return task_view.task.sequence_path
     monkeypatch.setattr(FileDialogEx, 'get_open_file_name', get_filename)
 
@@ -340,14 +370,14 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     assert task_view.task.sequence_timestamp != old_timestamp
 
     @classmethod
-    def get_save_filename1(cls, parent, path, name_filters):
+    def get_save_filename1(cls, parent, current_path, name_filters):
         return ''
 
     new_path = task_view.task.sequence_path.rstrip('.pulse.ini')
     new_path += '2'
 
     @classmethod
-    def get_save_filename2(cls, parent, path, name_filters):
+    def get_save_filename2(cls, parent, current_path, name_filters):
         return new_path
 
     old_timestamp = task_view.task.sequence_timestamp
