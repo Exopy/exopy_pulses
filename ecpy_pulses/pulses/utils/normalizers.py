@@ -16,22 +16,12 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 
-# TODO would be nicer with regex but I never managed to get the regex right.
-def normalize_sequence_name(name):
-    """Normalize sequence names.
+def _normalize(name):
+    """Private normalizing function.
 
-    For sequences, strip the terminal Sequence if present, replaces '_' by
-    spaces and add spaces between 'aA' sequences.
-    For templates, only the extension file is removed.
+    Replaces '_' by spaces and add spaces between 'aA' sequences.
 
     """
-    if name.endswith('.temp_pulse.ini'):
-        name, _, _ = name.rsplit('.', 2)
-        return name.capitalize()
-
-    if name.endswith('Sequence'):
-        name = name[:-8] + '\0'
-
     package = None
     if '.' in name:
         package, name = name.rsplit('.', 1)
@@ -65,6 +55,25 @@ def normalize_sequence_name(name):
 
 
 # TODO would be nicer with regex but I never managed to get the regex right.
+def normalize_sequence_name(name):
+    """Normalize sequence names.
+
+    For sequences, strip the terminal Sequence if present, replaces '_' by
+    spaces and add spaces between 'aA' sequences.
+    For templates, only the extension file is removed.
+
+    """
+    if name.endswith('.temp_pulse.ini'):
+        name, _, _ = name.rsplit('.', 2)
+        return name.capitalize()
+
+    if name.endswith('Sequence'):
+        name = name[:-8] + '\0'
+
+    return _normalize(name)
+
+
+# TODO would be nicer with regex but I never managed to get the regex right.
 def normalize_context_name(name):
     """Normalize context names.
 
@@ -75,36 +84,7 @@ def normalize_context_name(name):
     if name.endswith('Context'):
         name = name[:-7] + '\0'
 
-    package = None
-    if '.' in name:
-        package, name = name.rsplit('.', 1)
-
-    aux = ''
-    for i, char in enumerate(name):
-        if char == '_':
-            aux += ''
-            continue
-
-        if char != '\0':
-            if char.isupper() and i != 0:
-                if name[i-1].islower():
-                    if name[i+1].islower():
-                        aux += ' ' + char.lower()
-                    else:
-                        aux += ' ' + char
-                elif i + 1 < len(name):
-                    if name[i+1].islower():
-                        aux += ' ' + char.lower()
-                    else:
-                        aux += char
-            else:
-                if i == 0:
-                    aux += char.upper()
-                else:
-                    aux += char
-
-    return package + '.' + aux if package else aux
-
+    return _normalize(name)
 
 # TODO would be nicer with regex but I never managed to get the regex right.
 def normalize_shape_name(name):
@@ -117,36 +97,4 @@ def normalize_shape_name(name):
     if name.endswith('Shape'):
         name = name[:-5] + '\0'
 
-    package = None
-    if '.' in name:
-        package, name = name.rsplit('.', 1)
-
-    aux = ''
-    for i, char in enumerate(name):
-        if char == '_':
-            aux += ''
-            continue
-
-        if char != '\0':
-            if char.isupper() and i != 0:
-                if name[i-1].islower():
-                    if i + 1 < len(name) and name[i+1].islower():
-                        aux += ' ' + char.lower()
-                    else:
-                        aux += ' ' + char
-                elif i + 1 < len(name):
-                    if name[i+1].islower():
-                        aux += ' ' + char.lower()
-                    else:
-                        aux += char
-            else:
-                if i == 0:
-                    aux += char.upper()
-                else:
-                    aux += char
-
-    return package + '.' + aux if package else aux
-
-
-__all__ = ['normalize_context_name', 'normalize_sequence_name',
-           'normalize_shape_name']
+    return _normalize(name)
