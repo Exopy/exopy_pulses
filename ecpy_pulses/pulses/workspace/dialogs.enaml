@@ -91,7 +91,7 @@ enamldef CompilationWidget(Container): main:
                 kind = 'Compilation errors'
 
     Label: dur_lab:
-        text = 'Compilation duration (µs)'
+        text = 'Compilation duration (mus)'
 
     Field: dur_val:
         read_only = True

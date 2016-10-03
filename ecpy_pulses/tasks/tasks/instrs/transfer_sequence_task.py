@@ -124,10 +124,12 @@ class TransferPulseSequenceTask(InstrumentTask):
         builder = cls.mro()[1].build_from_config.__func__
         task = builder(cls, config, dependencies)
 
-        builder = dependencies['ecpy.pulses.items']['ecpy_pulses.RootSequence']
-        conf = config['sequence']
-        seq = builder.build_from_config(conf, dependencies)
-        task.sequence = seq
+        if 'sequence' in config:
+            pulse_dep = dependencies['ecpy.pulses.items']
+            builder = pulse_dep['ecpy_pulses.RootSequence']
+            conf = config['sequence']
+            seq = builder.build_from_config(conf, dependencies)
+            task.sequence = seq
 
         return task
 

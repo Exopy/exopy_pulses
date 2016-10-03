@@ -99,7 +99,7 @@ def load_sequence(core, task, parent=None, path=''):
 
     """
     if not os.path.isfile(path):
-        path = FileDialogEx.get_open_file_name(parent, path=path,
+        path = FileDialogEx.get_open_file_name(parent, current_path=path,
                                                name_filters=['*.pulse.ini'])
     if path:
         cmd = 'ecpy.pulses.build_sequence'
@@ -131,9 +131,9 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
     """View for the TransferPulseSequenceTask.
 
     """
-    constraints = [vbox(hbox(seq, seq_name, seq_re, seq_sav, spacer,
-                             instr_label, instr_selection),
-                        *cnd.items)]
+    constraints << [vbox(hbox(seq, seq_name, seq_re, seq_sav, spacer,
+                              instr_label, instr_selection),
+                         *cnd.items)]
 
     initialized ::
 
@@ -188,8 +188,6 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
                                 '')
 
     PushButton: seq:
-        enabled << bool(task.selected_instrument and
-                        task.selected_instrument[0])
         text = 'Select sequence'
         clicked ::
             dir_path = os.path.dirname(task.sequence_path)
