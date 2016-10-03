@@ -12,17 +12,27 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+import enaml
 
 from .declarations import (Sequence, Sequences, Shape, Shapes,
                            Context, Contexts, SequenceConfig, SequenceConfigs)
-from .sequences.base_sequences import BaseSequence, RootSequence
+from .sequences.base_sequences import (AbstractSequence, BaseSequence,
+                                       RootSequence)
 from .pulse import Pulse
 from .item import Item
 from .shapes.base_shape import AbstractShape
 from .contexts.base_context import BaseContext, TIME_CONVERSION
 from .utils.validators import Feval, SkipEmpty
 
+with enaml.imports():
+    from .sequences.views.abstract_sequence_view import AbstractSequenceView
+    from .sequences.views.base_sequences_views import BaseSequenceView
+    from .contexts.views.base_context_view import BaseContextView
+    from .shapes.views.base_shape_view import AbstractShapeView
+
 __all__ = ['Sequence', 'Sequences', 'Shape', 'Shapes', 'Context', 'Contexts',
-           'SequenceConfig', 'SequenceConfigs', 'BaseSequence', 'RootSequence',
-           'Pulse', 'Item', 'BaseContext', 'AbstractShape', 'Feval',
-           'SkipEmpty', 'TIME_CONVERSION']
+           'SequenceConfig', 'SequenceConfigs', 'AbstractSequence',
+           'AbstractSequenceView', 'BaseSequence', 'BaseSequenceView',
+           'RootSequence', 'Pulse', 'Item', 'BaseContext', 'BaseContextView',
+           'AbstractShape', 'AbstractShapeView', 'Feval', 'SkipEmpty',
+           'TIME_CONVERSION']
