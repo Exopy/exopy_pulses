@@ -35,7 +35,7 @@ def instantiate_context_view(core, sequence, context):
         cmd = 'ecpy.pulses.get_context'
         cls, view = core.invoke_command(cmd, {'context_id': context.context_id,
                                               'view': True})
-        return view(context=context, sequence=sequence)
+        return view(core=core, context=context, sequence=sequence)
 
 
 enamldef LocalVariablesEditorPage(Page):

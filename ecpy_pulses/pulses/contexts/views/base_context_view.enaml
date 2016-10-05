@@ -19,6 +19,9 @@ enamldef BaseContextView(Container): view:
     """Base class for all Context views.
 
     """
+    #: Reference to the core plugin of the application.
+    attr core
+
     #: Reference to the context obect being edited through this view.
     attr context
 

@@ -107,14 +107,14 @@ Creating the view
 
 All context views should inherit from |BaseContextView| which is nothing more than
 a customized Container. The view will always have a reference to the context it is
-used to edit under *context* and to the view of the root sequence. From there you
-are free to design your UI the way you want.
+used to edit under *context*, to the root sequence and to the application core plugin.
+From there you are free to design your UI the way you want.
 
 
 To edit member corresponding to formulas with access to the sequence variables,
 note that the |QtLineCompleter| and |QtTextCompleter| widgets give
 auto-completion for the sequence variables after a '{'. You need to set the
-entries_updater attribute to *root.item.get_accessible_vars*. If you do
+entries_updater attribute to *sequence.get_accessible_vars*. If you do
 so you may also want to use |EVALUATER_TOOLTIP| as a tool tip (*tool_tip* member)
 so that your user get a nice explanation about what he can and cannot write in
 this field. From a general point of view it is a good idea to provide
@@ -126,7 +126,7 @@ meaningful tool tips.
 
         QtLineCompleter:
             text := context.my_formula
-            entries_updater = root.item.get_accessible_vars
+            entries_updater = seuence.get_accessible_vars
             tool_tip = EVALUATER_TOOLTIP
 
 
