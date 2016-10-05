@@ -27,7 +27,7 @@ from ...utils.entry_eval import EVALUATER_TOOLTIP
 from ...pulse import Pulse
 
 
-def instantiate_context_view(core, context):
+def instantiate_context_view(core, sequence, context):
     """ Instantiate the appropriate view for the given context.
 
     """
@@ -35,7 +35,7 @@ def instantiate_context_view(core, context):
         cmd = 'ecpy.pulses.get_context'
         cls, view = core.invoke_command(cmd, {'context_id': context.context_id,
                                               'view': True})
-        return view(context=context)
+        return view(context=context, sequence=sequence)
 
 
 enamldef LocalVariablesEditorPage(Page):
@@ -47,7 +47,7 @@ enamldef LocalVariablesEditorPage(Page):
 
     title = 'Local vars'
     DictEditor(FieldFieldCompleterEditor): de:
-        de.mapping := item.local_vars
+        de.mapping := sequence.local_vars
         de.operations = ['add','move','remove']
         de.attributes = {'entries_updater': item.get_accessible_vars,
                          'evaluater_tooltip': EVALUATER_TOOLTIP}
@@ -219,7 +219,8 @@ enamldef RootSequenceView(AbstractSequenceView): view:
                         view.core.invoke_command(cmd, {'root': item,
                                                        'parent_ui': self})
                 Include:
-                    objects << ([instantiate_context_view(core, item.context)]
+                    objects << ([instantiate_context_view(core, item,
+                                                          item.context)]
                                 if getattr(item, 'context') else [])
 
         LocalVariablesEditorPage:

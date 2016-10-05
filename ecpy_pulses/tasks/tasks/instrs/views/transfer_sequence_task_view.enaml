@@ -261,6 +261,7 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
                 title = 'Context'
                 Include:
                     objects << ([instantiate_context_view(view.root.core,
+                                                          task.sequence,
                                                           task.sequence.context
                                                           )]
                                 if task.sequence.context else [])
