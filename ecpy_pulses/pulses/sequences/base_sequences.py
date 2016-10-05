@@ -52,7 +52,7 @@ class AbstractSequence(Item):
 
     #: Dict of variables whose scope is limited to the sequence. Each key/value
     #: pair represents the name and definition of the variable.
-    local_vars = Dict(Unicode()).tag(pref=True)
+    local_vars = Dict().tag(pref=True)
 
     #: String representing the item first element of definition : according
     #: to the selected mode it evaluated value will either be used for the
