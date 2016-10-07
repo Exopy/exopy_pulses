@@ -23,7 +23,7 @@ from enaml.core.api import Conditional, Include
 from enaml.widgets.api import (GroupBox, Label, Field, ObjectCombo, CheckBox,
                                Notebook, Page, PushButton, Menu, Action,
                                FileDialogEx, Container)
-from enaml.stdlib.message_box import information, question
+from enaml.stdlib.message_box import information, question, warning
 
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ecpy.utils.widgets.dict_editor import DictEditor
@@ -210,7 +210,12 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
                            text='If you refresh any local modification to the '
                                 'sequence will be lost.\nConfirm refresh ?')
             if btn and btn.action == 'accept':
-                load_sequence(view.root.core, task, path=task.sequence_path)
+                try:
+                    load_sequence(view.root.core, task,
+                                  path=task.sequence_path)
+                except Exception:
+                    warning(self, 'Failed to refresh sequence', format_exc())
+
                 self.tool_tip = 'Reload the sequence from file.'
                 self.style_class = ''
 

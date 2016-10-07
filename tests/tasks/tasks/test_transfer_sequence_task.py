@@ -140,21 +140,21 @@ def test_task_traversal(task):
     """
     components = list(task.traverse())
     assert task.sequence in components
-    
+
 def test_dependencies_analysis(workbench, task):
     """Test analysing dependencies.
-    
+
     We must ensure that instruments are there as this task does not rely on the
     common mechanism.
-    
+
     """
     workbench.register(PulsesTasksManifest())
     workbench.register(TasksManagerManifest())
     workbench.register(InstrumentManagerManifest())
     core = workbench.get_plugin('enaml.workbench.core')
     build, runtime = core.invoke_command('ecpy.app.dependencies.analyse',
-                                         dict(obj=task, 
-                                              dependencies=['build', 
+                                         dict(obj=task,
+                                              dependencies=['build',
                                                             'runtime']))
     print(runtime.errors)
     assert not build.errors and not runtime.errors
@@ -392,6 +392,48 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     actions[1].triggered = True
     assert task_view.task.sequence_timestamp != old_timestamp
     assert task_view.task.sequence_path == new_path + '.pulse.ini'
+
+
+def test_load_refresh_save2(task_view, monkeypatch, process_and_sleep, windows):
+    """Test loading a sequence, refreshing, modifying and saving.
+
+    Test handling the case of an empty sequence_path
+
+    """
+    from enaml.widgets.api import FileDialogEx
+
+    @classmethod
+    def get_filename(cls, parent, current_path, name_filters):
+        return task_view.task.sequence_path
+    monkeypatch.setattr(FileDialogEx, 'get_open_file_name', get_filename)
+
+    task_view.task.sequence_path = ''
+
+    show_widget(task_view)
+
+    task_view.task.sequence_vars = {}
+    # Refresh
+    button = task_view.widgets()[4]
+    assert not button.enabled
+
+    def false_load(*args, **kwargs):
+        raise Exception()
+
+    with enaml.imports():
+        from ecpy_pulses.tasks.tasks.instrs.views\
+            import transfer_sequence_task_view
+    old = transfer_sequence_task_view.load_sequence
+    monkeypatch.setattr(transfer_sequence_task_view, 'load_sequence',
+                        false_load)
+    with handle_question('OK'):
+        button.clicked = True
+
+    monkeypatch.setattr(transfer_sequence_task_view, 'load_sequence', old)
+
+    # Save
+    btn = task_view.widgets()[5]
+    actions = btn.menu().items()
+    assert not actions[0].enabled
 
 
 def test_handling_error_in_loading(task_view, windows, monkeypatch):
