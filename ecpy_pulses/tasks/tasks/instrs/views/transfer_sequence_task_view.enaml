@@ -139,7 +139,7 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
 
         task.observe('sequence', _install_context_observer)
 
-        if task.sequence:
+        if task.sequence and os.path.isfile(task.sequence_path):
             if os.path.getmtime(task.sequence_path) != task.sequence_timestamp:
                 seq_re.style_class = 'red-button'
                 seq_re.tool_tip = fill('The sequence appears to have been '
@@ -200,8 +200,11 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
         text << os.path.basename(task.sequence_path).rstrip('.pulse.ini')
 
     PushButton: seq_re:
-        enabled << bool(task.sequence_path)
+        enabled << bool(task.sequence_path and
+                        os.path.isfile(task.sequence_path))
         text = 'Refresh'
+        tool_tip << ('Referenced file does not exist anymore.'
+                     if not self.enabled else '')
         clicked ::
             btn = question(self, title='Confirm refresh',
                            text='If you refresh any local modification to the '
@@ -212,11 +215,15 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
                 self.style_class = ''
 
     PushButton: seq_sav:
-        enabled << bool(task.sequence_path)
+        enabled << bool(task.sequence)
         text = 'Save'
         Menu:
             Action:
                 text = 'Save'
+                enabled << bool(task.sequence_path and
+                                os.path.isfile(task.sequence_path))
+                tool_tip << ('Referenced file does not exist anymore.'
+                             if not self.enabled else '')
                 triggered ::
                     btn = question(seq_sav, title='Confirm save',
                            text='If you save any local modification will '
