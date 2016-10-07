@@ -317,12 +317,12 @@ def test_build_from_config():
     add_children(seq, [pulse4])
 
     pref = root.preferences_from_members()
-    dependecies = {'ecpy.pulses.items':
+    dependecies = {'ecpy.pulses.item':
                    {'ecpy_pulses.BaseSequence': BaseSequence,
                     'ecpy_pulses.Pulse': Pulse},
-                   'ecpy.pulses.shapes':
+                   'ecpy.pulses.shape':
                    {'ecpy_pulses.SquareShape': SquareShape},
-                   'ecpy.pulses.contexts':
+                   'ecpy.pulses.context':
                    {'ecpy_pulses.TestContext': TestContext}}
 
     aux = RootSequence.build_from_config(pref, dependecies)

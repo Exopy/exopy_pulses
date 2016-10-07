@@ -17,7 +17,7 @@ from atom.api import Unicode, Constant, Int
 from ..utils.entry_eval import HasEvaluableFields
 
 #: Id used to identify dependencies type.
-DEP_TYPE = 'ecpy.pulses.shapes'
+DEP_TYPE = 'ecpy.pulses.shape'
 
 
 class AbstractShape(HasEvaluableFields):

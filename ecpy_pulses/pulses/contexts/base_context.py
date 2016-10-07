@@ -17,7 +17,7 @@ from atom.api import (Enum, Unicode, Bool, Float, Property, Tuple, List,
 
 from ..utils.entry_eval import HasEvaluableFields
 
-DEP_TYPE = 'ecpy.pulses.contexts'
+DEP_TYPE = 'ecpy.pulses.context'
 
 # Time conversion dictionary first key is the original unit, second the final
 # one.

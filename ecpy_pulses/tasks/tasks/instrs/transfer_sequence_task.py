@@ -125,7 +125,7 @@ class TransferPulseSequenceTask(InstrumentTask):
         task = builder(cls, config, dependencies)
 
         if 'sequence' in config:
-            pulse_dep = dependencies['ecpy.pulses.items']
+            pulse_dep = dependencies['ecpy.pulses.item']
             builder = pulse_dep['ecpy_pulses.RootSequence']
             conf = config['sequence']
             seq = builder.build_from_config(conf, dependencies)

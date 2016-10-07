@@ -187,7 +187,7 @@ def test_task_saving_building(workbench, task):
     del task.sequence
     task.update_preferences_from_members()
     prefs = task.preferences
-    del deps.dependencies['ecpy.pulses.items']
+    del deps.dependencies['ecpy.pulses.item']
     task3 = TransferPulseSequenceTask.build_from_config(prefs,
                                                         deps.dependencies)
 
