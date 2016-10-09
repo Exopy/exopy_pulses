@@ -84,30 +84,37 @@ be passed as a tuple/list.
 You will also need to implement two methods :
 
 - **compile_and_transfer_sequence**: this method does the heavy work of conversion
-  and transfer. When called the entries of the context have been evaluated and are
-  available in the *_cache* member. The passed list of items is guaranteed to be
-  composed only of object the context can handle. Note however that if a context
-  declare it supports a specific sequence, the sequence items are not simplified.
-  If the driver is None, the context should do its best to validate that the
-  sequence can be compiled.
+  and transfer. The passed sequence should be considered unevaluated. If the
+  context does not need any control over the evaluation and simplification
+  steps it can simply call the **preprocess_sequence** method to get a list
+  of simplified items. During this step, the entries of the context are evaluated
+  and are afterwards available in the *_cache* member. The returned list of items
+  is guaranteed to be composed only of object the context can handle. Note however
+  that if a context declare it supports a specific sequence, the sequence items are
+  not simplified. If the driver is None, the context should do its best to validate
+  that the sequence can be compiled.
+
+.. note::
+
+    If the sequence declare a fixed duration the context should honor it.
 
 - **list_sequence_infos**: return a dict matching the infos returned are a successful
   compilation. Those infos can for example contain the names under which the sequence
-  is stored for each channel.
+  is stored for each channel. The keys should not depend on the sequence.
 
 Creating the view
 ^^^^^^^^^^^^^^^^^
 
 All context views should inherit from |BaseContextView| which is nothing more than
 a customized Container. The view will always have a reference to the context it is
-used to edit under *context* and to the view of the root sequence. From there you
-are free to design your UI the way you want.
+used to edit under *context*, to the root sequence and to the application core plugin.
+From there you are free to design your UI the way you want.
 
 
 To edit member corresponding to formulas with access to the sequence variables,
 note that the |QtLineCompleter| and |QtTextCompleter| widgets give
 auto-completion for the sequence variables after a '{'. You need to set the
-entries_updater attribute to *root.item.get_accessible_vars*. If you do
+entries_updater attribute to *sequence.get_accessible_vars*. If you do
 so you may also want to use |EVALUATER_TOOLTIP| as a tool tip (*tool_tip* member)
 so that your user get a nice explanation about what he can and cannot write in
 this field. From a general point of view it is a good idea to provide
@@ -119,7 +126,7 @@ meaningful tool tips.
 
         QtLineCompleter:
             text := context.my_formula
-            entries_updater = root.item.get_accessible_vars
+            entries_updater = seuence.get_accessible_vars
             tool_tip = EVALUATER_TOOLTIP
 
 

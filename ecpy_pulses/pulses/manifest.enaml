@@ -500,11 +500,6 @@ enamldef PulsesManagerManifest(PluginManifest):
     Extension:
         id = 'menu'
         point = 'enaml.workbench.ui.actions'
-        MenuItem:
-            path = '/tools/pulses'
-            label = 'Pulses'
-            ItemGroup:
-                id = 'user'
         ActionItem:
                 path = '/workspace/pulses'
                 label = 'Pulses'

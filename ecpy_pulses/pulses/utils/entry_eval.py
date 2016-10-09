@@ -16,7 +16,12 @@ from __future__ import (division, unicode_literals, print_function,
 from inspect import cleandoc
 from textwrap import fill
 from traceback import format_exc
+from math import (cos, sin, tan, acos, asin, atan, sqrt, log10,
+                  exp, log, cosh, sinh, tanh, atan2)
+from cmath import pi as Pi
+import cmath as cm
 
+import numpy as np
 from atom.api import Dict
 from ecpy.utils.atom_util import tagged_members, HasPrefAtom
 
@@ -119,14 +124,14 @@ class HasEvaluableFields(HasPrefAtom):
         res = True
         cache = self._cache
 
-        for member, store in tagged_members(self, 'fmt').items():
+        for member, m in tagged_members(self, 'fmt').items():
             if member in cache:
                 continue
             fmt_str = getattr(self, member)
             try:
                 fmt = fmt_str.format(**local_vars)
                 self._cache[member] = fmt
-                if store:
+                if m.metadata['fmt']:
                     id_ = self.format_global_vars_id(member)
                     global_vars[id_] = fmt
                     local_vars[id_] = fmt

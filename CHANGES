@@ -2,7 +2,14 @@ Ecpy Changelog
 ==============
 
 
-0.1.0 
------
+0.1.0.a2
+--------
+
+- Update sequence compilation logic : context has now full power on compilation
+  and a standard pre-processing method is provided.
+- fixes some issues in the UI
+
+0.1.0.a1
+--------
 
 - First numbered version

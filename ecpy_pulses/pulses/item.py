@@ -26,7 +26,7 @@ def sequence():
     return BaseSequence
 
 #: Id used to identify dependencies type.
-DEP_TYPE = 'ecpy.pulses.items'
+DEP_TYPE = 'ecpy.pulses.item'
 
 
 class Item(HasEvaluableFields):

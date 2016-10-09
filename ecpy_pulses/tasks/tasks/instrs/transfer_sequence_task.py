@@ -45,6 +45,7 @@ class TransferPulseSequenceTask(InstrumentTask):
         err_path = self.path + '/' + self.name + '-'
 
         msg = 'Failed to evaluate {} ({}): {}'
+        seq = self.sequence
         for k, v in self.sequence_vars.items():
             try:
                 self.format_and_eval_string(v)
@@ -52,18 +53,11 @@ class TransferPulseSequenceTask(InstrumentTask):
                 test = False
                 traceback[err_path+k] = msg.format(k, v, format_exc())
 
-        if test:
-            res, missings, errors = self.sequence.evaluate_sequence()
-            if not res:
-                if missings:
-                    msg = 'Those variables were never evaluated : %s'
-                    errors['missings'] = msg % missings
-                traceback[err_path+'compil'] = errors
-                return False, traceback
+        if not test:
+            return test, traceback
 
-        items = self.sequence.simplify_sequence()
-        context = self.sequence.context
-        res, infos, errors = context.compile_and_transfer_sequence(items)
+        context = seq.context
+        res, infos, errors = context.compile_and_transfer_sequence(seq)
 
         if not res:
             traceback[err_path+'compil'] = errors
@@ -87,17 +81,9 @@ class TransferPulseSequenceTask(InstrumentTask):
         seq = self.sequence
         context = seq.context
         for k, v in self.sequence_vars.items():
-            self.sequence.external_vars[k] = self.format_and_eval_string(v)
+            seq.external_vars[k] = self.format_and_eval_string(v)
 
-        res, missings, errors = seq.evaluate_sequence()
-        if not res:
-            msg = 'The following variables were never computed : %s'
-            errors['Unknown variables'] = msg % missings
-            raise Exception('Failed to evaluate sequence :\n' +
-                            pformat(errors))
-
-        items = seq.simplify_sequence()
-        res, infos, errors = context.compile_and_transfer_sequence(items,
+        res, infos, errors = context.compile_and_transfer_sequence(seq,
                                                                    self.driver)
         if not res:
             raise Exception('Failed to compile sequence :\n' +
@@ -138,10 +124,12 @@ class TransferPulseSequenceTask(InstrumentTask):
         builder = cls.mro()[1].build_from_config.__func__
         task = builder(cls, config, dependencies)
 
-        builder = dependencies['ecpy.pulses.items']['ecpy_pulses.RootSequence']
-        conf = config['sequence']
-        seq = builder.build_from_config(conf, dependencies)
-        task.sequence = seq
+        if 'sequence' in config:
+            pulse_dep = dependencies['ecpy.pulses.item']
+            builder = pulse_dep['ecpy_pulses.RootSequence']
+            conf = config['sequence']
+            seq = builder.build_from_config(conf, dependencies)
+            task.sequence = seq
 
         return task
 

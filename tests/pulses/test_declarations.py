@@ -495,6 +495,8 @@ def test_register_context_decl1(collector, context_decl):
     parent.insert_children(None, [context_decl])
     context_decl.context = 'base_context:BaseContext'
     context_decl.view = 'views.base_context_view:BaseContextView'
+    context_decl.metadata = {'test': True}
+    context_decl.instruments = ['ecpy.Legacy.TektronixAWG5014B']
     parent.register(collector, {})
     infos = collector.contributions['ecpy_pulses.BaseContext']
     from ecpy_pulses.pulses.contexts.base_context import BaseContext
@@ -504,24 +506,28 @@ def test_register_context_decl1(collector, context_decl):
     assert infos.cls is BaseContext
     assert infos.view is BaseContextView
     assert infos.metadata['group'] == 'test'
+    assert infos.instruments
 
 
 def test_register_context_decl_extend1(collector, context_decl):
-    """Test extending a sequence.
+    """Test extending a context.
 
     """
-    collector.contributions['ecpy_pulses.Context'] = ContextInfos()
+    infos = ContextInfos(metadata={'test2': False},
+                         instruments=['ecpy.Legacy.TektronixAWG5014B'])
+    collector.contributions['ecpy_pulses.Context'] = infos
     context_decl.context = 'ecpy_pulses.Context'
     context_decl.metadata = {'test': True}
     context_decl.instruments = ['ecpy.i3py.TektronixAWG5014B']
     context_decl.register(collector, {})
     infos = collector.contributions['ecpy_pulses.Context']
+    assert len(infos.metadata) == 2
     assert 'test' in infos.metadata
-    assert infos.instruments
+    assert len(infos.instruments) == 2
 
 
 def test_register_context_decl_extend2(collector, context_decl):
-    """Test extending a yet to be defined sequence.
+    """Test extending a yet to be defined context.
 
     """
     context_decl.context = 'ecpy_pulses.Context'
@@ -574,7 +580,7 @@ def test_register_context_decl_duplicate2(collector, context_decl):
 
 
 def test_register_context_decl_cls1(collector, context_decl):
-    """Test handling sequence class issues : failed import no such module.
+    """Test handling context class issues : failed import no such module.
 
     """
     tb = {}
@@ -585,7 +591,7 @@ def test_register_context_decl_cls1(collector, context_decl):
 
 
 def test_register_context_decl_cls1_bis(collector, context_decl):
-    """Test handling sequence class issues : failed import error while
+    """Test handling context class issues : failed import error while
     importing.
 
     """
@@ -596,7 +602,7 @@ def test_register_context_decl_cls1_bis(collector, context_decl):
 
 
 def test_register_context_decl_cls2(collector, context_decl):
-    """Test handling sequence class issues : undefined in module.
+    """Test handling context class issues : undefined in module.
 
     """
     tb = {}
@@ -606,7 +612,7 @@ def test_register_context_decl_cls2(collector, context_decl):
 
 
 def test_register_context_decl_cls3(collector, context_decl):
-    """Test handling sequence class issues : wrong type.
+    """Test handling context class issues : wrong type.
 
     """
     tb = {}
@@ -661,7 +667,7 @@ def test_register_context_decl_view3(collector, context_decl):
 
 
 def test_unregister_context_decl1(collector, context_decl):
-    """Test unregistering a sequence.
+    """Test unregistering a context.
 
     """
     context_decl.register(collector, {})
@@ -670,7 +676,7 @@ def test_unregister_context_decl1(collector, context_decl):
 
 
 def test_unregister_context_decl2(collector, context_decl):
-    """Test unregistering a sequence which already disappeared.
+    """Test unregistering a context which already disappeared.
 
     """
     context_decl.register(collector, {})
@@ -680,7 +686,7 @@ def test_unregister_context_decl2(collector, context_decl):
 
 
 def test_unregister_context_decl3(collector, context_decl):
-    """Test unregistering a sequence extending an existing one.
+    """Test unregistering a context extending an existing one.
 
     """
     collector.contributions['ecpy_pulses.BaseContext'] = ContextInfos()

@@ -31,3 +31,6 @@ enamldef PulsesTasksManifest(PluginManifest):
                 task = 'transfer_sequence_task:TransferPulseSequenceTask'
                 view = ('views.transfer_sequence_task_view:'
                         'TransferPulseSequenceView')
+                # Way to declare instrument dependencies without specifying
+                # any instrument.
+                instruments = [None]

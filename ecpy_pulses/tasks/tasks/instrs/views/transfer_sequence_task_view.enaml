@@ -23,7 +23,7 @@ from enaml.core.api import Conditional, Include
 from enaml.widgets.api import (GroupBox, Label, Field, ObjectCombo, CheckBox,
                                Notebook, Page, PushButton, Menu, Action,
                                FileDialogEx, Container)
-from enaml.stdlib.message_box import information, question
+from enaml.stdlib.message_box import information, question, warning
 
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ecpy.utils.widgets.dict_editor import DictEditor
@@ -99,7 +99,7 @@ def load_sequence(core, task, parent=None, path=''):
 
     """
     if not os.path.isfile(path):
-        path = FileDialogEx.get_open_file_name(parent, path=path,
+        path = FileDialogEx.get_open_file_name(parent, current_path=path,
                                                name_filters=['*.pulse.ini'])
     if path:
         cmd = 'ecpy.pulses.build_sequence'
@@ -131,15 +131,15 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
     """View for the TransferPulseSequenceTask.
 
     """
-    constraints = [vbox(hbox(seq, seq_name, seq_re, seq_sav, spacer,
-                             instr_label, instr_selection),
-                        *cnd.items)]
+    constraints << [vbox(hbox(seq, seq_name, seq_re, seq_sav, spacer,
+                              instr_label, instr_selection),
+                         *cnd.items)]
 
     initialized ::
 
         task.observe('sequence', _install_context_observer)
 
-        if task.sequence:
+        if task.sequence and os.path.isfile(task.sequence_path):
             if os.path.getmtime(task.sequence_path) != task.sequence_timestamp:
                 seq_re.style_class = 'red-button'
                 seq_re.tool_tip = fill('The sequence appears to have been '
@@ -188,8 +188,6 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
                                 '')
 
     PushButton: seq:
-        enabled << bool(task.selected_instrument and
-                        task.selected_instrument[0])
         text = 'Select sequence'
         clicked ::
             dir_path = os.path.dirname(task.sequence_path)
@@ -202,23 +200,35 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
         text << os.path.basename(task.sequence_path).rstrip('.pulse.ini')
 
     PushButton: seq_re:
-        enabled << bool(task.sequence_path)
+        enabled << bool(task.sequence_path and
+                        os.path.isfile(task.sequence_path))
         text = 'Refresh'
+        tool_tip << ('Referenced file does not exist anymore.'
+                     if not self.enabled else '')
         clicked ::
             btn = question(self, title='Confirm refresh',
                            text='If you refresh any local modification to the '
                                 'sequence will be lost.\nConfirm refresh ?')
             if btn and btn.action == 'accept':
-                load_sequence(view.root.core, task, path=task.sequence_path)
+                try:
+                    load_sequence(view.root.core, task,
+                                  path=task.sequence_path)
+                except Exception:
+                    warning(self, 'Failed to refresh sequence', format_exc())
+
                 self.tool_tip = 'Reload the sequence from file.'
                 self.style_class = ''
 
     PushButton: seq_sav:
-        enabled << bool(task.sequence_path)
+        enabled << bool(task.sequence)
         text = 'Save'
         Menu:
             Action:
                 text = 'Save'
+                enabled << bool(task.sequence_path and
+                                os.path.isfile(task.sequence_path))
+                tool_tip << ('Referenced file does not exist anymore.'
+                             if not self.enabled else '')
                 triggered ::
                     btn = question(seq_sav, title='Confirm save',
                            text='If you save any local modification will '
@@ -236,7 +246,7 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
                 text = 'Save as'
                 triggered ::
                     explore = FileDialogEx.get_save_file_name
-                    path = explore(seq_sav, path=task.sequence_path,
+                    path = explore(seq_sav, current_path=task.sequence_path,
                                    name_filters=['*.pulse.ini'])
                     if path:
                         if not path.endswith('.pulse.ini'):
@@ -263,6 +273,7 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
                 title = 'Context'
                 Include:
                     objects << ([instantiate_context_view(view.root.core,
+                                                          task.sequence,
                                                           task.sequence.context
                                                           )]
                                 if task.sequence.context else [])

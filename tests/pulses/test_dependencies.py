@@ -33,7 +33,7 @@ def item_dep_collector(workbench):
     dep_ext = [e for e in plugin.manifest.extensions
                if e.id == 'build_deps'][0]
     return [b for b in dep_ext.get_children(BuildDependency)
-            if b.id == 'ecpy.pulses.items'][0]
+            if b.id == 'ecpy.pulses.item'][0]
 
 
 @pytest.fixture
@@ -45,7 +45,7 @@ def shape_dep_collector(workbench):
     dep_ext = [e for e in plugin.manifest.extensions
                if e.id == 'build_deps'][0]
     return [b for b in dep_ext.get_children(BuildDependency)
-            if b.id == 'ecpy.pulses.shapes'][0]
+            if b.id == 'ecpy.pulses.shape'][0]
 
 
 @pytest.fixture
@@ -57,7 +57,7 @@ def context_dep_collector(workbench):
     dep_ext = [e for e in plugin.manifest.extensions
                if e.id == 'build_deps'][0]
     return [b for b in dep_ext.get_children(BuildDependency)
-            if b.id == 'ecpy.pulses.contexts'][0]
+            if b.id == 'ecpy.pulses.context'][0]
 
 
 @pytest.fixture
@@ -302,7 +302,7 @@ def test_collect_dependencies(workbench):
                                     'dependencies': dep.dependencies})
 
     assert not dep.errors
-    assert 'ecpy.pulses.items' in dep.dependencies
-    assert 'ecpy.pulses.contexts' in dep.dependencies
-    assert 'ecpy.pulses.shapes' in dep.dependencies
+    assert 'ecpy.pulses.item' in dep.dependencies
+    assert 'ecpy.pulses.context' in dep.dependencies
+    assert 'ecpy.pulses.shape' in dep.dependencies
     assert 'ecpy.pulses.modulation' in dep.dependencies

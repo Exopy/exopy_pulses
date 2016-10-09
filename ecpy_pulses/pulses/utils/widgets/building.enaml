@@ -108,7 +108,7 @@ enamldef ContextBuilderView(Dialog): dial:
 
 
     func _update():
-        sc = _context_map[selector.selected_item]
+        sc = _context_map.get(selector.selected_item)
         if sc:
             context_infos = manager.get_context_infos(sc)
             if context_infos:

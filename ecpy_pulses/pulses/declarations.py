@@ -417,7 +417,8 @@ class Context(Declarator):
             traceback[err_id] = msg.format(context, c_path)
             return
 
-        infos = ContextInfos(metadata=self.metadata)
+        infos = ContextInfos(metadata=self.metadata,
+                             instruments=self.instruments)
 
         # Get the sequence class.
         c_cls = import_and_get(c_path, context, traceback, context_id)

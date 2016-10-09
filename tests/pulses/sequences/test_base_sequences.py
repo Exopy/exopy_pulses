@@ -317,12 +317,12 @@ def test_build_from_config():
     add_children(seq, [pulse4])
 
     pref = root.preferences_from_members()
-    dependecies = {'ecpy.pulses.items':
+    dependecies = {'ecpy.pulses.item':
                    {'ecpy_pulses.BaseSequence': BaseSequence,
                     'ecpy_pulses.Pulse': Pulse},
-                   'ecpy.pulses.shapes':
+                   'ecpy.pulses.shape':
                    {'ecpy_pulses.SquareShape': SquareShape},
-                   'ecpy.pulses.contexts':
+                   'ecpy.pulses.context':
                    {'ecpy_pulses.TestContext': TestContext}}
 
     aux = RootSequence.build_from_config(pref, dependecies)
@@ -331,18 +331,22 @@ def test_build_from_config():
     assert isinstance(aux.context, TestContext)
 
     pulse1 = aux.items[0]
+    assert pulse1.parent
     assert pulse1.def_1 == '1.0'
     assert pulse1.def_2 == '{a}'
 
     pulse2 = aux.items[1]
+    assert pulse2.parent
     assert pulse2.def_1 == '{a} + 1.0'
     assert pulse2.def_2 == '3.0'
 
     pulse3 = aux.items[2]
+    assert pulse3.parent
     assert pulse3.def_1 == '{2_stop} + 0.5'
     assert pulse3.def_2 == '10'
     assert pulse3.kind == 'Analogical'
     assert isinstance(pulse3.shape, SquareShape)
 
     seq = aux.items[3]
+    assert seq.parent
     assert len(seq.items) == 1

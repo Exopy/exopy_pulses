@@ -52,7 +52,7 @@ class AbstractSequence(Item):
 
     #: Dict of variables whose scope is limited to the sequence. Each key/value
     #: pair represents the name and definition of the variable.
-    local_vars = Dict(Unicode()).tag(pref=True)
+    local_vars = Dict().tag(pref=True)
 
     #: String representing the item first element of definition : according
     #: to the selected mode it evaluated value will either be used for the
@@ -138,33 +138,8 @@ class AbstractSequence(Item):
         sequence : AbstractSequence
             Newly created and initiliazed sequence.
 
-        Notes
-        -----
-        This method is fairly powerful and can handle a lot of cases so
-        don't override it without checking that it works.
-
         """
-        sequence = cls()
-        update_members_from_preferences(sequence, config)
-
-        i = 0
-        pref = 'item_{}'
-        validated = []
-        while True:
-            item_name = pref.format(i)
-            if item_name not in config:
-                break
-            item_config = config[item_name]
-            i_id = item_config.pop('item_id')
-            i_cls = dependencies['ecpy.pulses.items'][i_id]
-            item = i_cls.build_from_config(item_config,
-                                           dependencies)
-            validated.append(item)
-            i += 1
-
-        setattr(sequence, 'items', validated)
-
-        return sequence
+        raise NotImplementedError()
 
     def traverse(self, depth=-1):
         """Traverse the items.
@@ -382,7 +357,7 @@ class BaseSequence(AbstractSequence):
         belonging to that sequence.
 
         """
-        return self.local_vars.keys() + self.parent.get_accessible_vars()
+        return list(self.local_vars) + self.parent.get_accessible_vars()
 
     def preferences_from_members(self):
         """ Get the members values as string to store them in .ini files.
@@ -495,6 +470,44 @@ class BaseSequence(AbstractSequence):
         notification = ContainerChange(obj=self, name='items',
                                        removed=[(index, child)])
         self.items_changed(notification)
+
+    @classmethod
+    def build_from_config(cls, config, dependencies):
+        """ Create a new instance using the provided infos for initialisation.
+
+        Parameters
+        ----------
+        config : dict(str)
+            Dictionary holding the new values to give to the members in string
+            format, or dictionnary like for instance with prefs.
+
+        dependencies : dict
+            Dictionary holding the necessary classes needed when rebuilding.
+
+        Returns
+        -------
+        sequence : AbstractSequence
+            Newly created and initiliazed sequence.
+
+        """
+        sequence = cls()
+        update_members_from_preferences(sequence, config)
+
+        i = 0
+        pref = 'item_{}'
+        while True:
+            item_name = pref.format(i)
+            if item_name not in config:
+                break
+            item_config = config[item_name]
+            i_id = item_config.pop('item_id')
+            i_cls = dependencies['ecpy.pulses.item'][i_id]
+            item = i_cls.build_from_config(item_config,
+                                           dependencies)
+            sequence.add_child_item(i, item)
+            i += 1
+
+        return sequence
 
     # --- Private API ---------------------------------------------------------
 
@@ -697,7 +710,7 @@ class RootSequence(BaseSequence):
 
         """
         return (self.linkable_vars + self.global_vars +
-                self.local_vars.keys() + self.external_vars.keys())
+                list(self.local_vars) + list(self.external_vars))
 
     @classmethod
     def build_from_config(cls, config, dependencies):
@@ -726,7 +739,7 @@ class RootSequence(BaseSequence):
         if 'context' in config and isinstance(config['context'], Mapping):
             context_config = config['context']
             c_id = context_config.pop('context_id')
-            c_cls = dependencies['ecpy.pulses.contexts'][c_id]
+            c_cls = dependencies['ecpy.pulses.context'][c_id]
             context = c_cls()
 
             context.update_members_from_preferences(context_config)

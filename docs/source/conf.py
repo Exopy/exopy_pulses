@@ -296,5 +296,5 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'http://docs.python.org/': None,
-                       'http://nucleic.github.io/enaml/docs/': None
-                       }  # XXX add ecpy cross-link
+                       'http://nucleic.github.io/enaml/docs/': None,
+                       'http://ecpy.readthedocs.io/en/latest/': None}

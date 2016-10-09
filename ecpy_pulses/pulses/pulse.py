@@ -114,7 +114,7 @@ class Pulse(Item):
             shape_config = config['shape']
             if not shape_config == 'None':
                 s_id = shape_config.pop('shape_id')
-                s_cls = dependencies['ecpy.pulses.shapes'][s_id]
+                s_cls = dependencies['ecpy.pulses.shape'][s_id]
                 shape = s_cls()
                 pulse.shape = shape
 

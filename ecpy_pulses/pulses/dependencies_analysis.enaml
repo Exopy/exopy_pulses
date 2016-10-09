@@ -23,7 +23,7 @@ enamldef PulsesBuildingDependenciesExtension(Extension):
         point = 'ecpy.app.dependencies.build'
 
         BuildDependency:
-            id = 'ecpy.pulses.items'
+            id = 'ecpy.pulses.item'
             analyse => (workbench, obj, getter, dependencies, errors):
                 manager = workbench.get_plugin('ecpy.pulses')
 
@@ -55,7 +55,7 @@ enamldef PulsesBuildingDependenciesExtension(Extension):
                     dependencies[i_id] = cls
 
         BuildDependency:
-            id = 'ecpy.pulses.contexts'
+            id = 'ecpy.pulses.context'
             analyse => (workbench, obj, getter, dependencies, errors):
                 manager = workbench.get_plugin('ecpy.pulses')
 
@@ -87,7 +87,7 @@ enamldef PulsesBuildingDependenciesExtension(Extension):
                     dependencies[c_id] = cls
 
         BuildDependency:
-            id = 'ecpy.pulses.shapes'
+            id = 'ecpy.pulses.shape'
             analyse => (workbench, obj, getter, dependencies, errors):
                 manager = workbench.get_plugin('ecpy.pulses')
 

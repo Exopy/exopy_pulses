@@ -167,7 +167,7 @@ class TemplateSequence(AbstractSequence):
 
         context_config = config['context']
         context_id_name = context_config.pop('context_id')
-        context_id = dep['ecpy.pulses.contexts'][context_id_name]
+        context_id = dep['ecpy.pulses.context'][context_id_name]
         context = context_id()
         update_members_from_preferences(context, context_config)
 
