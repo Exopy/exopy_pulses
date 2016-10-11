@@ -60,6 +60,7 @@ def test_sequence_vars_update(measure_workbench, editor, task,
 
     editor.react_to_unselection(measure_workbench)
     assert task.sequence_vars == {'a': '1.5', 'c': ''}
+    win.close()
 
 
 def test_sequence_replacement(editor, task, windows, process_and_sleep):
@@ -79,6 +80,7 @@ def test_sequence_replacement(editor, task, windows, process_and_sleep):
     process_and_sleep()
 
     root_view = editor.page_widget().widgets()[0].scroll_widget().widgets()[0]
+    process_and_sleep()
     new = root_view.additional_pages[0]
 
     assert old is not new
