@@ -16,11 +16,14 @@ from traceback import format_exc
 from copy import deepcopy
 from collections import Mapping
 from numbers import Real
+from collections import OrderedDict
 
 from atom.api import (Int, Instance, Unicode, Dict, Bool, List,
                       Signal, set_default, Typed)
 from ecpy.utils.container_change import ContainerChange
-from ecpy.utils.atom_util import (update_members_from_preferences)
+from ecpy.utils.atom_util import (update_members_from_preferences,
+                                  ordered_dict_to_pref,
+                                  ordered_dict_from_pref)
 
 from ..contexts.base_context import BaseContext
 from ..utils.entry_eval import eval_entry, MissingLocalVars
@@ -619,7 +622,8 @@ class RootSequence(BaseSequence):
 
     #: Dictionary of external variables whose values should be given before
     #: the start of the compilation stage.
-    external_vars = Dict().tag(pref=True)
+    external_vars = Typed(OrderedDict, ()).tag(pref=(ordered_dict_to_pref,
+                                                     ordered_dict_from_pref))
 
     #: Duration of the sequence when it is fixed. The unit of this time is
     # fixed by the context.

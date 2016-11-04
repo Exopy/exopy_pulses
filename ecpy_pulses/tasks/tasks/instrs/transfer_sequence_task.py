@@ -15,9 +15,11 @@ from __future__ import (division, unicode_literals, print_function,
 import os
 from traceback import format_exc
 from pprint import pformat
+from collections import OrderedDict
 
-from atom.api import Value, Unicode, Dict, Float
+from atom.api import Value, Unicode, Float, Typed
 from ecpy.tasks.api import InstrumentTask
+from ecpy.utils.atom_util import ordered_dict_from_pref, ordered_dict_to_pref
 
 
 class TransferPulseSequenceTask(InstrumentTask):
@@ -34,7 +36,8 @@ class TransferPulseSequenceTask(InstrumentTask):
     sequence = Value()
 
     #: Global variable to use for the sequence.
-    sequence_vars = Dict().tag(pref=True)
+    sequence_vars = Typed(OrderedDict, ()).tag(pref=(ordered_dict_to_pref,
+                                                     ordered_dict_from_pref))
 
     def check(self, *args, **kwargs):
         """Check that the sequence can be compiled.
