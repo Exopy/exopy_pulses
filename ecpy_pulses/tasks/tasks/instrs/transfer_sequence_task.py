@@ -48,7 +48,7 @@ class TransferPulseSequenceTask(InstrumentTask):
         seq = self.sequence
         for k, v in self.sequence_vars.items():
             try:
-                self.format_and_eval_string(v)
+                seq.external_vars[k] = self.format_and_eval_string(v)
             except Exception:
                 test = False
                 traceback[err_path+k] = msg.format(k, v, format_exc())

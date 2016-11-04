@@ -85,7 +85,7 @@ def sequence():
     context = TestContext(sampling=0.5)
     root.context = context
 
-    root.external_vars = {'a': 1.5}
+    root.external_vars = {'a': None}
     root.local_vars = {'b': '2*{a}'}
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
