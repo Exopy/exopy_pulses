@@ -619,7 +619,7 @@ class RootSequence(BaseSequence):
 
     #: Dictionary of external variables whose values should be given before
     #: the start of the compilation stage.
-    external_vars = Dict(Unicode()).tag(pref=True)
+    external_vars = Dict().tag(pref=True)
 
     #: Duration of the sequence when it is fixed. The unit of this time is
     # fixed by the context.
