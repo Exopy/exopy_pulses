@@ -267,7 +267,7 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
             Page:
                 title = 'Variables (Name: values)'
                 DictEditor(VarEditor): ed:
-                    ed.mapping = task.sequence_vars
+                    ed.mapping := task.sequence_vars
                     ed.attributes = {'task': task}
             Page:
                 title = 'Context'
