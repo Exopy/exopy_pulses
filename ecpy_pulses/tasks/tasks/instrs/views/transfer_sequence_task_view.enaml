@@ -116,10 +116,10 @@ def load_sequence(core, task, parent=None, path=''):
             validate_context_driver_pair(core, seq.context, task, parent)
 
         task.sequence = seq
-        old = task.sequence_vars
-        task.sequence_vars = OrderedDict(seq.external_vars)
-        for k in (e for e in old if e in task.sequence_vars):
-            task.sequence_vars[k] = old[k]
+        new = OrderedDict.fromkeys(seq.external_vars, '')
+        for k in (e for e in task.sequence_vars if e in new):
+            new[k] = task.sequence_vars[k]
+        task.sequence_vars = new
         task.sequence_path = path
         task.sequence_timestamp = os.path.getmtime(path)
 

@@ -142,6 +142,7 @@ def test_task_traversal(task):
     components = list(task.traverse())
     assert task.sequence in components
 
+
 def test_dependencies_analysis(workbench, task):
     """Test analysing dependencies.
 
@@ -395,7 +396,8 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     assert task_view.task.sequence_path == new_path + '.pulse.ini'
 
 
-def test_load_refresh_save2(task_view, monkeypatch, process_and_sleep, windows):
+def test_load_refresh_save2(task_view, monkeypatch, process_and_sleep,
+                            windows):
     """Test loading a sequence, refreshing, modifying and saving.
 
     Test handling the case of an empty sequence_path
@@ -538,4 +540,3 @@ def test_drivers_filtering(task_view):
     del task_view.task.sequence.context
 
     assert len(task_view.filter_drivers([DInfos(id='__dummy__'), d])) == 2
-
