@@ -12,6 +12,8 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+from collections import OrderedDict
+
 from ecpy_pulses.pulses.pulse import Pulse
 from ecpy_pulses.pulses.sequences.base_sequences\
     import RootSequence, BaseSequence
@@ -79,12 +81,13 @@ def test_get_accessible_vars():
     """Test getting the accessible vars of a sequence.
 
     """
-    root = RootSequence(external_vars={'a': 1}, local_vars={'a2': '5'},
+    root = RootSequence(external_vars=OrderedDict({'a': 1}),
+                        local_vars=OrderedDict({'a2': '5'}),
                         time_constrained=True)
     context = TestContext()
     root.context = context
-    sequence1 = BaseSequence(local_vars={'b': '1'})
-    sequence2 = BaseSequence(local_vars={'c': '2'})
+    sequence1 = BaseSequence(local_vars=OrderedDict({'b': '1'}))
+    sequence2 = BaseSequence(local_vars=OrderedDict({'c': '2'}))
     pulse = Pulse()
 
     sequence2.add_child_item(0, pulse)
@@ -278,7 +281,7 @@ def test_traverse_sequence():
     root = RootSequence()
     context = TestContext()
     root.context = context
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -304,7 +307,7 @@ def test_build_from_config():
     root = RootSequence()
     context = TestContext()
     root.context = context
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')

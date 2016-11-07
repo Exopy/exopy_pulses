@@ -231,7 +231,7 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
                     if btn and btn.action == 'accept':
                         seq = task.sequence
                         prefs = seq.preferences_from_members()
-                        ext_vars = dict.fromkeys(seq.external_vars, '')
+                        ext_vars = OrderedDict.fromkeys(seq.external_vars, '')
                         prefs['external_vars'] = repr(ext_vars)
                         save_sequence_prefs(task.sequence_path, prefs)
                         tstmp = os.path.getmtime(task.sequence_path)
@@ -247,7 +247,7 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
                             path += '.pulse.ini'
                         seq = task.sequence
                         prefs = seq.preferences_from_members()
-                        ext_vars = dict.fromkeys(seq.external_vars, '')
+                        ext_vars = OrderedDict.fromkeys(seq.external_vars, '')
                         prefs['external_vars'] = repr(ext_vars)
                         save_sequence_prefs(path, prefs)
                         tstmp = os.path.getmtime(path)

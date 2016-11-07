@@ -13,6 +13,7 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 import os
+from collections import OrderedDict
 
 import enaml
 import pytest
@@ -85,8 +86,8 @@ def sequence():
     context = TestContext(sampling=0.5)
     root.context = context
 
-    root.external_vars = {'a': None}
-    root.local_vars = {'b': '2*{a}'}
+    root.external_vars = OrderedDict({'a': None})
+    root.local_vars = OrderedDict({'b': '2*{a}'})
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -236,7 +237,7 @@ def test_task_check3(task):
     """Test handling an evaluation error.
 
     """
-    task.sequence.local_vars = {}
+    task.sequence.local_vars = OrderedDict()
     res, traceback = task.check()
     assert not res
     assert 'root/Test-compil' in traceback
@@ -279,7 +280,7 @@ def test_task_perform2(task):
     """Test handling error in sequence evaluation.
 
     """
-    task.sequence.local_vars = {}
+    task.sequence.local_vars = OrderedDict()
     with pytest.raises(Exception):
         task.perform()
 
