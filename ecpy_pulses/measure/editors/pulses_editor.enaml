@@ -55,7 +55,7 @@ enamldef PulseEditor(BaseEditor):
             for k in old_vars:
                 if k in new_vars:
                     new_vars[k] = old_vars[k]
-            selected_task.sequence_vars = dict(new_vars)
+            selected_task.sequence_vars = OrderedDict(new_vars)
 
     Container:
         ScrollArea:

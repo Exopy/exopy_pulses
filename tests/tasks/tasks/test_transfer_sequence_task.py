@@ -111,7 +111,7 @@ def task(sequence, tmpdir):
     save_sequence_prefs(path, sequence.preferences_from_members())
     task = TransferPulseSequenceTask(sequence=sequence, sequence_path=path,
                                      sequence_timestamp=os.path.getmtime(path),
-                                     sequence_vars={'a': '1.5'},
+                                     sequence_vars=OrderedDict({'a': '1.5'}),
                                      name='Test',
                                      selected_instrument=('p', 'd', 'c', 's'))
     root.add_child_task(0, task)
@@ -227,7 +227,7 @@ def test_task_check2(task):
     """Test handling errors in variable evaluation.
 
     """
-    task.sequence_vars = {'a': '+*'}
+    task.sequence_vars = OrderedDict({'a': '+*'})
     res, traceback = task.check()
     assert not res
     assert 'root/Test-a' in traceback
@@ -338,16 +338,16 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     assert task_view.widgets()[4].style_class
 
     old_seq = task_view.task.sequence
-    task_view.task.sequence_vars = {'a': '1*23', 'c': '1'}
+    task_view.task.sequence_vars = OrderedDict([('a', '1*23'), ('c', '1')])
     # Load
     task_view.widgets()[2].clicked = True
     process_and_sleep()
     assert task_view.task.sequence is not old_seq
-    assert task_view.task.sequence_vars == {'a': '1*23'}
+    assert task_view.task.sequence_vars == OrderedDict({'a': '1*23'})
     assert not task_view.widgets()[4].style_class
 
     old_seq = task_view.task.sequence
-    task_view.task.sequence_vars = {}
+    task_view.task.sequence_vars = OrderedDict()
     # Refresh
     with handle_question('no'):
         task_view.widgets()[4].clicked = True
@@ -355,7 +355,7 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     with handle_question('yes'):
         task_view.widgets()[4].clicked = True
     assert task_view.task.sequence is not old_seq
-    assert task_view.task.sequence_vars == {'a': ''}
+    assert task_view.task.sequence_vars == OrderedDict({'a': ''})
 
     old_timestamp = task_view.task.sequence_timestamp
     # Save
@@ -412,7 +412,7 @@ def test_load_refresh_save2(task_view, monkeypatch, process_and_sleep, windows):
 
     show_widget(task_view)
 
-    task_view.task.sequence_vars = {}
+    task_view.task.sequence_vars = OrderedDict()
     # Refresh
     button = task_view.widgets()[4]
     assert not button.enabled
