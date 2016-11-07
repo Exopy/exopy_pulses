@@ -89,7 +89,7 @@ def test_sequence_compilation1bis(root):
     assert len(pulses) == 3
     assert pulses[0].stop == 1.5
 
-    root.external_vars = {'a': 2.}
+    root.external_vars = OrderedDict({'a': 2.})
     res = root.evaluate_sequence()
     pulses = root.items
     assert res
