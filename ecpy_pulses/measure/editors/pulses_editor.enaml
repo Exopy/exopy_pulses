@@ -12,6 +12,8 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+from collections import OrderedDict
+
 from enaml.widgets.api import Container, ScrollArea, Page, Field
 from enaml.core.api import Conditional
 
@@ -34,7 +36,7 @@ enamldef ExternalVarsPage(Page):
             text << ', '.join(sequence.external_vars)
             text ::
                 keys = [k.strip() for k in text.split(',')]
-                sequence.external_vars = dict.fromkeys(keys, '')
+                sequence.external_vars = OrderedDict.fromkeys(keys, '')
 
 
 enamldef PulseEditor(BaseEditor):
@@ -53,7 +55,7 @@ enamldef PulseEditor(BaseEditor):
             for k in old_vars:
                 if k in new_vars:
                     new_vars[k] = old_vars[k]
-            selected_task.sequence_vars = dict(new_vars)
+            selected_task.sequence_vars = OrderedDict(new_vars)
 
     Container:
         ScrollArea:

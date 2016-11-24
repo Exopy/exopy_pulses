@@ -136,7 +136,7 @@ class Item(HasEvaluableFields):
                 errors[prefix + par1] = repr(e)
             else:
                 # Check the value makes sense as a start time or duration.
-                if d1 >= 0 and (par1 == 'start' or d1 != 0):
+                if d1 >= 0:
                     setattr(self, par1, d1)
                     root_vars[prefix + par1] = d1
                     sequence_locals[prefix + par1] = d1
@@ -145,7 +145,7 @@ class Item(HasEvaluableFields):
                     if par1 == 'start':
                         m = 'Got a strictly negative value for start: {}'
                     else:
-                        m = 'Got a negative value for duration: {}'
+                        m = 'Got a strictly negative value for duration: {}'
 
                     errors[prefix + par1] = m.format(d1)
 
@@ -159,7 +159,7 @@ class Item(HasEvaluableFields):
                 errors[prefix + par2] = repr(e)
             else:
                 # Check the value makes sense as a duration or stop time.
-                if d2 > 0 and (par2 == 'duration' or d1 is None or d2 > d1):
+                if d2 >= 0 and (par2 == 'duration' or d1 is None or d2 >= d1):
                     setattr(self, par2, d2)
                     root_vars[prefix + par2] = d2
                     sequence_locals[prefix + par2] = d2
@@ -171,7 +171,7 @@ class Item(HasEvaluableFields):
                     elif par2 == 'stop':
                         msg = 'Got a stop smaller than start: {} < {}'
                         args = (d1, d2)
-                    elif d2 <= 0.0:
+                    elif d2 < 0.0:
                         msg = 'Got a negative value for duration: {}'
                         args = (d2,)
 

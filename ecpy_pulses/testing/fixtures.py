@@ -13,10 +13,10 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 import os
+from pprint import pformat
+from collections import OrderedDict
 
 import pytest
-from pprint import pformat
-
 import enaml
 from enaml.workbench.api import Workbench
 
@@ -97,7 +97,7 @@ def template_sequence(pulses_plugin):
                               channel_mapping={'A': '', 'B': '', 'Ch1': '',
                                                'Ch2': ''})
     root.context = context
-    root.local_vars = {'a': '1.5'}
+    root.local_vars = OrderedDict({'a': '1.5'})
 
     pulse1 = Pulse(channel='A', def_1='1.0', def_2='{a}')
     pulse2 = Pulse(channel='B', def_1='{a} + 1.0', def_2='3.0')

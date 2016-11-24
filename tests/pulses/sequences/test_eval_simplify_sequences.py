@@ -12,6 +12,8 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+from collections import OrderedDict
+
 import pytest
 
 from ecpy_pulses.pulses.pulse import Pulse
@@ -42,8 +44,8 @@ def test_sequence_compilation1(root):
     """Test compiling a flat sequence.
 
     """
-    root.external_vars = {'a': 1.5}
-    root.local_vars = {'b': '2*{a}'}
+    root.external_vars = OrderedDict({'a': 1.5})
+    root.local_vars = OrderedDict({'b': '2*{a}'})
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}', kind='Analogical',
                    shape=SquareShape(amplitude='0.5',
@@ -74,7 +76,7 @@ def test_sequence_compilation1bis(root):
     sure the cache is cleaned in between
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='4.0')
@@ -87,7 +89,7 @@ def test_sequence_compilation1bis(root):
     assert len(pulses) == 3
     assert pulses[0].stop == 1.5
 
-    root.external_vars = {'a': 2.}
+    root.external_vars = OrderedDict({'a': 2.})
     res = root.evaluate_sequence()
     pulses = root.items
     assert res
@@ -99,7 +101,7 @@ def test_sequence_compilation2(root):
     """Test compiling a flat sequence of fixed duration.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
     root.time_constrained = True
     root.sequence_duration = '10.0'
 
@@ -129,7 +131,7 @@ def test_sequence_compilation2bis(root):
     stopping too late.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
     root.time_constrained = True
     root.sequence_duration = '10.0'
 
@@ -147,7 +149,7 @@ def test_sequence_compilation3(root):
     """Test compiling a flat sequence in two passes.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{2_start} - 1.0')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -173,7 +175,7 @@ def test_sequence_compilation4(root):
     """Test compiling a flat sequence with circular references.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{2_start} - 1.0')
     pulse2 = Pulse(def_1='{1_stop} + 1.0', def_2='3.0')
@@ -213,7 +215,7 @@ def test_sequence_compilation6(root):
     wrong string value
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
     root.time_constrained = True
     root.sequence_duration = '*10.0*'
 
@@ -237,8 +239,8 @@ def test_sequence_compilation6bis(root):
     """
     root.time_constrained = True
     root.sequence_duration = '10.0'
-    root.external_vars = {'a': 1.5}
-    root.local_vars = {'b': '2*{a}+', 'c': '{dummy}'}
+    root.external_vars = OrderedDict({'a': 1.5})
+    root.local_vars = OrderedDict({'b': '2*{a}+', 'c': '{dummy}'})
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -256,7 +258,7 @@ def test_sequence_compilation6ter(root):
     wrong string value
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
     root.time_constrained = True
     root.sequence_duration = '10.0*{dummy}'
 
@@ -276,7 +278,7 @@ def test_sequence_compilation7(root):
     """Test compiling a nested sequence with a disabled item
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -323,7 +325,7 @@ def test_sequence_compilation8(root):
     sequence.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{7_start} - 1.0')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -368,7 +370,7 @@ def test_sequence_compilation9(root):
     """Test compiling a nested sequence in multi passes.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{7_start} - 1.0')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='{6_start} + 1.0')
@@ -414,7 +416,7 @@ def test_sequence_compilation10(root):
     one.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{7_start} - 1.0')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='{6_start} + 1.0')
@@ -443,7 +445,7 @@ def test_sequence_compilation11(root):
     one.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{7_start} - 1.0')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='{6_start} + 1.0')
@@ -468,7 +470,7 @@ def test_sequence_compilation12(root):
     """Test compiling a nested sequence using local vars.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -476,7 +478,7 @@ def test_sequence_compilation12(root):
     pulse4 = Pulse(def_1='2.0', def_2='0.5', def_mode='Start/Duration')
     pulse5 = Pulse(def_1='3.0', def_2='0.5', def_mode='Start/Duration')
 
-    sequence2 = BaseSequence(local_vars={'b': '2**2'})
+    sequence2 = BaseSequence(local_vars=OrderedDict({'b': '2**2'}))
     sequence2.add_child_item(0, pulse3)
     sequence1 = BaseSequence()
     add_children(sequence1, (pulse2, sequence2, pulse4))
@@ -514,7 +516,7 @@ def test_sequence_compilation13(root):
     """Test compiling a nested sequence with wrong local vars definitions.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -522,7 +524,8 @@ def test_sequence_compilation13(root):
     pulse4 = Pulse(def_1='2.0', def_2='0.5', def_mode='Start/Duration')
     pulse5 = Pulse(def_1='3.0', def_2='0.5', def_mode='Start/Duration')
 
-    sequence2 = BaseSequence(local_vars={'b': '2**', 'c': '{dummy}'})
+    sequence2 = BaseSequence(local_vars=OrderedDict({'b': '2**',
+                                                     'c': '{dummy}'}))
     sequence2.add_child_item(0, pulse3)
     sequence1 = BaseSequence()
     add_children(sequence1, (pulse2, sequence2, pulse4))
@@ -541,7 +544,7 @@ def test_sequence_compilation14(root):
     """Test the locality of local vars.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -549,7 +552,7 @@ def test_sequence_compilation14(root):
     pulse4 = Pulse(def_1='2.0', def_2='0.5', def_mode='Start/Duration')
     pulse5 = Pulse(def_1='3.0', def_2='{b}', def_mode='Start/Duration')
 
-    sequence2 = BaseSequence(local_vars={'b': '2**2'})
+    sequence2 = BaseSequence(local_vars=OrderedDict({'b': '2**2'}))
     sequence2.add_child_item(0, pulse3)
     sequence1 = BaseSequence()
     add_children(sequence1, (pulse2, sequence2, pulse4))
@@ -570,7 +573,7 @@ def test_sequence_compilation15(root):
     """Test compiling a nested sequence with internal fixed length.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -618,7 +621,7 @@ def test_sequence_compilation16(root):
     incoherent pulse start.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -646,7 +649,7 @@ def test_sequence_compilation17(root):
     incoherent pulse stop.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -674,7 +677,7 @@ def test_sequence_compilation18(root):
     """Test compiling a nested fixed duration sequence.
 
     """
-    root.external_vars = {'a': 1.5}
+    root.external_vars = OrderedDict({'a': 1.5})
     root.time_constrained = True
     root.sequence_duration = '100'
 

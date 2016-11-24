@@ -12,6 +12,8 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+from collections import OrderedDict
+
 import enaml
 import pytest
 
@@ -49,7 +51,7 @@ def test_sequence_vars_update(measure_workbench, editor, task,
     """Test that when unselecting the editor we properly synchronize the vars.
 
     """
-    task.sequence_vars = {'a': '1.5', 'b': '2'}
+    task.sequence_vars = OrderedDict({'a': '1.5', 'b': '2'})
     win = show_widget(editor)
     editor.selected_task = task
     process_and_sleep()
@@ -59,7 +61,7 @@ def test_sequence_vars_update(measure_workbench, editor, task,
     vars_editor.page_widget().widgets()[0].text = 'a, c'
 
     editor.react_to_unselection(measure_workbench)
-    assert task.sequence_vars == {'a': '1.5', 'c': ''}
+    assert task.sequence_vars == OrderedDict([('a', '1.5'), ('c', '')])
     win.close()
 
 

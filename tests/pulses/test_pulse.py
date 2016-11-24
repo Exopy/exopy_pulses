@@ -56,6 +56,35 @@ def test_eval_pulse1(pulse):
     assert_array_equal(pulse.waveform, np.ones(1))
 
 
+def test_eval_pulse1bis(pulse):
+    """Test evaluating the entries of a pulse when everything is ok.
+    Start/Stop mode, zero duration.
+
+    """
+    pulse.def_1 = '1.0*2.0'
+    pulse.def_2 = '2.0'
+
+    root_vars = {'a': 2.0, 'b': 5.0, 'c': 1.0}
+    missing = set()
+    errors = {}
+
+    seq_locals = root_vars.copy()
+    assert pulse.eval_entries(root_vars, seq_locals, missing, errors)
+
+    assert missing == set()
+    assert errors == {}
+    assert root_vars['0_start'] == 2.0
+    assert root_vars['0_stop'] == 2.0
+    assert root_vars['0_duration'] == 0.0
+    assert seq_locals['0_start'] == 2.0
+    assert seq_locals['0_stop'] == 2.0
+    assert seq_locals['0_duration'] == 0.0
+    assert pulse.start == 2.0
+    assert pulse.stop == 2.0
+    assert pulse.duration == 0.0
+    assert_array_equal(pulse.waveform, np.ones(0))
+
+
 def test_eval_pulse_validation_fail(pulse):
     """Test evaluating the entries of a pulse when everything is ok.
     Start/Stop mode, meaningless start.
@@ -184,6 +213,37 @@ def test_eval_pulse5(pulse):
     assert_array_equal(pulse.waveform, np.ones(3))
 
 
+def test_eval_pulse5bis(pulse):
+    """Test evaluating the entries of a pulse when everything is ok.
+    Start/Duration mode, 0 duration.
+
+    """
+    pulse.def_mode = 'Start/Duration'
+    pulse.def_1 = '1.0*2.0'
+    pulse.def_2 = '0'
+
+    root_vars = {'a': 2.0, 'b': 5.0, 'c': 1.0}
+    missing = set()
+    errors = {}
+
+    seq_locals = root_vars.copy()
+    assert pulse.eval_entries(root_vars, seq_locals,
+                              missing, errors)
+
+    assert missing == set()
+    assert errors == {}
+    assert root_vars['0_start'] == 2.0
+    assert root_vars['0_stop'] == 2.0
+    assert root_vars['0_duration'] == 0.0
+    assert seq_locals['0_start'] == 2.0
+    assert seq_locals['0_stop'] == 2.0
+    assert seq_locals['0_duration'] == 0.0
+    assert pulse.start == 2.0
+    assert pulse.stop == 2.0
+    assert pulse.duration == 0
+    assert_array_equal(pulse.waveform, np.ones(0))
+
+
 def test_eval_pulse6(pulse):
     """Test evaluating the entries of a pulse when everything is ok.
     Start/Duration mode, meaningless start.
@@ -218,7 +278,7 @@ def test_eval_pulse7(pulse):
     pulse.def_1 = '1.0*2.0'
     pulse.def_2 = '5.0*{a}/{b} + {c}'
 
-    root_vars = {'a': 0.0, 'b': 10.0, 'c': 0.0}
+    root_vars = {'a': -1.0, 'b': 10.0, 'c': 0.0}
     missing = set()
     errors = {}
 
@@ -263,6 +323,37 @@ def test_eval_pulse8(pulse):
     assert pulse.stop == 3.0
     assert pulse.duration == 2.0
     assert_array_equal(pulse.waveform, np.ones(2))
+
+
+def test_eval_pulse8bis(pulse):
+    """Test evaluating the entries of a pulse when everything is ok.
+    Duration/Stop mode, zero duration.
+
+    """
+    pulse.def_mode = 'Duration/Stop'
+    pulse.def_1 = '0'
+    pulse.def_2 = '5.0*{a}/{b} + {c}'
+
+    root_vars = {'a': 2.0, 'b': 5.0, 'c': 1.0}
+    missing = set()
+    errors = {}
+
+    seq_locals = root_vars.copy()
+    assert pulse.eval_entries(root_vars, seq_locals,
+                              missing, errors)
+
+    assert missing == set()
+    assert errors == {}
+    assert root_vars['0_start'] == 3.0
+    assert root_vars['0_stop'] == 3.0
+    assert root_vars['0_duration'] == 0.0
+    assert seq_locals['0_start'] == 3.0
+    assert seq_locals['0_stop'] == 3.0
+    assert seq_locals['0_duration'] == 0.0
+    assert pulse.start == 3.0
+    assert pulse.stop == 3.0
+    assert pulse.duration == 0.0
+    assert_array_equal(pulse.waveform, np.ones(0))
 
 
 def test_eval_pulse9(pulse):

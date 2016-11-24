@@ -13,6 +13,7 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 import os
+from collections import OrderedDict
 
 import enaml
 import pytest
@@ -85,8 +86,8 @@ def sequence():
     context = TestContext(sampling=0.5)
     root.context = context
 
-    root.external_vars = {'a': 1.5}
-    root.local_vars = {'b': '2*{a}'}
+    root.external_vars = OrderedDict({'a': None})
+    root.local_vars = OrderedDict({'b': '2*{a}'})
 
     pulse1 = Pulse(def_1='1.0', def_2='{a}')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -110,7 +111,7 @@ def task(sequence, tmpdir):
     save_sequence_prefs(path, sequence.preferences_from_members())
     task = TransferPulseSequenceTask(sequence=sequence, sequence_path=path,
                                      sequence_timestamp=os.path.getmtime(path),
-                                     sequence_vars={'a': '1.5'},
+                                     sequence_vars=OrderedDict({'a': '1.5'}),
                                      name='Test',
                                      selected_instrument=('p', 'd', 'c', 's'))
     root.add_child_task(0, task)
@@ -140,6 +141,7 @@ def test_task_traversal(task):
     """
     components = list(task.traverse())
     assert task.sequence in components
+
 
 def test_dependencies_analysis(workbench, task):
     """Test analysing dependencies.
@@ -226,7 +228,7 @@ def test_task_check2(task):
     """Test handling errors in variable evaluation.
 
     """
-    task.sequence_vars = {'a': '+*'}
+    task.sequence_vars = OrderedDict({'a': '+*'})
     res, traceback = task.check()
     assert not res
     assert 'root/Test-a' in traceback
@@ -236,7 +238,7 @@ def test_task_check3(task):
     """Test handling an evaluation error.
 
     """
-    task.sequence.local_vars = {}
+    task.sequence.local_vars = OrderedDict()
     res, traceback = task.check()
     assert not res
     assert 'root/Test-compil' in traceback
@@ -279,7 +281,7 @@ def test_task_perform2(task):
     """Test handling error in sequence evaluation.
 
     """
-    task.sequence.local_vars = {}
+    task.sequence.local_vars = OrderedDict()
     with pytest.raises(Exception):
         task.perform()
 
@@ -337,16 +339,16 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     assert task_view.widgets()[4].style_class
 
     old_seq = task_view.task.sequence
-    task_view.task.sequence_vars = {'a': '1*23', 'c': '1'}
+    task_view.task.sequence_vars = OrderedDict([('a', '1*23'), ('c', '1')])
     # Load
     task_view.widgets()[2].clicked = True
     process_and_sleep()
     assert task_view.task.sequence is not old_seq
-    assert task_view.task.sequence_vars == {'a': '1*23'}
+    assert task_view.task.sequence_vars == OrderedDict({'a': '1*23'})
     assert not task_view.widgets()[4].style_class
 
     old_seq = task_view.task.sequence
-    task_view.task.sequence_vars = {}
+    task_view.task.sequence_vars = OrderedDict()
     # Refresh
     with handle_question('no'):
         task_view.widgets()[4].clicked = True
@@ -354,7 +356,7 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     with handle_question('yes'):
         task_view.widgets()[4].clicked = True
     assert task_view.task.sequence is not old_seq
-    assert task_view.task.sequence_vars == {'a': ''}
+    assert task_view.task.sequence_vars == OrderedDict({'a': ''})
 
     old_timestamp = task_view.task.sequence_timestamp
     # Save
@@ -394,7 +396,8 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     assert task_view.task.sequence_path == new_path + '.pulse.ini'
 
 
-def test_load_refresh_save2(task_view, monkeypatch, process_and_sleep, windows):
+def test_load_refresh_save2(task_view, monkeypatch, process_and_sleep,
+                            windows):
     """Test loading a sequence, refreshing, modifying and saving.
 
     Test handling the case of an empty sequence_path
@@ -411,7 +414,7 @@ def test_load_refresh_save2(task_view, monkeypatch, process_and_sleep, windows):
 
     show_widget(task_view)
 
-    task_view.task.sequence_vars = {}
+    task_view.task.sequence_vars = OrderedDict()
     # Refresh
     button = task_view.widgets()[4]
     assert not button.enabled
@@ -537,4 +540,3 @@ def test_drivers_filtering(task_view):
     del task_view.task.sequence.context
 
     assert len(task_view.filter_drivers([DInfos(id='__dummy__'), d])) == 2
-

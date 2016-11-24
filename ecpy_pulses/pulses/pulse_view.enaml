@@ -114,6 +114,7 @@ enamldef PulseView(GroupBox): view:
         selected := item.def_mode
 
     Splitter: defs:
+        hug_width = 'ignore'
         SplitItem:
             Container:
                 constraints = [hbox(d1_lab, d1_val),
@@ -144,10 +145,12 @@ enamldef PulseView(GroupBox): view:
 
         Container:
             padding = 0
+            hug_width = 'strong'
             constraints = [hbox(m_val, s_lab, s_val),
                            align('v_center', s_lab, s_val)]
             CheckBox: m_val:
                 text = 'Use modulation'
+                hug_width = 'strong'
                 checked := item.modulation.activated
                 checked ::
                     if change['value']:

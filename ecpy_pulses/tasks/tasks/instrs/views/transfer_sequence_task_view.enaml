@@ -16,9 +16,10 @@ import os
 import logging
 from traceback import format_exc
 from textwrap import fill
+from collections import OrderedDict
 
 from enaml.styling import StyleSheet, Style, Setter
-from enaml.layout.api import factory, hbox, vbox, spacer
+from enaml.layout.api import factory, hbox, vbox, spacer, align
 from enaml.core.api import Conditional, Include
 from enaml.widgets.api import (GroupBox, Label, Field, ObjectCombo, CheckBox,
                                Notebook, Page, PushButton, Menu, Action,
@@ -54,7 +55,7 @@ enamldef VarEditor(Container):
     attr model
 
     padding = 1
-    constraints = [hbox(lab, val)]
+    constraints = [hbox(lab, val), align('v_center', lab, val)]
     Label: lab:
         hug_width = 'strong'
         text << model.key
@@ -115,14 +116,10 @@ def load_sequence(core, task, parent=None, path=''):
             validate_context_driver_pair(core, seq.context, task, parent)
 
         task.sequence = seq
-        added = set(seq.external_vars) - set(task.sequence_vars)
-        removed = set(task.sequence_vars) - set(seq.external_vars)
-        seq_vars = task.sequence_vars.copy()
-        for e in added:
-            seq_vars[e] = ''
-        for e in removed:
-            del seq_vars[e]
-        task.sequence_vars = seq_vars
+        new = OrderedDict.fromkeys(seq.external_vars, '')
+        for k in (e for e in task.sequence_vars if e in new):
+            new[k] = task.sequence_vars[k]
+        task.sequence_vars = new
         task.sequence_path = path
         task.sequence_timestamp = os.path.getmtime(path)
 
@@ -133,7 +130,7 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
     """
     constraints << [vbox(hbox(seq, seq_name, seq_re, seq_sav, spacer,
                               instr_label, instr_selection),
-                         *cnd.items)]
+                         nb)]
 
     initialized ::
 
@@ -237,8 +234,8 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
                     if btn and btn.action == 'accept':
                         seq = task.sequence
                         prefs = seq.preferences_from_members()
-                        ext_vars = dict.fromkeys(seq.external_vars, '')
-                        prefs['external_vars'] = repr(ext_vars)
+                        ext_vars = OrderedDict.fromkeys(seq.external_vars, '')
+                        prefs['external_vars'] = repr(list(ext_vars.items()))
                         save_sequence_prefs(task.sequence_path, prefs)
                         tstmp = os.path.getmtime(task.sequence_path)
                         task.sequence_timestamp = tstmp
@@ -253,30 +250,29 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
                             path += '.pulse.ini'
                         seq = task.sequence
                         prefs = seq.preferences_from_members()
-                        ext_vars = dict.fromkeys(seq.external_vars, '')
-                        prefs['external_vars'] = repr(ext_vars)
+                        ext_vars = OrderedDict.fromkeys(seq.external_vars, '')
+                        prefs['external_vars'] = repr(list(ext_vars.items()))
                         save_sequence_prefs(path, prefs)
                         tstmp = os.path.getmtime(path)
                         task.sequence_timestamp = tstmp
                         task.sequence_path = path
 
-    Conditional: cnd:
-        condition << bool(task.sequence)
-        Notebook:
-            tabs_closable = False
-            Page:
-                title = 'Variables (Name: values)'
-                DictEditor(VarEditor): ed:
-                    ed.mapping = task.sequence_vars
-                    ed.attributes = {'task': task}
-            Page:
-                title = 'Context'
-                Include:
-                    objects << ([instantiate_context_view(view.root.core,
-                                                          task.sequence,
-                                                          task.sequence.context
-                                                          )]
-                                if task.sequence.context else [])
+    Notebook: nb:
+        tabs_closable = False
+        visible << bool(task.sequence)
+        Page:
+            title = 'Variables (Name: values)'
+            DictEditor(VarEditor): ed:
+                ed.mapping := task.sequence_vars
+                ed.attributes << {'task': task}
+        Page:
+            title = 'Context'
+            Include:
+                objects << ([instantiate_context_view(view.root.core,
+                                                      task.sequence,
+                                                      task.sequence.context
+                                                      )]
+                            if task.sequence and task.sequence.context else [])
 
     # =========================================================================
     # --- Private API ---------------------------------------------------------

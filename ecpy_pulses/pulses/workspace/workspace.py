@@ -14,6 +14,7 @@ from __future__ import (division, unicode_literals, print_function,
 
 import os
 import logging
+from collections import OrderedDict
 from inspect import cleandoc
 from textwrap import fill
 from traceback import format_exc
@@ -297,8 +298,8 @@ class SequenceEditionSpace(Workspace):
             path += '.pulse.ini'
         seq = self.state.sequence
         prefs = seq.preferences_from_members()
-        prefs['external_vars'] = repr(dict.fromkeys(seq.external_vars.keys(),
-                                                    ''))
+        empty_vars = OrderedDict.fromkeys(seq.external_vars, '')
+        prefs['external_vars'] = repr(list(empty_vars.items()))
         save_sequence_prefs(path, prefs)
 
 #    def _save_sequence_to_template(self, path, doc):

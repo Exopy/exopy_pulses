@@ -12,6 +12,8 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+from collections import OrderedDict
+
 from ecpy_pulses.pulses.pulse import Pulse
 from ecpy_pulses.pulses.sequences.base_sequences import BaseSequence
 from ecpy_pulses.pulses.sequences.conditional_sequence\
@@ -25,7 +27,7 @@ def test_conditional_sequence_compilation1(root):
     True.
 
     """
-    root.external_vars = {'a': 1.5, 'include': True}
+    root.external_vars = OrderedDict({'a': 1.5, 'include': True})
 
     pulse1 = Pulse(def_1='1.0', def_2='{7_start} - 1.0')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -73,7 +75,7 @@ def test_conditional_sequence_compilation2(root):
     False.
 
     """
-    root.external_vars = {'a': 1.5, 'include': False}
+    root.external_vars = OrderedDict({'a': 1.5, 'include': False})
 
     pulse1 = Pulse(def_1='1.0', def_2='{7_start} - 1.0')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
@@ -106,7 +108,7 @@ def test_conditional_sequence_compilation3(root):
     """Test compiling a conditional sequence with a wrong condition.
 
     """
-    root.external_vars = {'a': 1.5, 'include': False}
+    root.external_vars = OrderedDict({'a': 1.5, 'include': False})
 
     pulse1 = Pulse(def_1='1.0', def_2='{7_start} - 1.0')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
