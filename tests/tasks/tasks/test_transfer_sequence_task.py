@@ -89,7 +89,7 @@ def sequence():
     root.external_vars = OrderedDict({'a': None})
     root.local_vars = OrderedDict({'b': '2*{a}'})
 
-    pulse1 = Pulse(def_1='1.0', def_2='{a}')
+    pulse1 = Pulse(def_1='1.0', def_2='{a}', def_mode=str('Start/Stop'))
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='3.0')
     pulse3 = Pulse(def_1='{2_stop} + 0.5', def_2='10 + {b}')
     for i, c in enumerate((pulse1, pulse2, pulse3)):
