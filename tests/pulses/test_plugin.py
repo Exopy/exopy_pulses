@@ -45,7 +45,7 @@ def test_init(workbench):
 
 
 def test_template_observation(workbench, template_sequence, app_dir,
-                              capturelog):
+                              caplog):
     """Test that new templates are properly detected.
 
     """
@@ -64,7 +64,7 @@ def test_template_observation(workbench, template_sequence, app_dir,
     assert 'template' not in plugin.sequences
 
     plugin.templates_folders = ['']
-    assert capturelog.records()
+    assert caplog.records
 
     plugin.templates_folders = [os.path.join(app_dir, 'pulses', 'templates')]
     assert template_sequence in plugin.sequences
@@ -202,7 +202,7 @@ def test_get_config(workbench):
     assert cls is None and view is None
 
 
-def test_list_sequences(workbench, template_sequence, capturelog):
+def test_list_sequences(workbench, template_sequence, caplog):
     """Test iltering sequences.
 
     """
@@ -214,4 +214,4 @@ def test_list_sequences(workbench, template_sequence, capturelog):
     assert 'ecpy_pulses.RootSequence' not in seq
 
     plugin.list_sequences('__unknown__')
-    assert capturelog.records()
+    assert caplog.records

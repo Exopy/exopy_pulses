@@ -7,7 +7,7 @@ dist: trusty
 branches:
   only:
     - master
-    
+
 env:
   global:
     secure: "SHFMzDL5m4rYCxuOEKgMm78aFsOGAYOtKM3C8LRv0ZCtmmEnnRkQ+YiwaA4tGOW9StoMX2zeFb9YdrDEYm4BY424y0Xzn5lAdL/xA2a82Q6gmU6TByD1Ue94wzmL0MVaWY/bEWM1M8u0X3zuqiC4oh6vzG8mEhPBwu2sJRyDRzK8uVz7eWqoCSCbswxh7YanGxqp59BLMPQLLdcF1Wo9OOd9KU4ZKxSiLOBbUTeNYCy0CO/k7QiveI/FDkgEoRsy6oyyTdYkrr2TDGoJSHZ2vnxjNva7yG8qEM62GsvKghc54666u+pV8yG4hSQCNRSshJOOjU2Uh3/3tllA7kNcO3jlneSM0+roaGmbnPHVgK51LkLkeQdbNpf+c4MMeS8yJIh+UsBODDkHopTnjT6P4eXJD/VY4ZUYNFb0I1js6gxGGun0fl0gLIGJCMZrGpSn7qR6+yCQG/+NMh9UHsHLDeqz84AUZKPFCR51BW3yiTjlurU/FC6uOTCzjAVowchObOyYtffKKPvuLBXOxCiewtMn/9dQkxjejEEnHX/3p+QUrsmp/QuCMB2RhxChsU0XADxyaNpG1YI5BHsyBH9CjOFutthsgL+uzxfGwICqmmMbRo8jCN8CxVr529u3cjZaeiZuucyx+XPfYDuPonC45CsO8Cr6wvRJlLI7ttUnDJY="
@@ -49,9 +49,9 @@ before_install:
 
   # Intall test tools
   - $CONDA_INSTALL pytest
-  - $PIP_INSTALL pytest-cov pytest-capturelog pytest-timeout
+  - $PIP_INSTALL pytest-cov pytest-catchlog pytest-timeout
   - $PIP_INSTALL https://github.com/MatthieuDartiailh/enaml_coverage_plugin/tarball/master
-  
+
   # Install codecov report tools
   - $PIP_INSTALL codecov
 
@@ -72,12 +72,12 @@ script:
   # Run the ecpy_pulses test suite
   - cd ${SRC_DIR}
   - py.test tests --cov ecpy_pulses --cov-report xml
-  
+
 after_success:
   - cd ${SRC_DIR}
   - codecov
   - export PACK="$(conda build conda --output)"
-  - conda convert $PACK -p 'all' --quiet -o $CONDA_BLD_PATH 
+  - conda convert $PACK -p 'all' --quiet -o $CONDA_BLD_PATH
   - cd $CONDA_BLD_PATH
   - source deactivate
   - if [[ $TRAVIS_SECURE_ENV_VARS ]]; then python ../continuous-integration/anaconda-push.py; fi
