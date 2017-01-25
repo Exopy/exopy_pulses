@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015 by Ecpy Authors, see AUTHORS for more details.
+# Copyright 2015-2017 by Ecpy Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -23,6 +23,16 @@ DEP_TYPE = 'ecpy.pulses.shape'
 class AbstractShape(HasEvaluableFields):
     """Base class for all shapes.
 
+    Notes
+    -----
+    The entries of the shape will be evaluated only if the pulse it is attached
+    too succeeded in evaluating its entries. Which means that the pulse
+    start, stop and duration will always be present in the local variables and
+    accessible under '{self.index}_start/stop/duration'.
+
+    When compute is called all the shape evaluated parameters are avialble
+    under their name in the _cache attribute.
+
     """
     #: Identifier for the build dependency collector
     dep_type = Constant(DEP_TYPE).tag(pref=True)
@@ -30,12 +40,11 @@ class AbstractShape(HasEvaluableFields):
     #: Id of the shape used to query it from the plugin.
     shape_id = Unicode().tag(pref=True)
 
-    #: Index of the parent pulse. This is set whe evaluating the entries.
+    #: Index of the parent pulse. This is set when evaluating the entries.
     index = Int()
 
     def compute(self, time, unit):
         """ Computes the shape of the pulse at a given time.
-
 
         Parameters
         ----------

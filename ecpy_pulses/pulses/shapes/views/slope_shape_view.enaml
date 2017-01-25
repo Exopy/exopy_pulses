@@ -1,0 +1,55 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2017 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""View for the SlopeShape.
+
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+from enaml.layout.api import hbox, vbox, align
+from enaml.widgets.api import (Label, GroupBox, ObjectCombo)
+
+from ecpy.utils.widgets.qt_completers import QtLineCompleter
+from ...utils.entry_eval import EVALUATER_TOOLTIP
+
+from .base_shape_view import AbstractShapeView
+
+
+enamldef SlopeShapeView(AbstractShapeView): view:
+    """ View for a square pulse.
+
+    """
+    GroupBox:
+        title = 'Slope'
+        constraints = [hbox(mode_lab, mode_val, def1_lab, def1_val,
+                            def2_lab, def2_val),
+                       align('v_center', mode_lab, mode_val),
+                       align('v_center', def1_lab, def1_val),
+                       align('v_center', def2_lab, def2_val),
+                       def1_val.width == def2_val.width]
+
+        Label: mode_lab:
+            text = 'Mode'
+        ObjectCombo: mode_val:
+            items = list(shape.get_member('mode').items)
+            selected := shape.mode
+
+        Label: def1_lab:
+            text << shape.mode.split('/')[0]
+        QtLineCompleter: def1_val:
+            text := shape.def1
+            entries_updater = item.parent.get_accessible_vars
+            tool_tip << EVALUATER_TOOLTIP
+
+        Label: def2_lab:
+            text << shape.mode.split('/')[1]
+        QtLineCompleter: def2_val:
+            text := shape.def2
+            entries_updater = item.parent.get_accessible_vars
+            tool_tip << EVALUATER_TOOLTIP

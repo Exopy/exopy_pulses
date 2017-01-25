@@ -70,7 +70,7 @@ class Pulse(Item):
         success = super(Pulse, self).eval_entries(root_vars, sequence_locals,
                                                   missings, errors)
 
-        if self.kind == 'Analogical':
+        if success and self.kind == 'Analogical':
             # Shapes are not allowed to modify global vars hence the empty
             # dict
             success &= self.modulation.eval_entries({}, sequence_locals,

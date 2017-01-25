@@ -430,6 +430,9 @@ enamldef PulsesManagerManifest(PluginManifest):
             Shape:
                 shape = 'square_shape:SquareShape'
                 view = 'views.square_shape_view:SquareShapeView'
+            Shape:
+                shape = 'slope_shape:SlopeShape'
+                view = 'views.slope_shape_view:SlopeShapeView'
 
     PulsesBuildingDependenciesExtension:
         pass
