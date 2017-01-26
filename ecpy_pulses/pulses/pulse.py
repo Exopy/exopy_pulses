@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015 by Ecpy Authors, see AUTHORS for more details.
+# Copyright 2015-2017 by Ecpy Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -75,7 +75,7 @@ class Pulse(Item):
             # dict
             success &= self.modulation.eval_entries({}, sequence_locals,
                                                     missings, errors)
-
+            self.shape.index = self.index
             success &= self.shape.eval_entries({}, sequence_locals,
                                                missings, errors)
 

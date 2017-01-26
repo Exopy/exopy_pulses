@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2017 by EcpyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -531,6 +531,7 @@ def test_eval_pulse16(pulse):
     """Test evaluating the entries of an analogical pulse.
 
     """
+    pulse.index = 2
     pulse.def_1 = '1.0*2.0'
     pulse.def_2 = '5.0*{a}/{b} + {c}'
 
@@ -552,6 +553,7 @@ def test_eval_pulse16(pulse):
     assert missing == set()
     assert errors == {}
     assert_array_equal(pulse.waveform, 0.5*np.ones(1))
+    assert pulse.shape.index == 2
 
     pulse.clean_cached_values()
     assert not pulse.modulation._cache
