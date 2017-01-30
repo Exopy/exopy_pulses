@@ -47,6 +47,10 @@ class TransferPulseSequenceTask(InstrumentTask):
                                 self).check(*args, **kwargs)
         err_path = self.path + '/' + self.name + '-'
 
+        if not self.sequence:
+            traceback[err_path+'sequence'] = 'There is no selected sequence.'
+            return False, traceback
+
         msg = 'Failed to evaluate {} ({}): {}'
         seq = self.sequence
         for k, v in self.sequence_vars.items():
@@ -116,8 +120,9 @@ class TransferPulseSequenceTask(InstrumentTask):
         for i in infos:
             yield i
 
-        for item in self.sequence.traverse():
-            yield item
+        if self.sequence:
+            for item in self.sequence.traverse():
+                yield item
 
     @classmethod
     def build_from_config(cls, config, dependencies):

@@ -142,6 +142,10 @@ def test_task_traversal(task):
     components = list(task.traverse())
     assert task.sequence in components
 
+    task.sequence = None
+    components = list(task.traverse())
+    assert None not in components
+
 
 def test_dependencies_analysis(workbench, task):
     """Test analysing dependencies.
@@ -266,6 +270,16 @@ def test_task_check5(task):
     res, traceback = task.check()
     assert res
     assert 'root/Test-outdated' in traceback
+
+
+def test_task_check6(task):
+    """Test handling an absence of sequence.
+
+    """
+    task.sequence = None
+    res, traceback = task.check()
+    assert not res
+    assert 'root/Test-sequence' in traceback
 
 
 def test_task_perform1(task):
