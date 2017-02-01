@@ -430,6 +430,10 @@ enamldef PulsesManagerManifest(PluginManifest):
             Shape:
                 shape = 'square_shape:SquareShape'
                 view = 'views.square_shape_view:SquareShapeView'
+            path = 'ecpy_pulses.pulses.shapes'
+            Shape:
+                shape = 'gaussian_shape:GaussianShape'
+                view = 'views.gaussian_shape_view:GaussianShapeView'
 
     PulsesBuildingDependenciesExtension:
         pass
