@@ -42,4 +42,4 @@ enamldef GaussianShapeView(AbstractShapeView): view:
         QtLineCompleter: sigma_val:
             text := shape.sigma
             entries_updater = item.parent.get_accessible_vars
-            tool_tip = ('Sigma of gaussian pulse in ns')
+            tool_tip = ('Sigma of gaussian pulse, units are AWG context units')
