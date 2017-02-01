@@ -84,5 +84,6 @@ class GaussianShape(AbstractShape):
         """
         amp = self._cache['amplitude']
         sigma = self._cache['sigma']
-        pulse_shape = [amp*np.exp(-t**2/2/sigma**2) for t in time]
+        t0 = (time[0]+time[1])/2
+        pulse_shape = [amp*np.exp(-(t-t0)**2/2/sigma**2) for t in time]
         return np.asarray(pulse_shape)
