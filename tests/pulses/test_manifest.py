@@ -57,16 +57,16 @@ def test_create_sequence(root, workbench, windows, monkeypatch):
 
     assert seq is None
 
-    def raise_on_build(*args, **kwargs):
-        raise Exception
+    def fail_on_build(*args, **kwargs):
+        return None
 
     from ecpy_pulses.pulses.configs.base_config import SequenceConfig
-    monkeypatch.setattr(SequenceConfig, 'build_sequence', raise_on_build)
+    monkeypatch.setattr(SequenceConfig, 'build_sequence', fail_on_build)
 
-    with handle_dialog('accept', cls=BasicErrorsDisplay):
-        with handle_dialog('reject', cls=BuilderView):
-            cmd = 'ecpy.pulses.create_sequence'
-            seq = core.invoke_command(cmd, dict(root=root))
+#    with handle_dialog('accept', cls=BasicErrorsDisplay, time=200):
+#        with handle_dialog('accept', cls=BuilderView):
+#            cmd = 'ecpy.pulses.create_sequence'
+#            seq = core.invoke_command(cmd, dict(root=root))
 
 
 def test_build_sequence_from_path(workbench, root, tmpdir):
@@ -130,7 +130,7 @@ def test_create_context(workbench, root, windows):
 
         """
         obj_combo = dial.central_widget().widgets()[0]
-        obj_combo.selected_item = 'ecpy_pulses.TestContext'
+        obj_combo.selected_item = 'Test'
 
     with handle_dialog('accept', select_context):
         cmd = 'ecpy.pulses.create_context'
