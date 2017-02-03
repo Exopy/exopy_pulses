@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2017 by EcpyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -13,6 +13,7 @@ and defining some default pulse shapes.
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
+from traceback import format_exc
 from ast import literal_eval
 from future.builtins import str
 from configobj import ConfigObj
@@ -87,14 +88,14 @@ def create_sequence(event):
     dial = BuilderView(parent_ui, manager=manager, root=root)
     dial.exec_()
     if dial.result:
-        seq = dial.config.build_sequence()
-        if seq:
-            return seq
+        try:
+            seq = dial.config.build_sequence()
+        except Exception:
+            core = event.workbench.get_plugin('enaml.workbench.core')
+            core.invoke_command('ecpy.app.errors.signal',
+                                {'message': format_exc})
         else:
-            pass
-            # XXX fix me
-#            BasicErrorsDisplay(errors=dial.config.errors,
-#                               kind='Config errors').exec_()
+            return seq
 
 
 def build_sequence(event):

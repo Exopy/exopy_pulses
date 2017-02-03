@@ -13,13 +13,13 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 import os
-from pprint import pformat
 from collections import OrderedDict
 
 import pytest
 import enaml
 from enaml.workbench.api import Workbench
 
+from ecpy.testing.util import exit_on_err
 from ..pulses.utils.sequences_io import save_sequence_prefs
 
 with enaml.imports():
@@ -43,15 +43,7 @@ def pulses_workbench(monkeypatch, app_dir):
     """Setup the workbench in such a way that the pulses manager can be tested.
 
     """
-    def exit_err(self):
-        """Turn error reporting into an exception.
-
-        """
-        if self._delayed:
-            raise Exception('Unexpected exceptions occured :\n' +
-                            pformat(self._delayed))
-
-    monkeypatch.setattr(ErrorsPlugin, 'exit_error_gathering', exit_err)
+    monkeypatch.setattr(ErrorsPlugin, 'exit_error_gathering', exit_on_err)
     workbench = Workbench()
     workbench.register(CoreManifest())
     workbench.register(AppManifest())

@@ -41,9 +41,6 @@ class AbstractConfig(Atom):
     #: Bool indicating if the build can be done.
     ready = Bool(False)
 
-    #: Dict of errors which happened during construction.
-    errors = Dict()
-
     def check_parameters(self, change):
         """Check if enough parameters have been provided to build the item.
 
@@ -55,9 +52,6 @@ class AbstractConfig(Atom):
 
     def build_sequence(self):
         """This method use the user parameters to build the item object.
-
-        This method should not raise any exceptions but populate the errors
-        dictionary.
 
         Returns
         -------
