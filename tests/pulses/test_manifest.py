@@ -19,7 +19,7 @@ import enaml
 from configobj import ConfigObj
 from ecpy.testing.util import handle_dialog
 with enaml.imports():
-    from ecpy.app.errors.widgets import BasicErrorsDisplay
+    from ecpy.app.errors.widgets import ErrorsDialog
 
 from ecpy_pulses.pulses.sequences.base_sequences import RootSequence
 from ecpy_pulses.testing.context import TestContext
@@ -57,16 +57,16 @@ def test_create_sequence(root, workbench, windows, monkeypatch):
 
     assert seq is None
 
-    def fail_on_build(*args, **kwargs):
-        return None
+    def raise_on_build(*args, **kwargs):
+        raise Exception()
 
     from ecpy_pulses.pulses.configs.base_config import SequenceConfig
-    monkeypatch.setattr(SequenceConfig, 'build_sequence', fail_on_build)
+    monkeypatch.setattr(SequenceConfig, 'build_sequence', raise_on_build)
 
-#    with handle_dialog('accept', cls=BasicErrorsDisplay, time=200):
-#        with handle_dialog('accept', cls=BuilderView):
-#            cmd = 'ecpy.pulses.create_sequence'
-#            seq = core.invoke_command(cmd, dict(root=root))
+    with handle_dialog('accept', cls=ErrorsDialog, time=500):
+        with handle_dialog('accept', cls=BuilderView):
+            cmd = 'ecpy.pulses.create_sequence'
+            seq = core.invoke_command(cmd, dict(root=root))
 
 
 def test_build_sequence_from_path(workbench, root, tmpdir):

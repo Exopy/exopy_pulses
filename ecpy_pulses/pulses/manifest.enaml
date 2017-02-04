@@ -93,7 +93,7 @@ def create_sequence(event):
         except Exception:
             core = event.workbench.get_plugin('enaml.workbench.core')
             core.invoke_command('ecpy.app.errors.signal',
-                                {'message': format_exc})
+                                {'kind': 'error', 'message': format_exc()})
         else:
             return seq
 
