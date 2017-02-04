@@ -57,6 +57,7 @@ def test_building_template1(pulses_plugin, template_sequence):
     # test_template_sequence.
 
 
+@pytest.mark.xfail
 def test_building_template2(pulses_plugin, template_sequence):
     """Test building a template for which some dependencies are missing.
 

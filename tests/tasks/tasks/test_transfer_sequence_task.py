@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2017 by EcpyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -17,6 +17,7 @@ from collections import OrderedDict
 
 import enaml
 import pytest
+from enaml.widgets.api import Window
 from ecpy.tasks.api import RootTask
 from ecpy.tasks.tasks.instr_task import (PROFILE_DEPENDENCY_ID,
                                          DRIVER_DEPENDENCY_ID)
@@ -141,6 +142,10 @@ def test_task_traversal(task):
     """
     components = list(task.traverse())
     assert task.sequence in components
+
+    task.sequence = None
+    components = list(task.traverse())
+    assert None not in components
 
 
 def test_dependencies_analysis(workbench, task):
@@ -268,6 +273,16 @@ def test_task_check5(task):
     assert 'root/Test-outdated' in traceback
 
 
+def test_task_check6(task):
+    """Test handling an absence of sequence.
+
+    """
+    task.sequence = None
+    res, traceback = task.check()
+    assert not res
+    assert 'root/Test-sequence' in traceback
+
+
 def test_task_perform1(task):
     """Test performing the task when everything goes right.
 
@@ -304,11 +319,12 @@ def test_view_validate_driver_context(windows, task_view):
     """
     task_view.task.selected_instrument = ('p', 'ecpy_pulses.TestDriver',
                                           'c', 's')
-    with handle_dialog('accept'):
-        validate_context_driver_pair(task_view.root.core,
-                                     task_view.task.sequence.context,
-                                     task_view.task, task_view)
 
+    validate_context_driver_pair(task_view.root.core,
+                                 task_view.task.sequence.context,
+                                 task_view.task, task_view)
+
+    assert not Window.windows
     assert task_view.task.selected_instrument[0]
 
     task_view.task.selected_instrument = ('p', '__dummy__',

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyHqcLegacy Authors, see AUTHORS for more details.
+# Copyright 2015-2017 by EcpyHqcLegacy Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -46,6 +46,10 @@ class TransferPulseSequenceTask(InstrumentTask):
         test, traceback = super(TransferPulseSequenceTask,
                                 self).check(*args, **kwargs)
         err_path = self.path + '/' + self.name + '-'
+
+        if not self.sequence:
+            traceback[err_path+'sequence'] = 'There is no selected sequence.'
+            return False, traceback
 
         msg = 'Failed to evaluate {} ({}): {}'
         seq = self.sequence
@@ -116,8 +120,9 @@ class TransferPulseSequenceTask(InstrumentTask):
         for i in infos:
             yield i
 
-        for item in self.sequence.traverse():
-            yield item
+        if self.sequence:
+            for item in self.sequence.traverse():
+                yield item
 
     @classmethod
     def build_from_config(cls, config, dependencies):
