@@ -36,7 +36,7 @@ before_install:
   - conda info -a
   - conda create -n travisci --yes python=$PYTHON pip
   - source activate travisci
-  - CONDA_INSTALL="conda install -- -q"
+  - CONDA_INSTALL="conda install -q"
   - PIP_INSTALL="pip install -q"
 
   # Setup conda build output directory
