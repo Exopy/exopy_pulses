@@ -77,7 +77,4 @@ script:
 after_success:
   - cd $TRAVIS_BUILD_DIR
   - codecov
-  after_success:
-  - cd $TRAVIS_BUILD_DIR
-  - codecov
   - if [ "$TRAVIS_PULL_REQUEST" = false ]; then bash continuous-integration/deploy.sh; fi
