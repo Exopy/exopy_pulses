@@ -18,6 +18,7 @@ matrix:
     - env: PYTHON=2.7 CONDA_PY=27
     - env: PYTHON=3.4 CONDA_PY=34
     - env: PYTHON=3.5 CONDA_PY=35
+    - env: PYTHON=3.6 CONDA_PY=36
 
 before_install:
 
