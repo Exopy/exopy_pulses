@@ -13,6 +13,7 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 import os
+from time import sleep
 from collections import OrderedDict
 
 import enaml
@@ -385,6 +386,7 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     with handle_question('yes'):
         btn.clicked = True
         actions[0].triggered = True
+    sleep(0.1)
     assert task_view.task.sequence_timestamp != old_timestamp
 
     @classmethod

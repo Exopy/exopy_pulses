@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2017 by EcpyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""Test for the square shape.
+"""Test for the square shape (and some base shape functionality.
 
 The view is tested as part of the pulse.
 
@@ -51,9 +51,7 @@ def test_eval_amplitude_too_large():
 
 
 def test_eval_amplitude2():
-    """Test evaluating the entries of an active modulation when some vars
-    are missing.
-    Issue on amplitude.
+    """Test evaluating the entries of a shape when some vars are missing.
 
     """
     shape = SquareShape(amplitude='1*{b}')
@@ -66,9 +64,7 @@ def test_eval_amplitude2():
 
 
 def test_eval_amplitude3():
-    """Test evaluating the entries of an active modulation when some entries
-    are incorrect.
-    Issue on frequency.
+    """Test evaluating the entries of a shape when some entries are incorrect.
 
     """
     shape = SquareShape(amplitude='1*{a}+-')

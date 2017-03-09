@@ -18,34 +18,35 @@ matrix:
     - env: PYTHON=2.7 CONDA_PY=27
     - env: PYTHON=3.4 CONDA_PY=34
     - env: PYTHON=3.5 CONDA_PY=35
+    - env: PYTHON=3.6 CONDA_PY=36
 
 before_install:
 
   # Install Miniconda
-  - travis_retry wget -q https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - travis_retry wget -q https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b -p ~/anaconda
   - export PATH=~/anaconda/bin:$PATH
 
-  - SRC_DIR=$(pwd)
-
   # Setup environment
   - travis_retry conda update --yes conda
-  - conda install conda-build anaconda-client --yes -q
-  - conda config --add channels ecpy
+  - conda config --set always_yes yes
+  - conda config --append channels ecpy
+  - conda install conda-build anaconda-client -q
+  - conda info -a
   - conda create -n travisci --yes python=$PYTHON pip
   - source activate travisci
-  - CONDA_INSTALL="conda install --yes -q"
+  - CONDA_INSTALL="conda install -q"
   - PIP_INSTALL="pip install -q"
 
   # Setup conda build output directory
+  - cd ~
   - mkdir conda-bld-out
   - cd conda-bld-out
   - export CONDA_BLD_PATH=$(pwd)
-  - cd ..
 
   # Install ecpy dependencies
-  - $CONDA_INSTALL pyqt=4 numpy ecpy
+  - $CONDA_INSTALL pyqt numpy ecpy
 
   # Intall test tools
   - $CONDA_INSTALL pytest
@@ -58,26 +59,22 @@ before_install:
 install:
 
   # Install ecpy_pulses
-  - cd ${SRC_DIR}
+  - cd $TRAVIS_BUILD_DIR
   - conda build conda -q  # Package building does run only very minimal tests
   - conda install ecpy_pulses --use-local --yes -q --override-channels
   - cd ~
 
 before_script:
-# I need a (fake) display on Travis so I need to start a X server.
-- export DISPLAY=:99.0
-- /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render
+  # I need a (fake) display on Travis so I need to start a X server.
+  - export DISPLAY=:99.0
+  - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render
 
 script:
   # Run the ecpy_pulses test suite
-  - cd ${SRC_DIR}
+  - cd $TRAVIS_BUILD_DIR
   - py.test tests --cov ecpy_pulses --cov-report xml
 
 after_success:
-  - cd ${SRC_DIR}
+  - cd $TRAVIS_BUILD_DIR
   - codecov
-  - export PACK="$(conda build conda --output)"
-  - conda convert $PACK -p 'all' --quiet -o $CONDA_BLD_PATH
-  - cd $CONDA_BLD_PATH
-  - source deactivate
-  - if [[ $TRAVIS_SECURE_ENV_VARS ]]; then python ../continuous-integration/anaconda-push.py; fi
+  - if [ "$TRAVIS_PULL_REQUEST" = false ]; then bash continuous-integration/deploy.sh; fi
