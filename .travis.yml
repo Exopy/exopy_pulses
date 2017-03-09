@@ -46,7 +46,7 @@ before_install:
   - export CONDA_BLD_PATH=$(pwd)
 
   # Install ecpy dependencies
-  - $CONDA_INSTALL pyqt=4 numpy ecpy
+  - $CONDA_INSTALL pyqt numpy ecpy
 
   # Intall test tools
   - $CONDA_INSTALL pytest
