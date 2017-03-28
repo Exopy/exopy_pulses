@@ -1,0 +1,278 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# module : transfer_pulse_sequence_view.enaml
+# author : Matthieu Dartiailh
+# license : MIT license
+# =============================================================================
+"""
+"""
+import os
+import logging
+import traceback
+from enaml.layout.api import factory, hbox, vbox, spacer
+from enaml.core.api import Conditional, Include
+from enaml.widgets.api import (GroupBox, Label, Field, ObjectCombo, CheckBox,
+                               Notebook, Page, PushButton, Menu, Action,
+                               FileDialogEx, Container)
+from inspect import cleandoc
+from textwrap import fill
+def fc(txt):
+    return fill(cleandoc(txt))
+
+from hqc_meas.tasks.tools.pair_editor import PairEditor
+from hqc_meas.utils.widgets.qt_line_completer import QtLineCompleter
+from hqc_meas.utils.widgets.dict_editor import DictEditor
+from hqc_meas.tasks.tools.string_evaluation import EVALUATER_TOOLTIP
+from hqc_meas.tasks.views.base_instr_view import BaseInstrumentView
+from hqc_meas.pulses.sequences_views import instantiate_context_view
+
+                
+enamldef VarEditorLoop(Container):
+    """ Fields allowing top edit the local variables of a sequence.
+
+    """
+    attr model
+    padding = 1
+    constraints = [hbox(lab, val)]
+
+    Label: lab:
+        hug_width = 'strong'
+        text << model.key
+    QtLineCompleter: val:
+        text := model.value
+        entries_updater << model.model.accessible_database_entries
+        tool_tip = EVALUATER_TOOLTIP
+        
+class BaseTransferLoopView(BaseInstrumentView):
+    """Base view not including the interface view in the hierarchy.
+
+    """
+    def _insert_interface_views(self, interface):
+        """ Update the interface when the selected driver change.
+
+        """
+        cmd = 'hqc_meas.task_manager.interface_views_request'
+        views, _ = self.core.invoke_command(cmd,
+                                            {'interface_classes':
+                                                [interface.__class__.__name__]}
+                                            )
+
+        if interface.has_view:
+            i_views = [v(self, interface=self.task.interface)
+                       for v in views[interface.__class__.__name__]]
+            self.i_views = tuple(i_views)
+
+        else:
+            self.i_views = ()
+
+
+def load_loop(core, task, mode='reference', view=None, path=''):
+    """Open a dialog and load a pulse sequence.
+
+    Parameters
+    ----------
+    core : CorePlugin
+        Refrence to the core plugin of the application.
+    task : TransferPulseloopTask
+        Task for which to load the sequence.
+    mode : {'reference', 'merge'}
+        In referencve mode, the path to the sequence is saved and the sequence
+        is not stored in the task.
+        In merge mode, the path to the sequence is not saved and the sequence
+        is saved as part of the task.
+    view : enaml.Widget
+        Parent for the dialog.
+    path : unicode
+        Path of the sequence to load.
+
+    """
+    if not path:
+        path = FileDialogEx.get_open_file_name(view, name_filters=['*.ini'])
+    if path:
+        cmd = 'hqc_meas.pulses.build_sequence'
+        try:
+            seq = core.invoke_command(cmd, {'mode': 'file', 'path': path})
+        except Exception:
+            mess = 'Failed to load sequence {}: {}'
+            logging.warning(mess.format(path, traceback.format_exc()))
+
+        if not task.interface.validate_context(seq.context):
+            logging.warning('Invalid context driver combination.')
+            return
+
+        task.sequence = seq
+        # This makes sure the editor is kept in sync.
+        task.sequence_vars = seq.external_vars.copy()
+        if mode == 'reference':
+            task.sequence_path = path
+        else:
+            task.sequence_path = ''
+
+                
+enamldef TransferPulseLoopView(BaseTransferLoopView): view:
+
+    title << task.task_name
+    constraints << [vbox(hbox(driver_lab, driver_val,
+                              profile_lab, profile_val,
+                              seq, seq_name, seq_re, spacer),
+                         hbox(channel, channel_val, param_keys, param_keys_val,
+                            param_start, param_start_val, param_stop, 
+                            param_stop_val, param_points, param_points_val),
+                         hbox(vbox(wait_trig, wait_trig_val),vbox(internal_trig, 
+                              internal_trig_val), trig_period, trig_period_val),
+                         *cnd.items)]
+
+    Label:  driver_lab:
+        text = 'Driver'
+    ObjectCombo: driver_val:
+        items << sorted(drivers)
+        selected := task.selected_driver
+
+    Label:  profile_lab:
+        text = 'Instr'
+    ObjectCombo: profile_val:
+        items << sorted(profiles)
+        selected := task.selected_profile
+
+    PushButton: seq:
+        enabled << bool(task.selected_driver)
+        text = 'Select sequence'
+        Menu:
+            Action:
+                text = 'Reference'
+                tool_tip = fc('''A reference to the sequence will be kept
+                              so that modifications on the sequence will be
+                              reflected on this measure.''')
+                triggered ::
+                    load_loop(core, task, view=view)
+            Action:
+                text = 'Merge'
+                tool_tip = fc('''The sequence will be merged into the task
+                              and further modification to the sequence file
+                              won't be reflected on this measure.''')
+                triggered ::
+                    load_loop(core, task, 'merge', view)
+
+    Field: seq_name:
+        visible << bool(task.sequence_path)
+        read_only = True
+        text << os.path.basename(task.sequence_path)
+
+    PushButton: seq_re:
+        enabled << bool(task.sequence_path)
+        text = 'Refresh sequence'
+        clicked ::
+            load_loop(core, task, path=task.sequence_path)
+            
+    Label: channel:
+        text = 'Channels to loop'
+    Field: channel_val:
+        text := task.loopable_channels
+        tool_tip = fc('''Enter the ID of the channel(s) modified by 
+                        the loop separated by a comma, ie 1,2 if
+                        Ch1 and Ch2 need to be modified. Do not put a space
+                        after the commas.''')
+
+    Label: param_keys:
+        text = 'Parameters name'
+    Field: param_keys_val:
+        text := task.loop_names
+        tool_tip = fc('''Name of the loop parameter to be called in the
+                        variables. If several loops are needed, separate the 
+                        names by a comma. Do not put a space
+                        after the commas.
+                        ''')
+        
+    Label: param_start:
+        text = 'Start value'
+    QtLineCompleter: param_start_val:
+        text := task.loop_start
+        entries_updater << task.accessible_database_entries
+        tool_tip = fc('''Start value of the loop parameter to be called in the
+                        variables. If several loops are needed, separate the 
+                        values by a comma. Do not put a space
+                        after the commas.
+                        ''')
+        
+    Label: param_stop:
+        text = 'Stop value'
+    QtLineCompleter: param_stop_val:
+        text := task.loop_stop
+        entries_updater << task.accessible_database_entries
+        tool_tip = fc('''Stop value of the loop parameter to be called in the
+                        variables. If several loops are needed, separate the 
+                        values by a comma. Do not put a space
+                        after the commas.
+                        ''')
+        
+    Label: param_points:
+        text = 'Number of points'
+    QtLineCompleter: param_points_val:
+        text := task.loop_points
+        entries_updater << task.accessible_database_entries
+        tool_tip = fc('''Number of points of the loop. If several loops
+                        are needed, separate the values by a comma. 
+                        Do not put a space after the commas.
+                        ''')
+                        
+    Label: wait_trig:
+        text = 'Wait for trigger'
+    CheckBox: wait_trig_val:
+        checked := task.wait_trigger
+    
+    Label: internal_trig:
+        text = 'Internal trigger'
+    CheckBox: internal_trig_val:
+        checked := task.internal_trigger
+        
+    Label: trig_period:
+        text = 'Trigger period (mus)'
+    QtLineCompleter: trig_period_val:
+        entries_updater << task.accessible_database_entries
+        text := task.trigger_period
+        tool_tip = EVALUATER_TOOLTIP
+
+    Conditional: cnd:
+        condition << bool(task.sequence)
+        Notebook:
+            tabs_closable = False
+            Page:
+                title = 'Variables'
+                DictEditor(VarEditorLoop): ed:
+                    ed.title = 'Name : formula'
+                    ed.operations = ['move']
+                    ed.model = task
+                    ed.iterable_name = 'sequence_vars'
+            Page:
+                title = 'Context'
+                Include:
+                    objects << ([instantiate_context_view(core,
+                                                         task.sequence.context,
+                                                         {})]
+                                if getattr(task.sequence, 'context') else [])
+            Include:
+                objects << list(i_views)
+
+TASK_VIEW_MAPPING = {'TransferPulseLoopTask' : TransferPulseLoopView}
+
+
+enamldef AWGTransferPulseLoopInterfaceView(Page):
+    """
+    """
+    attr interface
+    title = 'AWG specials'
+
+    Container:
+        constraints = [hbox(lb, fd)]
+        Label: lb:
+            text = 'Sequence name'
+
+        Field: fd:
+            placeholder = 'Sequence'
+            text := interface.sequence_name
+            tool_tip = fc('''If left empty the sequence will be named
+                          'Sequence'. In any case the channel name is appended.
+                          ex : Sequence_Ch1''')
+
+INTERFACE_VIEW_MAPPING = {'AWGTransferLoopInterface':
+                          [AWGTransferPulseLoopInterfaceView]}
