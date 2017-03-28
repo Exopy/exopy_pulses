@@ -34,3 +34,11 @@ enamldef PulsesTasksManifest(PluginManifest):
                 # Way to declare instrument dependencies without specifying
                 # any instrument.
                 instruments = [None]
+            path = 'ecpy_pulses.tasks.tasks.instrs'
+            Task:
+                task = 'transfer_pulse_loop_task:TransferPulseLoopTask'
+                view = ('views.transfer_pulse_loop_task_view:'
+                        'TransferPulseLoopView')
+                # Way to declare instrument dependencies without specifying
+                # any instrument.
+                instruments = [None]
