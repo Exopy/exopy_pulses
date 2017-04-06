@@ -1,133 +1,140 @@
 # -*- coding: utf-8 -*-
-# =============================================================================
-# module : transfer_pulse_loop_task.py
-# author : Matthieu Dartiailh & Nathanael Cottet
-# license : MIT license
-# =============================================================================
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyHqcLegacy Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""Task to transfer a sequence on an AWG.
+
 """
-"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+import os
 from traceback import format_exc
-from inspect import cleandoc
+from pprint import pformat
+from collections import OrderedDict, Iterable
 
-import numpy as np
-from atom.api import (Value, Str, Bool, Unicode, Dict, set_default)
-
-from ecpy.tasks.api import (InstrumentTask, InterfaceableTaskMixin,
-                            TaskInterface)
+from atom.api import Value, Unicode, Float, Typed, Bool
+from ecpy.tasks.api import (InstrumentTask, validators)
+from ecpy.utils.atom_util import ordered_dict_from_pref, ordered_dict_to_pref
 
 
-class TransferPulseLoopTask(InterfaceableTaskMixin, InstrumentTask):
-    """Build and transfer several pulse sequences to an instrument.
-    Awg_start task needed to turn it on.
+class TransferPulseLoopTask(InstrumentTask):
+    """Build and transfer a pulse sequence to an instrument.
+
     """
     #: Sequence path for the case of sequence simply referenced.
-    sequence_path = Unicode()
+    sequence_path = Unicode().tag(pref=True)
+
+    #: Time stamp of the last modification of the sequence file.
+    sequence_timestamp = Float().tag(pref=True)
 
     #: Sequence of pulse to compile and transfer to the instrument.
     sequence = Value()
 
     #: Global variable to use for the sequence.
-    sequence_vars = Dict().tag(pref=True)
+    sequence_vars = Typed(OrderedDict, ()).tag(pref=(ordered_dict_to_pref,
+                                                     ordered_dict_from_pref))
 
     #: Loop variables: channels on which the loop will be done, loop parameters
     #: names, start value, stop value and number of points per loop
-    loopable_channels = Str().tag(pref=True)
+    loopable_channels = Unicode('1').tag(pref=True)
 
-    loop_names = Str().tag(pref=True)
+    loop_names = Unicode('a').tag(pref=True)
 
-    loop_start = Str().tag(pref=True)
+    loop_start = Unicode('0').tag(pref=True)
 
-    loop_stop = Str().tag(pref=True)
+    loop_stop = Unicode('1').tag(pref=True)
 
-    loop_points = Str().tag(pref=True)
+    loop_points = Unicode('2').tag(pref=True)
 
     #: Check if each sequence has to wait for a trigger
-    wait_trigger = Bool().tag(pref=False)
+    wait_trigger = Bool(True).tag(pref=True)
 
     #: internal or external trigger
-    internal_trigger = Bool().tag(pref=False)
+    internal_trigger = Bool(True).tag(pref=True)
 
     #: Internal trigger period in mus
-    trigger_period = Str().tag(pref=True)
-
-    def intricate_loops(self, var_count, variables):
-        """
-        """
-        loop_points = np.array(self.format_and_eval_string(self.loop_points))
-        loop_start = np.array(self.format_and_eval_string(self.loop_start))
-        loop_stop = np.array(self.format_and_eval_string(self.loop_stop))
-
-        if var_count == np.size(self.loop_names.split(',')):
-            return variables
-        else:
-            if np.size(loop_points) == 1:
-                value = np.linspace(loop_start, loop_stop, loop_points)
-                variables = value
-            else:
-                Npoints = loop_points[var_count]
-                changeN = np.product(loop_points[:var_count])
-                repeatN = np.product(loop_points[var_count + 1:])
-                value = np.linspace(loop_start[var_count], loop_stop[var_count],
-                                Npoints)
-                for p in range(0, repeatN):
-                    for k in range(p*Npoints, (p+1)*Npoints): variables[k*changeN :
-                        (k + 1)*changeN, var_count] = value[k % Npoints]
-
-            var_count = var_count + 1
-            return self.intricate_loops(var_count, variables)
+    trigger_period = Unicode('20').tag(pref=True)
 
     def check(self, *args, **kwargs):
-        """Generic check making sure sequence can be compiled.
+        """Check that the sequence can be compiled.
+
         """
         test, traceback = super(TransferPulseLoopTask,
                                 self).check(*args, **kwargs)
-        err_path = self.task_path + '/' + self.task_name + '_'
+        err_path = self.path + '/' + self.name + '-'
 
-        loop_names = self.loop_names.split(',')
-        loop_points = np.array(self.format_and_eval_string(self.loop_points))
-        loop_start = np.array(self.format_and_eval_string(self.loop_start))
-        loop_stop = np.array(self.format_and_eval_string(self.loop_stop))
-
-        if (np.size(loop_names) != np.size(loop_points)
-                 or np.size(loop_names) != np.size(loop_start)
-                 or np.size(loop_names) != np.size(loop_stop)):
-            mess = '''The numbers of loop variables, start, stop and points values do not match'''
-            test =  False
-            traceback[err_path+'seq'] = mess
-        elif 0 in loop_points:
-            mess = '''Cannot set a loop with 0 points. Please set at least 1 step.
-                        '''
-            test =  False
-            traceback[err_path+'seq'] = mess
-        else:
-            if self.interface and self.sequence:
-
-                if not self.interface.validate_context(self.sequence.context):
-                    test = False
-                    mess = 'Invalid context, instrument combination : {}, {}'
-                    traceback[err_path+'context'] = \
-                        mess.format(self.driver, self.sequence.context)
-
-            else:
+        msg = 'Failed to evaluate {} ({}): {}'
+        seq = self.sequence
+        for k, v in self.sequence_vars.items():
+            try:
+                seq.external_vars[k] = self.format_and_eval_string(v)
+            except Exception:
                 test = False
-                traceback[err_path+'seq'] = 'No interface or sequence'
+                traceback[err_path+k] = msg.format(k, v, format_exc())
+
+        if not test:
+            return test, traceback
+
+        context = seq.context
+        res, infos, errors = context.compile_and_transfer_sequence(seq)
+
+        if not res:
+            traceback[err_path+'compil'] = errors
+            return False, traceback
+
+        for k, v in infos.items():
+            self.write_in_database(k, v)
+
+        if self.sequence_path:
+            if not (self.sequence_timestamp ==
+                    os.path.getmtime(self.sequence_path)):
+                msg = 'The sequence is outdated, consider refreshing it.'
+                traceback[err_path+'outdated'] = msg
 
         return test, traceback
 
-    def compile_sequence(self, loop_names, value):
+    def perform(self):
         """Compile the sequence.
-        """
-        for k, v in self.sequence_vars.items():
-            if np.size(value) == 1:
-                if loop_names[0] in v:
-                    v = v.replace(loop_names[0], str(value))
-            else:
-                for p in range(np.size(value)):
-                    if loop_names[p] in v:
-                        v = v.replace(loop_names[p], value[p])
 
-            self.sequence.external_vars[k] = self.format_and_eval_string(v)
-        return self.sequence.compile_sequence()
+        """
+        seq = self.sequence
+        context = seq.context
+        context.run_after_transfer = False
+
+        for k, v in self.sequence_vars.items():
+            seq.external_vars[k] = self.format_and_eval_string(v)
+
+        self.driver.run_mode = 'SEQUENCE'
+        res, infos, errors = context.compile_and_transfer_sequence(
+                                                            seq,
+                                                            driver=self.driver)
+        if not res:
+            raise Exception('Failed to compile sequence :\n' +
+                            pformat(errors))
+ #ZL
+        seq_name_iter= infos['sequence_ch%s' % c[2]]
+        self.driver.set_sequence_pos(seq_name_iter
+                                     + '_Ch{}'.format(ch_id), ch_id, i + 1)
+
+        for k, v in infos.items():
+            self.write_in_database(k, v)
+
+    def register_preferences(self):
+        """Register the task preferences into the preferences system.
+
+        """
+        super(TransferPulseLoopTask, self).register_preferences()
+
+        if self.sequence:
+            self.preferences['sequence'] =\
+                self.sequence.preferences_from_members()
+
+    update_preferences_from_members = register_preferences
 
     def traverse(self, depth=-1):
         """Reimplemented to also yield the sequence
@@ -141,22 +148,6 @@ class TransferPulseLoopTask(InterfaceableTaskMixin, InstrumentTask):
         for item in self.sequence.traverse():
             yield item
 
-    def register_preferences(self):
-        """Handle the sequence specific registering in the preferences.
-        """
-        # super(TransferPulseLoopTask, self).register_preferences()
-        if self.sequence_path:
-            self.task_preferences['sequence_path'] = self.sequence_path
-        elif self.sequence:
-            seq = self.sequence
-            self.task_preferences['sequence'] = {}
-            prefs = seq.preferences_from_members()
-            prefs['external_vars'] = \
-                repr(dict.fromkeys(seq.external_vars.keys()))
-            self.task_preferences['sequence'] = prefs
-
-    update_preferences_from_members = register_preferences
-
     @classmethod
     def build_from_config(cls, config, dependencies):
         """Rebuild the task and the sequence from a config file.
@@ -164,109 +155,45 @@ class TransferPulseLoopTask(InterfaceableTaskMixin, InstrumentTask):
         """
         builder = cls.mro()[1].build_from_config.__func__
         task = builder(cls, config, dependencies)
-        if 'sequence_path' in config:
-            path = config['sequence_path']
-            builder = dependencies['pulses']['RootSequence']
-            conf = dependencies['pulses']['sequences'][path]
-            seq = builder.build_from_config(conf, dependencies)
-            task.sequence = seq
-            task.sequence_path = path
-        elif 'sequence' in config:
-            builder = dependencies['pulses']['RootSequence']
+
+        if 'sequence' in config:
+            pulse_dep = dependencies['ecpy.pulses.item']
+            builder = pulse_dep['ecpy_pulses.RootSequence']
             conf = config['sequence']
             seq = builder.build_from_config(conf, dependencies)
             task.sequence = seq
 
         return task
 
-
-class AWGTransferLoopInterface(TaskInterface):
-    """Interface for the AWG, handling naming the transfered sequences and
-    selecting it.
-    """
-    #: Generic name to use for the sequence (the number of the channel will be
-    #: appended automatically).
-    sequence_name = Str().tag(pref=True)
-
-    has_view = True
-
-    interface_database_entries = {'sequence_name': ''}
-
-    def perform(self):
-        """Compile and transfer the sequence into the AWG. Automatically
-        turn off the AWG.
-        """
-        task = self.task
-        if not task.driver:
-            task.start_driver()
-
-        task.driver.run_mode = 'SEQUENCE'
-
-        loopable_ch = task.format_and_eval_string(task.loopable_channels)
-        loopable_ch = np.array(loopable_ch)
-
-        loop_names = task.loop_names.split(',')
-        loop_points = np.array(task.format_and_eval_string(task.loop_points))
-
-        Nwaveforms = np.product(loop_points)
-        variables = np.empty((Nwaveforms, np.size(loop_names)))
-        variables = task.intricate_loops(0, variables)
-
-        task.driver.clear_sequence()
-
-        if task.wait_trigger:
-            if task.internal_trigger:
-                period = task.format_and_eval_string(task.trigger_period)*10**3
-                task.driver.internal_trigger = 'INT'
-                task.driver.internal_trigger_period = period
-            else:
-                task.driver.internal_trigger = 'EXT'
-
-        for i in range(0, Nwaveforms):
-            seq_name = task.format_string(self.sequence_name) if self.sequence_name else 'Sequence'
-            seq_name_iter = seq_name + '_' + str(int(i))
-            res, seqs = task.compile_sequence(loop_names, variables[i])
-            if not res:
-                mess = 'Failed to compile the pulse sequence: missing {}, errs {}'
-                raise RuntimeError(mess.format(*seqs))
-
-            for ch_id in task.driver.defined_channels:
-                if ch_id in seqs and i == 0:
-                     task.driver.to_send(seq_name_iter
-                                     + '_Ch{}'.format(ch_id), seqs[ch_id], False)
-                     task.driver.set_sequence_pos(seq_name_iter
-                                     + '_Ch{}'.format(ch_id), ch_id, i +1)
-
-                elif ch_id in seqs and ch_id in loopable_ch:
-                    task.driver.to_send(seq_name_iter
-                                    + '_Ch{}'.format(ch_id), seqs[ch_id], False)
-                    task.driver.set_sequence_pos(seq_name_iter
-                                    + '_Ch{}'.format(ch_id), ch_id, i + 1)
-                elif ch_id in seqs:
-                    task.driver.set_sequence_pos(seq_name + '_' + str(0)
-                                + '_Ch{}'.format(ch_id), ch_id, i +1)
-
-            index_start = (i + 1)
-            index_stop = (i + 1) % Nwaveforms + 1
-            task.driver.set_goto_pos(index_start, index_stop)
-            if task.wait_trigger:
-                task.driver.set_trigger_pos(index_start)
-
-        for ch_id in task.driver.defined_channels:
-            if ch_id in seqs:
-                ch = task.driver.get_channel(ch_id)
-                ch.output_state = 'ON'
-
-    def check(self, *args, **kwargs):
-        """Simply add the sequence name in the database.
+    def _post_setattr_sequence(self, old, new):
+        """Set up n observer on the sequence context to properly update the
+        database entries.
 
         """
-        task = self.task
-        task.write_in_database('sequence_name', self.sequence_name)
-        return True, {}
+        entries = self.database_entries.copy()
+        if old:
+            old.unobserve('context', self._update_database_entries)
+            if old.context:
+                for k in old.context.list_sequence_infos():
+                    del entries[k]
+        if new:
+            new.observe('context', self._update_database_entries)
+            if new.context:
+                entries.update(new.context.list_sequence_infos())
 
-    def validate_context(self, context):
-        """Validate the context is appropriate for the driver.
+        if entries != self.database_entries:
+            self.database_entries = entries
+
+    def _update_database_entries(self, change):
+        """Reflect in the database the sequence infos of the context.
 
         """
-        return context.__class__.__name__ == 'AWGContext'
+        entries = self.database_entries.copy()
+        if change.get('oldvalue'):
+            for k in change['oldvalue'].list_sequence_infos():
+                del entries[k]
+        if change['value']:
+            context = change['value']
+            entries.update(context.list_sequence_infos())
+
+        self.database_entries = entries
