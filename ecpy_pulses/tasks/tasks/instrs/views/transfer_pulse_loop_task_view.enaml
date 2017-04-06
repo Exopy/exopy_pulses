@@ -1,32 +1,57 @@
 # -*- coding: utf-8 -*-
-# =============================================================================
-# module : transfer_pulse_sequence_view.enaml
-# author : Matthieu Dartiailh - Nathanael Cottet - Zaki Leghtas
-# license : MIT license
-# =============================================================================
+# -----------------------------------------------------------------------------
+# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""View of the task used to transfer a pulse sequence on an arbitrary
+waveform generator.
+
 """
-"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
 import os
 import logging
-import traceback
-from enaml.layout.api import factory, hbox, vbox, spacer
+from traceback import format_exc
+from textwrap import fill
+from collections import OrderedDict
+
+from enaml.styling import StyleSheet, Style, Setter
+from enaml.layout.api import factory, hbox, vbox, spacer, align
 from enaml.core.api import Conditional, Include
 from enaml.widgets.api import (GroupBox, Label, Field, ObjectCombo, CheckBox,
                                Notebook, Page, PushButton, Menu, Action,
                                FileDialogEx, Container)
-from inspect import cleandoc
-from textwrap import fill
-def fc(txt):
-    return fill(cleandoc(txt))
+from enaml.stdlib.message_box import information, question, warning
 
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ecpy.utils.widgets.dict_editor import DictEditor
-from ecpy_pulses.pulses.utils.entry_eval import EVALUATER_TOOLTIP
 from ecpy.tasks.tasks.instr_view import InstrTaskView
+
+from ecpy_pulses.pulses.utils.entry_eval import EVALUATER_TOOLTIP
+from ecpy_pulses.pulses.utils.sequences_io import save_sequence_prefs
 from ecpy_pulses.pulses.sequences.views.base_sequences_views\
      import instantiate_context_view
 
-# ZL: copied from transfer_sequence_task_view
+from inspect import cleandoc
+from textwrap import fill
+
+def fc(txt):
+    return fill(cleandoc(txt))
+
+enamldef RedButton(StyleSheet):
+    """Style sheet allowing to use a large font for the save confirmation popup
+
+    """
+    Style:
+        style_class = 'red-button'
+        Setter:
+            field = 'background'
+            value = 'red'
+
+
 enamldef VarEditor(Container):
     """ Fields allowing top edit the global variables of a sequence.
 
@@ -45,113 +70,202 @@ enamldef VarEditor(Container):
         tool_tip = EVALUATER_TOOLTIP
 
 
-class BaseTransferLoopView(InstrTaskView):
-    """Base view not including the interface view in the hierarchy.
+def validate_context_driver_pair(core, context, task, parent=None):
+    """Validate that the context can work in conjunction with the selected
+    driver.
 
     """
-    def _insert_interface_views(self, interface):
-        """ Update the interface when the selected driver change.
-
-        """
-        cmd = 'hqc_meas.task_manager.interface_views_request'
-        views, _ = self.core.invoke_command(cmd,
-                                            {'interface_classes':
-                                                [interface.__class__.__name__]}
-                                            )
-
-        if interface.has_view:
-            i_views = [v(self, interface=self.task.interface)
-                       for v in views[interface.__class__.__name__]]
-            self.i_views = tuple(i_views)
-
-        else:
-            self.i_views = ()
+    if task.selected_instrument and task.selected_instrument[0]:
+        cmd = 'ecpy.pulses.get_context_infos'
+        c_id = context.context_id
+        c_infos = core.invoke_command(cmd, dict(context_id=c_id))
+        driver_id = task.selected_instrument[1]
+        if driver_id not in c_infos.instruments:
+            del task.selected_instrument
+            information(parent, title='Invalid context/driver association',
+                        text=fill('The context of the loaded sequence does '
+                                  'not support the selected driver, please '
+                                  ' elect a different driver.'))
 
 
-def load_loop(core, task, mode='reference', view=None, path=''):
+def load_sequence(core, task, parent=None, path=''):
     """Open a dialog and load a pulse sequence.
 
     Parameters
     ----------
     core : CorePlugin
         Refrence to the core plugin of the application.
-    task : TransferPulseloopTask
+    task : TransferPulseSequenceTask
         Task for which to load the sequence.
-    mode : {'reference', 'merge'}
-        In referencve mode, the path to the sequence is saved and the sequence
-        is not stored in the task.
-        In merge mode, the path to the sequence is not saved and the sequence
-        is saved as part of the task.
-    view : enaml.Widget
+    parent : enaml.Widget
         Parent for the dialog.
-    path : unicode
-        Path of the sequence to load.
+    path : unicode, optional
+        Path of the sequence to load. If this does not point to a real
+        file the path is used as a hint for the file selection dialog.
 
     """
-    if not path:
-        path = FileDialogEx.get_open_file_name(view, name_filters=['*.ini'])
+    if not os.path.isfile(path):
+        path = FileDialogEx.get_open_file_name(parent, current_path=path,
+                                               name_filters=['*.pulse.ini'])
     if path:
         cmd = 'ecpy.pulses.build_sequence'
         try:
-            seq = core.invoke_command(cmd, {'mode': 'file', 'path': path})
+            seq = core.invoke_command(cmd, {'path': path})
         except Exception:
-            mess = 'Failed to load sequence {}: {}'
-            logging.warning(mess.format(path, traceback.format_exc()))
-
-        if not task.interface.validate_context(seq.context):
-            logging.warning('Invalid context driver combination.')
+            cmd = 'ecpy.app.errors.signal'
+            msg = 'Failed to load sequence {}: {}'.format(path, format_exc())
+            core.invoke_command(cmd, dict(kind='error', message=msg))
             return
 
+        if seq.context:
+            validate_context_driver_pair(core, seq.context, task, parent)
+
         task.sequence = seq
-        # This makes sure the editor is kept in sync.
-        task.sequence_vars = seq.external_vars.copy()
-        if mode == 'reference':
-            task.sequence_path = path
-        else:
-            task.sequence_path = ''
+        new = OrderedDict.fromkeys(seq.external_vars, '')
+        for k in (e for e in task.sequence_vars if e in new):
+            new[k] = task.sequence_vars[k]
+        task.sequence_vars = new
+        task.sequence_path = path
+        task.sequence_timestamp = os.path.getmtime(path)
 
 
-enamldef TransferPulseLoopView(BaseTransferLoopView): view:
+enamldef TransferPulseLoopView(InstrTaskView): view:
+    """View for the TransferPulseSequenceTask.
+
     """
-    """
-    title << task.name
-    constraints << [vbox(hbox(seq, seq_name, seq_re, spacer),
+    constraints << [vbox(hbox(seq, seq_name, seq_re, seq_sav, spacer,
+                              instr_label, instr_selection),
                          hbox(channel, channel_val, param_keys, param_keys_val,
-                            param_start, param_start_val, param_stop,
-                            param_stop_val, param_points, param_points_val),
+                              param_start, param_start_val, param_stop,
+                              param_stop_val, param_points, param_points_val),
                          hbox(vbox(wait_trig, wait_trig_val),vbox(internal_trig,
                               internal_trig_val), trig_period, trig_period_val),
-                         *cnd.items)]
+                         nb)]
+
+    initialized ::
+
+        task.observe('sequence', _install_context_observer)
+
+        if task.sequence and os.path.isfile(task.sequence_path):
+            if os.path.getmtime(task.sequence_path) != task.sequence_timestamp:
+                seq_re.style_class = 'red-button'
+                seq_re.tool_tip = fill('The sequence appears to have been '
+                                       'edited since it has been reload. '
+                                       'Consider refreshing the sequence.')
+
+            if task.sequence.context:
+                validate_context_driver_pair(root.core, task.sequence.context,
+                                             task, self)
+
+            task.sequence.observe('context',
+                                  _check_context_driver_compatibility)
+
+    filter_profiles => (profiles):
+        """Only allow profile whose at least one driver can be used by the
+        context.
+
+        """
+        if not task.sequence or not task.sequence.context:
+            return profiles
+
+        cmd = 'ecpy.pulses.get_context_infos'
+        c_id = task.sequence.context.context_id
+        c_infos = self.root.core.invoke_command(cmd, dict(context_id=c_id))
+
+        return [p for p, v in profiles.items()
+                if any([d.id in c_infos.instruments
+                        for d in v.model.drivers])]
+
+    filter_drivers => (drivers):
+        """Only allow drivers supported by the context.
+
+        """
+        if not task.sequence or not task.sequence.context:
+            return drivers
+
+        cmd = 'ecpy.pulses.get_context_infos'
+        c_id = task.sequence.context.context_id
+        c_infos = self.root.core.invoke_command(cmd, dict(context_id=c_id))
+
+        return [d for d in drivers if d.id in c_infos.instruments]
+
+    instr_selection.enabled << bool(task.sequence and task.sequence.context)
+    instr_selection.tool_tip << ('Please first select a context'
+                                if not instr_selection.enabled else
+                                '')
 
     PushButton: seq:
-        enabled << True # bool(task.selected_driver)
         text = 'Select sequence'
-        Menu:
-            Action:
-                text = 'Reference'
-                tool_tip = fc('''A reference to the sequence will be kept
-                              so that modifications on the sequence will be
-                              reflected on this measure.''')
-                triggered ::
-                    load_loop(core, task, view=view)
-            Action:
-                text = 'Merge'
-                tool_tip = fc('''The sequence will be merged into the task
-                              and further modification to the sequence file
-                              won't be reflected on this measure.''')
-                triggered ::
-                    load_loop(core, task, 'merge', view)
+        clicked ::
+            dir_path = os.path.dirname(task.sequence_path)
+            load_sequence(view.root.core, task, parent=view, path=dir_path)
+            seq_re.style_class = ''
 
     Field: seq_name:
         visible << bool(task.sequence_path)
         read_only = True
-        text << os.path.basename(task.sequence_path)
+        text << os.path.basename(task.sequence_path).rstrip('.pulse.ini')
 
     PushButton: seq_re:
-        enabled << bool(task.sequence_path)
-        text = 'Refresh sequence'
+        enabled << bool(task.sequence_path and
+                        os.path.isfile(task.sequence_path))
+        text = 'Refresh'
+        tool_tip << ('Referenced file does not exist anymore.'
+                     if not self.enabled else '')
         clicked ::
-            load_loop(core, task, path=task.sequence_path)
+            btn = question(self, title='Confirm refresh',
+                           text='If you refresh any local modification to the '
+                                'sequence will be lost.\nConfirm refresh ?')
+            if btn and btn.action == 'accept':
+                try:
+                    load_sequence(view.root.core, task,
+                                  path=task.sequence_path)
+                except Exception:
+                    warning(self, 'Failed to refresh sequence', format_exc())
+
+                self.tool_tip = 'Reload the sequence from file.'
+                self.style_class = ''
+
+    PushButton: seq_sav:
+        enabled << bool(task.sequence)
+        text = 'Save'
+        Menu:
+            Action:
+                text = 'Save'
+                enabled << bool(task.sequence_path and
+                                os.path.isfile(task.sequence_path))
+                tool_tip << ('Referenced file does not exist anymore.'
+                             if not self.enabled else '')
+                triggered ::
+                    btn = question(seq_sav, title='Confirm save',
+                           text='If you save any local modification will '
+                                'override the original sequence.\n'
+                                'Confirm save ?')
+                    if btn and btn.action == 'accept':
+                        seq = task.sequence
+                        prefs = seq.preferences_from_members()
+                        ext_vars = OrderedDict.fromkeys(seq.external_vars, '')
+                        prefs['external_vars'] = repr(list(ext_vars.items()))
+                        save_sequence_prefs(task.sequence_path, prefs)
+                        tstmp = os.path.getmtime(task.sequence_path)
+                        task.sequence_timestamp = tstmp
+            Action:
+                text = 'Save as'
+                triggered ::
+                    explore = FileDialogEx.get_save_file_name
+                    path = explore(seq_sav, current_path=task.sequence_path,
+                                   name_filters=['*.pulse.ini'])
+                    if path:
+                        if not path.endswith('.pulse.ini'):
+                            path += '.pulse.ini'
+                        seq = task.sequence
+                        prefs = seq.preferences_from_members()
+                        ext_vars = OrderedDict.fromkeys(seq.external_vars, '')
+                        prefs['external_vars'] = repr(list(ext_vars.items()))
+                        save_sequence_prefs(path, prefs)
+                        tstmp = os.path.getmtime(path)
+                        task.sequence_timestamp = tstmp
+                        task.sequence_path = path
 
     Label: channel:
         text = 'Channels to loop'
@@ -221,40 +335,47 @@ enamldef TransferPulseLoopView(BaseTransferLoopView): view:
         text := task.trigger_period
         tool_tip = EVALUATER_TOOLTIP
 
-    Conditional: cnd:
-        condition << bool(task.sequence)
-        Notebook:
-            tabs_closable = False
-            Page:
-                title = 'Variables (Name: values)'
-                DictEditor(VarEditor): ed:
-                    ed.mapping := task.sequence_vars
-                    ed.attributes << {'task': task}
-            Page:
-                title = 'Context'
-                Include:
-                    objects << ([instantiate_context_view(core,
-                                                         task.sequence.context,
-                                                         {})]
-                                if getattr(task.sequence, 'context') else [])
+    Notebook: nb:
+        tabs_closable = False
+        visible << bool(task.sequence)
+        Page:
+            title = 'Variables (Name: values)'
+            DictEditor(VarEditor): ed:
+                ed.mapping := task.sequence_vars
+                ed.attributes << {'task': task}
+        Page:
+            title = 'Context'
             Include:
-                objects << list(i_views)
+                objects << ([instantiate_context_view(view.root.core,
+                                                      task.sequence,
+                                                      task.sequence.context
+                                                      )]
+                            if task.sequence and task.sequence.context else [])
 
+    # =========================================================================
+    # --- Private API ---------------------------------------------------------
+    # =========================================================================
 
-enamldef AWGTransferPulseLoopInterfaceView(Page):
-    """
-    """
-    attr interface
-    title = 'AWG specials'
+    func _install_context_observer(change):
+        """Setup an observer to validate the driver/context match on context
+        change.
 
-    Container:
-        constraints = [hbox(lb, fd)]
-        Label: lb:
-            text = 'Sequence name'
+        """
+        if 'oldvalue' in change and change['oldvalue']:
+            change['oldvalue'].unobserve('context',
+                                         _check_context_driver_compatibility)
+        if change['value']:
+            sequence = change['value']
+            sequence.observe('context', _check_context_driver_compatibility)
+            if sequence.context:
+                validate_context_driver_pair(view.root.core,
+                                             task.sequence.context, task, view)
 
-        Field: fd:
-            placeholder = 'Sequence'
-            text := interface.sequence_name
-            tool_tip = fc('''If left empty the sequence will be named
-                          'Sequence'. In any case the channel name is appended.
-                          ex : Sequence_Ch1''')
+    func _check_context_driver_compatibility(change):
+        """Check whether the selected driver can be used with the selected
+        context.
+
+        """
+        if task.sequence.context:
+            validate_context_driver_pair(view.root.core, task.sequence.context,
+                                         task, view)
