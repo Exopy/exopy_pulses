@@ -13,13 +13,13 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 import os
-from traceback import format_exc
 from pprint import pformat
 from collections import OrderedDict
 
 from atom.api import Value, Unicode, Float, Typed
 from ecpy.tasks.api import InstrumentTask
 from ecpy.utils.atom_util import ordered_dict_from_pref, ordered_dict_to_pref
+from ecpy.utils.traceback import format_exc
 
 
 class TransferPulseSequenceTask(InstrumentTask):

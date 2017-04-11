@@ -17,13 +17,13 @@ import logging
 from collections import OrderedDict
 from inspect import cleandoc
 from textwrap import fill
-from traceback import format_exc
 
 import enaml
 from atom.api import (Atom, Typed, Value, Enum, Unicode, Property,
                       set_default)
 from enaml.workbench.ui.api import Workspace
 from enaml.widgets.api import FileDialogEx
+from ecpy.utils.traceback import format_exc
 
 from ..api import RootSequence
 from ..utils.sequences_io import save_sequence_prefs

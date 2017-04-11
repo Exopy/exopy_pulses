@@ -17,11 +17,11 @@ from __future__ import (division, unicode_literals, print_function,
 
 from copy import deepcopy
 from ast import literal_eval
-from traceback import format_exc
 
 from atom.api import (Dict, ForwardTyped, Unicode, List)
 
 from ecpy.utils.atom_util import update_members_from_preferences
+from ecpy.utils.traceback import format_exc
 
 from ..pulse import Pulse
 from ..utils.entry_eval import eval_entry

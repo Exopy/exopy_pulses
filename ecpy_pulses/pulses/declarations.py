@@ -14,12 +14,12 @@ from __future__ import (division, unicode_literals, print_function,
 
 
 from future.utils import python_2_unicode_compatible
-from traceback import format_exc
 from inspect import cleandoc
 
 from atom.api import Unicode, Dict, Property, List
 from enaml.core.api import d_, d_func
 
+from ecpy.utils.traceback import format_exc
 from ecpy.utils.declarator import (Declarator, GroupDeclarator, import_and_get)
 from .infos import (SequenceInfos, ConfigInfos, ContextInfos, ShapeInfos)
 

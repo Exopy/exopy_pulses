@@ -12,7 +12,6 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-from traceback import format_exc
 from copy import deepcopy
 from collections import Mapping
 from numbers import Real
@@ -20,6 +19,7 @@ from collections import OrderedDict
 
 from atom.api import (Int, Instance, Unicode, Bool, List,
                       Signal, set_default, Typed)
+from ecpy.utils.traceback import format_exc
 from ecpy.utils.container_change import ContainerChange
 from ecpy.utils.atom_util import (update_members_from_preferences,
                                   ordered_dict_to_pref,
