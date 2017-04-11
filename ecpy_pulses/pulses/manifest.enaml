@@ -13,7 +13,6 @@ and defining some default pulse shapes.
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-from traceback import format_exc
 from ast import literal_eval
 from future.builtins import str
 from configobj import ConfigObj
@@ -26,6 +25,7 @@ from enaml.workbench.ui.api import ActionItem, MenuItem, ItemGroup
 from ecpy.app.api import AppStartup
 from ecpy.app.preferences.api import Preferences
 from ecpy.app.states.api import State
+from ecpy.utils.traceback import format_exc
 from ecpy.utils.plugin_tools import make_handler
 from ecpy.app.errors.widgets import BasicErrorsDisplay
 

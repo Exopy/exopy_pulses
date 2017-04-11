@@ -14,7 +14,6 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 import os
 import logging
-from traceback import format_exc
 from textwrap import fill
 from collections import OrderedDict
 
@@ -26,6 +25,7 @@ from enaml.widgets.api import (GroupBox, Label, Field, ObjectCombo, CheckBox,
                                FileDialogEx, Container)
 from enaml.stdlib.message_box import information, question, warning
 
+from ecpy.utils.traceback import format_exc
 from ecpy.utils.widgets.qt_completers import QtLineCompleter
 from ecpy.utils.widgets.dict_editor import DictEditor
 from ecpy.tasks.tasks.instr_view import InstrTaskView
