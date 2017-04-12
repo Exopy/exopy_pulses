@@ -116,10 +116,14 @@ class TransferPulseLoopTask(InstrumentTask):
         if not res:
             raise Exception('Failed to compile sequence :\n' +
                             pformat(errors))
- #ZL
-        seq_name_iter= infos['sequence_ch%s' % c[2]]
-        self.driver.set_sequence_pos(seq_name_iter
-                                     + '_Ch{}'.format(ch_id), ch_id, i + 1)
+#  ZL RL : set_sequence_pos does not work here, although it works through
+#  testingAWG
+        c = self.driver.defined_channels
+        ch_id = 2
+        seq_name_iter = infos['sequence_ch%s' % c[ch_id-1]]
+        i = 0
+        self.driver.set_sequence_pos(seq_name_iter, ch_id-1, i+1)
+        print((seq_name_iter, ch_id, i + 1))
 
         for k, v in infos.items():
             self.write_in_database(k, v)

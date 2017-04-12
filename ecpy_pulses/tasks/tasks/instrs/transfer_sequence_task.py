@@ -90,6 +90,7 @@ class TransferPulseSequenceTask(InstrumentTask):
         for k, v in self.sequence_vars.items():
             seq.external_vars[k] = self.format_and_eval_string(v)
 
+        self.driver.run_mode = 'CONTINUOUS'
         res, infos, errors = context.compile_and_transfer_sequence(seq,
                                                                    self.driver)
         if not res:
