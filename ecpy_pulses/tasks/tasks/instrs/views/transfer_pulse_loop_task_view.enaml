@@ -135,7 +135,7 @@ enamldef TransferPulseLoopView(InstrTaskView): view:
     """
     constraints << [vbox(hbox(seq, seq_name, seq_re, seq_sav, spacer,
                               instr_label, instr_selection),
-                         hbox(channel, channel_val, param_keys, param_keys_val,
+                         hbox(loop_name, loop_name_val,
                               param_start, param_start_val, param_stop,
                               param_stop_val, param_points, param_points_val),
                          hbox(vbox(wait_trig, wait_trig_val),vbox(internal_trig,
@@ -267,24 +267,12 @@ enamldef TransferPulseLoopView(InstrTaskView): view:
                         task.sequence_timestamp = tstmp
                         task.sequence_path = path
 
-    Label: channel:
-        text = 'Channels to loop'
-    Field: channel_val:
-        text := task.loopable_channels
-        tool_tip = fc('''Enter the ID of the channel(s) modified by
-                        the loop separated by a comma, ie 1,2 if
-                        Ch1 and Ch2 need to be modified. Do not put a space
-                        after the commas.''')
-
-    Label: param_keys:
-        text = 'Parameters name'
-    Field: param_keys_val:
-        text := task.loop_names
-        tool_tip = fc('''Name of the loop parameter to be called in the
-                        variables. If several loops are needed, separate the
-                        names by a comma. Do not put a space
-                        after the commas.
-                        ''')
+    Label: loop_name:
+        text = 'Parameter name'
+    ObjectCombo: loop_name_val:
+        items << task.sequence_vars.keys()
+        selected := task.loop_name
+        tool_tip = ("Select external sequence variable to loop")
 
     Label: param_start:
         text = 'Start value'

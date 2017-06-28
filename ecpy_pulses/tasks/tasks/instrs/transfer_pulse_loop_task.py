@@ -15,10 +15,11 @@ from __future__ import (division, unicode_literals, print_function,
 import os
 from traceback import format_exc
 from pprint import pformat
-from collections import OrderedDict, Iterable
+from collections import OrderedDict
+import numpy as np
 
 from atom.api import Value, Unicode, Float, Typed, Bool
-from ecpy.tasks.api import (InstrumentTask, validators)
+from ecpy.tasks.api import (InstrumentTask)
 from ecpy.utils.atom_util import ordered_dict_from_pref, ordered_dict_to_pref
 
 
@@ -41,9 +42,8 @@ class TransferPulseLoopTask(InstrumentTask):
 
     #: Loop variables: channels on which the loop will be done, loop parameters
     #: names, start value, stop value and number of points per loop
-    loopable_channels = Unicode('1').tag(pref=True)
 
-    loop_names = Unicode('a').tag(pref=True)
+    loop_name = Unicode('pulse_rabi_length').tag(pref=True)
 
     loop_start = Unicode('0').tag(pref=True)
 
@@ -105,25 +105,33 @@ class TransferPulseLoopTask(InstrumentTask):
         seq = self.sequence
         context = seq.context
         context.run_after_transfer = False
-
-        for k, v in self.sequence_vars.items():
-            seq.external_vars[k] = self.format_and_eval_string(v)
-
+        context.select_after_transfer = False
         self.driver.run_mode = 'SEQUENCE'
-        res, infos, errors = context.compile_and_transfer_sequence(
+
+        loop_values = np.linspace(float(self.loop_start),
+                                  float(self.loop_stop),
+                                  int(self.loop_points))
+        seq_name_0 = context.sequence_name
+        self.driver.delete_all_waveforms()
+        for nn in range(int(self.loop_points)):
+            self.sequence_vars[self.loop_name] = str(loop_values[nn])
+            for k, v in self.sequence_vars.items():
+                seq.external_vars[k] = self.format_and_eval_string(v)
+            context.sequence_name = '{}_{}'.format(seq_name_0, nn+1)
+            res, infos, errors = context.compile_and_transfer_sequence(
                                                             seq,
                                                             driver=self.driver)
+            for cc in range(4):
+                _seq = 'sequence_ch'+str(cc+1)
+                if infos[_seq]:
+                    self.driver.get_channel(cc+1).set_sequence_pos(infos[_seq],
+                                                                   nn)
+        self.driver.loop_infinite(1)
+        self.driver.running = True
+
         if not res:
             raise Exception('Failed to compile sequence :\n' +
                             pformat(errors))
-#  ZL RL : set_sequence_pos does not work here, although it works through
-#  testingAWG
-        c = self.driver.defined_channels
-        ch_id = 2
-        seq_name_iter = infos['sequence_ch%s' % c[ch_id-1]]
-        i = 0
-        self.driver.set_sequence_pos(seq_name_iter, ch_id-1, i+1)
-        print((seq_name_iter, ch_id, i + 1))
 
         for k, v in infos.items():
             self.write_in_database(k, v)
