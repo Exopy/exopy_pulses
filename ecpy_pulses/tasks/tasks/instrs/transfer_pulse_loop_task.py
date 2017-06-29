@@ -51,11 +51,8 @@ class TransferPulseLoopTask(InstrumentTask):
 
     loop_points = Unicode('2').tag(pref=True)
 
-    #: Check if each sequence has to wait for a trigger
-    wait_trigger = Bool(True).tag(pref=True)
-
     #: internal or external trigger
-    internal_trigger = Bool(True).tag(pref=True)
+    internal_trigger = Bool(False).tag(pref=True)
 
     #: Internal trigger period in mus
     trigger_period = Unicode('20').tag(pref=True)
@@ -107,6 +104,9 @@ class TransferPulseLoopTask(InstrumentTask):
         context.run_after_transfer = False
         context.select_after_transfer = False
         self.driver.run_mode = 'SEQUENCE'
+        self.driver.internal_trigger = self.internal_trigger
+        if self.internal_trigger:
+            self.driver.internal_trigger_period = int(float(self.trigger_period) * 1000)
 
         loop_values = np.linspace(float(self.loop_start),
                                   float(self.loop_stop),

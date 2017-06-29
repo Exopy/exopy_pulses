@@ -138,7 +138,7 @@ enamldef TransferPulseLoopView(InstrTaskView): view:
                          hbox(loop_name, loop_name_val,
                               param_start, param_start_val, param_stop,
                               param_stop_val, param_points, param_points_val),
-                         hbox(vbox(wait_trig, wait_trig_val),vbox(internal_trig,
+                         hbox(vbox(internal_trig,
                               internal_trig_val), trig_period, trig_period_val),
                          nb)]
 
@@ -306,11 +306,6 @@ enamldef TransferPulseLoopView(InstrTaskView): view:
                         Do not put a space after the commas.
                         ''')
 
-    Label: wait_trig:
-        text = 'Wait for trigger'
-    CheckBox: wait_trig_val:
-        checked := task.wait_trigger
-
     Label: internal_trig:
         text = 'Internal trigger'
     CheckBox: internal_trig_val:
@@ -322,6 +317,7 @@ enamldef TransferPulseLoopView(InstrTaskView): view:
         entries_updater << task.list_accessible_database_entries
         text := task.trigger_period
         tool_tip = EVALUATER_TOOLTIP
+        enabled << task.internal_trigger
 
     Notebook: nb:
         tabs_closable = False
