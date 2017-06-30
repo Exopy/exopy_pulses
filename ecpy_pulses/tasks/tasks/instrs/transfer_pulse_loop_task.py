@@ -125,7 +125,7 @@ class TransferPulseLoopTask(InstrumentTask):
                 _seq = 'sequence_ch'+str(cc+1)
                 if infos[_seq]:
                     self.driver.get_channel(cc+1).set_sequence_pos(infos[_seq],
-                                                                   nn)
+                                                                   nn+1)
         self.driver.loop_infinite(1)
         self.driver.running = True
 
