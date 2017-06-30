@@ -644,6 +644,15 @@ class RootSequence(BaseSequence):
         super(RootSequence, self).__init__(**kwargs)
         self.root = self
 
+    def clean_cached_values(self):
+        """ Clear all internal caches.
+
+        This should be called before evaluating a sequence.
+
+        """
+        super(RootSequence, self).clean_cached_values()
+        self.context.clean_cached_values()
+
     def evaluate_sequence(self):
         """Evaluate the root sequence entries and all sub items.
 
