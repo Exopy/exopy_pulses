@@ -75,6 +75,8 @@ def test_sequence_compilation1bis(root):
     """Compiles two times a sequence while changing a parameter to make
     sure the cache is cleaned in between
 
+    Also validate that the context cache is cleaned
+
     """
     root.external_vars = OrderedDict({'a': 1.5})
 
@@ -85,6 +87,9 @@ def test_sequence_compilation1bis(root):
 
     res, _, _ = root.evaluate_sequence()
     pulses = root.items
+    context = root.context
+    assert not context._cache
+    context._cache = {'a': 1}
     assert res
     assert len(pulses) == 3
     assert pulses[0].stop == 1.5
@@ -92,6 +97,8 @@ def test_sequence_compilation1bis(root):
     root.external_vars = OrderedDict({'a': 2.})
     res = root.evaluate_sequence()
     pulses = root.items
+    context = root.context
+    assert not context._cache
     assert res
     assert len(pulses) == 3
     assert pulses[0].stop == 2.

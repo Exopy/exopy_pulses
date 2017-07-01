@@ -647,7 +647,7 @@ class RootSequence(BaseSequence):
     def clean_cached_values(self):
         """ Clear all internal caches.
 
-        This should be called before evaluating a sequence.
+        This is called before evaluating a sequence.
 
         """
         super(RootSequence, self).clean_cached_values()
