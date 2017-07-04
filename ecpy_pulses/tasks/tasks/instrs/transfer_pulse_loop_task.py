@@ -103,17 +103,21 @@ class TransferPulseLoopTask(InstrumentTask):
         context = seq.context
         context.run_after_transfer = False
         context.select_after_transfer = False
+        loop_start = float(self.format_and_eval_string(self.loop_start))
+        loop_stop = float(self.format_and_eval_string(self.loop_stop))
+        loop_points = int(self.format_and_eval_string(self.loop_points))
         self.driver.run_mode = 'SEQUENCE'
         self.driver.internal_trigger = self.internal_trigger
         if self.internal_trigger:
             self.driver.internal_trigger_period = int(float(self.trigger_period) * 1000)
 
-        loop_values = np.linspace(float(self.loop_start),
-                                  float(self.loop_stop),
-                                  int(self.loop_points))
+        loop_values = np.linspace(loop_start, loop_stop, loop_points)
         seq_name_0 = context.sequence_name
         self.driver.delete_all_waveforms()
-        for nn in range(int(self.loop_points)):
+        self.driver.clear_all_sequences()
+
+        _used_channels = []
+        for nn in range(loop_points):
             self.sequence_vars[self.loop_name] = str(loop_values[nn])
             for k, v in self.sequence_vars.items():
                 seq.external_vars[k] = self.format_and_eval_string(v)
@@ -126,8 +130,11 @@ class TransferPulseLoopTask(InstrumentTask):
                 if infos[_seq]:
                     self.driver.get_channel(cc+1).set_sequence_pos(infos[_seq],
                                                                    nn+1)
-        self.driver.loop_infinite(1)
-        self.driver.running = True
+                    _used_channels.append(cc+1)
+        for cc in set(_used_channels):
+            self.driver.get_channel(cc).output_state = 'on'
+
+        self.driver.set_goto_pos(loop_points, 1)
 
         if not res:
             raise Exception('Failed to compile sequence :\n' +
