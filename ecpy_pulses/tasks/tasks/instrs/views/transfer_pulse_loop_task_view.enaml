@@ -270,7 +270,7 @@ enamldef TransferPulseLoopView(InstrTaskView): view:
     Label: loop_name:
         text = 'Parameter name'
     ObjectCombo: loop_name_val:
-        items << task.sequence_vars.keys()
+        items << list(task.sequence_vars.keys())
         selected := task.loop_name
         tool_tip = ("Select external sequence variable to loop")
 
