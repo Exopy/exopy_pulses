@@ -118,7 +118,7 @@ class TransferPulseLoopTask(InstrumentTask):
 
         _used_channels = []
         for nn in range(loop_points):
-            self.sequence_vars[self.loop_name] = str(loop_values[nn])
+            self.sequence_vars[self.loop_name] = str([loop_values[nn], loop_stop])
             for k, v in self.sequence_vars.items():
                 seq.external_vars[k] = self.format_and_eval_string(v)
             context.sequence_name = '{}_{}'.format(seq_name_0, nn+1)
