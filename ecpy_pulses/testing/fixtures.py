@@ -81,6 +81,7 @@ def template_sequence(pulses_plugin):
     from ecpy_pulses.pulses.sequences.base_sequences import (RootSequence,
                                                              BaseSequence)
     from ecpy_pulses.pulses.shapes.square_shape import SquareShape
+    from ecpy_pulses.pulses.shapes.gaussian_shape import GaussianShape
     from ecpy_pulses.pulses.contexts.template_context import TemplateContext
 
     root = RootSequence()
