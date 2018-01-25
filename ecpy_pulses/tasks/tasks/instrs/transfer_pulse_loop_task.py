@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2017 by EcpyHqcLegacy Authors, see AUTHORS for more details.
+# Copyright 2015-2016 by EcpyHqcLegacy Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -13,16 +13,17 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 import os
+from traceback import format_exc
 from pprint import pformat
 from collections import OrderedDict
+import numpy as np
 
-from atom.api import Value, Unicode, Float, Typed
-from ecpy.tasks.api import InstrumentTask
+from atom.api import Value, Unicode, Float, Typed, Bool
+from ecpy.tasks.api import (InstrumentTask)
 from ecpy.utils.atom_util import ordered_dict_from_pref, ordered_dict_to_pref
-from ecpy.utils.traceback import format_exc
 
 
-class TransferPulseSequenceTask(InstrumentTask):
+class TransferPulseLoopTask(InstrumentTask):
     """Build and transfer a pulse sequence to an instrument.
 
     """
@@ -39,17 +40,30 @@ class TransferPulseSequenceTask(InstrumentTask):
     sequence_vars = Typed(OrderedDict, ()).tag(pref=(ordered_dict_to_pref,
                                                      ordered_dict_from_pref))
 
+    #: Loop variables: channels on which the loop will be done, loop parameters
+    #: names, start value, stop value and number of points per loop
+
+    loop_name = Unicode('pulse_rabi_length').tag(pref=True)
+
+    loop_start = Unicode('0').tag(pref=True)
+
+    loop_stop = Unicode('1').tag(pref=True)
+
+    loop_points = Unicode('2').tag(pref=True)
+
+    #: internal or external trigger
+    internal_trigger = Bool(False).tag(pref=True)
+
+    #: Internal trigger period in mus
+    trigger_period = Unicode('20').tag(pref=True)
+
     def check(self, *args, **kwargs):
         """Check that the sequence can be compiled.
 
         """
-        test, traceback = super(TransferPulseSequenceTask,
+        test, traceback = super(TransferPulseLoopTask,
                                 self).check(*args, **kwargs)
         err_path = self.path + '/' + self.name + '-'
-
-        if not self.sequence:
-            traceback[err_path+'sequence'] = 'There is no selected sequence.'
-            return False, traceback
 
         msg = 'Failed to evaluate {} ({}): {}'
         seq = self.sequence
@@ -87,12 +101,41 @@ class TransferPulseSequenceTask(InstrumentTask):
         """
         seq = self.sequence
         context = seq.context
-        for k, v in self.sequence_vars.items():
-            seq.external_vars[k] = self.format_and_eval_string(v)
+        context.run_after_transfer = False
+        context.select_after_transfer = False
+        loop_start = float(self.format_and_eval_string(self.loop_start))
+        loop_stop = float(self.format_and_eval_string(self.loop_stop))
+        loop_points = int(self.format_and_eval_string(self.loop_points))
+        self.driver.run_mode = 'SEQUENCE'
+        self.driver.internal_trigger = self.internal_trigger
+        if self.internal_trigger:
+            self.driver.internal_trigger_period = int(float(self.trigger_period) * 1000)
 
-        self.driver.run_mode = 'TRIG'
-        res, infos, errors = context.compile_and_transfer_sequence(seq,
-                                                                   self.driver)
+        loop_values = np.linspace(loop_start, loop_stop, loop_points)
+        seq_name_0 = context.sequence_name
+        self.driver.delete_all_waveforms()
+        self.driver.clear_all_sequences()
+
+        _used_channels = []
+        for nn in range(loop_points):
+            self.sequence_vars[self.loop_name] = str([loop_values[nn], loop_stop])
+            for k, v in self.sequence_vars.items():
+                seq.external_vars[k] = self.format_and_eval_string(v)
+            context.sequence_name = '{}_{}'.format(seq_name_0, nn+1)
+            res, infos, errors = context.compile_and_transfer_sequence(
+                                                            seq,
+                                                            driver=self.driver)
+            for cc in range(4):
+                _seq = 'sequence_ch'+str(cc+1)
+                if infos[_seq]:
+                    self.driver.get_channel(cc+1).set_sequence_pos(infos[_seq],
+                                                                   nn+1)
+                    _used_channels.append(cc+1)
+        for cc in set(_used_channels):
+            self.driver.get_channel(cc).output_state = 'on'
+
+        self.driver.set_goto_pos(loop_points, 1)
+
         if not res:
             raise Exception('Failed to compile sequence :\n' +
                             pformat(errors))
@@ -104,7 +147,7 @@ class TransferPulseSequenceTask(InstrumentTask):
         """Register the task preferences into the preferences system.
 
         """
-        super(TransferPulseSequenceTask, self).register_preferences()
+        super(TransferPulseLoopTask, self).register_preferences()
 
         if self.sequence:
             self.preferences['sequence'] =\
@@ -116,14 +159,13 @@ class TransferPulseSequenceTask(InstrumentTask):
         """Reimplemented to also yield the sequence
 
         """
-        infos = super(TransferPulseSequenceTask, self).traverse(depth)
+        infos = super(TransferPulseLoopTask, self).traverse(depth)
 
         for i in infos:
             yield i
 
-        if self.sequence:
-            for item in self.sequence.traverse():
-                yield item
+        for item in self.sequence.traverse():
+            yield item
 
     @classmethod
     def build_from_config(cls, config, dependencies):
