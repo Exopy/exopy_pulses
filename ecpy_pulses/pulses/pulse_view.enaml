@@ -106,6 +106,8 @@ enamldef PulseView(GroupBox): view:
             if item.kind == 'Logical'\
             else list(getattr(context, 'analogical_channels', []))
         selected := item.channel
+        tool_tip << ('First select a context before selecting the channel'
+                     if not context else '')
 
     Label: def_lab:
         text = 'Mode'

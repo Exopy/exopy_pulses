@@ -13,7 +13,7 @@ from atom.api import Atom, Dict, Value
 from enaml.layout.api import hbox, align, spacer, vbox
 from enaml.widgets.api import (PushButton, Container, Label, Notebook, Page,
                                CheckBox, ObjectCombo, Splitter, SplitItem,
-                               HGroup)
+                               HGroup, ScrollArea)
 from enaml.core.api import Conditional, Include
 from enaml.workbench.core.core_plugin import CorePlugin
 from ecpy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
@@ -204,9 +204,11 @@ enamldef RootSequenceView(AbstractSequenceView): view:
         tabs_closable = False
         Page:
             title = 'Sequence'
-            SequenceEditor: editor:
-                sequence << view.item
-                root = view
+            Container:
+                ScrollArea:
+                    SequenceEditor: editor:
+                        sequence << view.item
+                        root = view
 
         Page:
             title = 'Context'
