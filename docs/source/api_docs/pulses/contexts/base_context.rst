@@ -1,7 +1,7 @@
-ecpy_pulses.pulses.contexts.base_context module
+exopy_pulses.pulses.contexts.base_context module
 ===============================================
 
-.. automodule:: ecpy_pulses.pulses.contexts.base_context
+.. automodule:: exopy_pulses.pulses.contexts.base_context
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,7 +1,7 @@
-ecpy_pulses.pulses.workspace.w_manifest module
+exopy_pulses.pulses.workspace.w_manifest module
 ==============================================
 
-.. automodule:: ecpy_pulses.pulses.workspace.w_manifest
+.. automodule:: exopy_pulses.pulses.workspace.w_manifest
     :members:
     :undoc-members:
     :show-inheritance:

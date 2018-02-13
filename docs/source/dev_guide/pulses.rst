@@ -5,7 +5,7 @@
 Pulse sequences and shapes
 ==========================
 
-Synthesis of pulse sequences in Ecpy is centered around the notion of sequence
+Synthesis of pulse sequences in Exopy is centered around the notion of sequence
 and pulse. Those two elements are used describe the sequence to synthetyse,
 while the actual synthesis is actually carried out by the context.
 
@@ -44,7 +44,7 @@ member should be set to **True**.
 
     Even if the name is identical to the objects used for tasks, the
     Feval object sused in both cases are different. For pulses related
-    object, it should be imported from *ecpy_pulses.pulses.api*.
+    object, it should be imported from *exopy_pulses.pulses.api*.
 
 
 Creating a new shape
@@ -75,7 +75,7 @@ be passed as a tuple/list.
     from numbers import Real
 
     from atom.api import Unicode, Int
-    from ecpy_pulses.pulses.api import Feval
+    from exopy_pulses.pulses.api import Feval
 
     class MyShape(AbstractShape):
         """MyShape description.
@@ -126,10 +126,10 @@ meaningful tool tips.
 
 
 For more informations about the Enaml syntax please give a look at
-the relevant section in the Ecpy documentation.
+the relevant section in the Exopy documentation.
 
 
-At this point your shape is ready to be registered in Ecpy, however writing a
+At this point your shape is ready to be registered in Exopy, however writing a
 bunch of unit tests for your shape making sure it works as expected and will go
 on doing so is good idea. Give a look at :doc:`testing` for more details about
 writing tests and checking that your tests do cover all the possible cases.
@@ -140,12 +140,12 @@ Registering your shape
 
 The last thing you need to do is to declare your shape in a plugin manifest so
 that the main application can find it. To do so your plugin should contribute
-an extension to 'ecpy.pulses.shapes' providing |Shapes| and/or |Shape|
+an extension to 'exopy.pulses.shapes' providing |Shapes| and/or |Shape|
 objects.
 
 Let's say we need to declare a single shape named 'MyShape'. The name of our
-extension package (see the glossary section in Ecpy documentation) is named
-'my_ecpy_plugin'. Let's look at the example below:
+extension package (see the glossary section in Exopy documentation) is named
+'my_exopy_plugin'. Let's look at the example below:
 
 .. code-block:: enaml
 
@@ -154,10 +154,10 @@ extension package (see the glossary section in Ecpy documentation) is named
         id = 'my_plugin_id'
 
         Extension:
-            point = 'ecpy.pulses.shapes'
+            point = 'exopy.pulses.shapes'
 
             Shapes:
-                path = 'my_ecpy_plugin'
+                path = 'my_exopy_plugin'
 
                 Shape:
                     shape = 'my_shape:MyShape'
@@ -182,7 +182,7 @@ but only two of them must be given non-default values :
 - 'metadata': Any additional informations about the shape. Those should be
   specified as a dictionary.
 
-This is it. Now when starting Ecpy your new shape should be listed.
+This is it. Now when starting Exopy your new shape should be listed.
 
 
 Creating a new sequence
@@ -214,7 +214,7 @@ value of the **linkable_vars** member.
     from numbers import Real
 
     from atom.api import Unicode, Int
-    from ecpy_pulses.pulses.api import Feval
+    from exopy_pulses.pulses.api import Feval
 
     class MySequence(BaseSequence):
         """MySequence description.
@@ -271,7 +271,7 @@ Registering your sequence
 Registering a sequence is quite similar to registering a shape.
 
 Let's say we need to declare a sequence named *MySequence*. The name of our
-extension package (see the glossary section in Ecpy documentation) is 'my_ecpy_plugin'.
+extension package (see the glossary section in Exopy documentation) is 'my_exopy_plugin'.
 Let's look at the example below:
 
 .. code-block:: enaml
@@ -281,10 +281,10 @@ Let's look at the example below:
         id = 'my_plugin_id'
 
         Extension:
-            point = 'ecpy.pulses.sequences'
+            point = 'exopy.pulses.sequences'
 
             Sequences:
-                path = 'my_ecpy_plugin'
+                path = 'my_exopy_plugin'
 
                 Sequence:
                     sequence = 'my_sequence:MySequence'
@@ -310,20 +310,20 @@ but only two of them must be given non-default values :
 - 'metadata': Any additional informations about the sequence. Those should be
   specified as a dictionary.
 
-This is it. Now when starting Ecpy your new sequence should be listed.
+This is it. Now when starting Exopy your new sequence should be listed.
 
 .. _dev_tasks_new_filter:
 
 Creating your own sequence filter
 ---------------------------------
 
-As the number of sequences available in Ecpy grows, finding the sequence you need might
-become a bit tedious. To make searching through tasks easier Ecpy can filter
+As the number of sequences available in Exopy grows, finding the sequence you need might
+become a bit tedious. To make searching through tasks easier Exopy can filter
 the sequences from which to choose from. A number a basic filters are built-in but
 one can easily add more.
 
 To add a new filter you simply need to contribute a |SequenceFilter| to the
-'ecpy.pulses.filters' extension point, as in the following example :
+'exopy.pulses.filters' extension point, as in the following example :
 
 .. code-block:: enaml
 
@@ -332,7 +332,7 @@ To add a new filter you simply need to contribute a |SequenceFilter| to the
         id = 'my_plugin_id'
 
         Extension:
-            point = 'ecpy.pulses.filters'
+            point = 'exopy.pulses.filters'
 
             SequenceFilter:
                 id = 'MySequenceFilter'
@@ -427,7 +427,7 @@ Declaring the configurer
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Finally you must declare the config in a manifest by contributing an
-extension to the 'ecpy.pulses.configs' extension point. This is identical to
+extension to the 'exopy.pulses.configs' extension point. This is identical to
 how shapes are declared but relies on the |SequenceConfigs| (instead of |Shapes|) and
 |SequenceConfig| (instead of |Shape|) objects. The base sequence class for which the
 configurer is meant should be returned by the get_sequence_class method.

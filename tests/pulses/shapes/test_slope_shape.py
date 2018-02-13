@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2017 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -16,10 +16,10 @@ import enaml
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from ecpy_pulses.pulses.pulse import Pulse
-from ecpy_pulses.pulses.sequences.base_sequences import RootSequence
-from ecpy_pulses.testing.context import TestContext
-from ecpy_pulses.pulses.shapes.slope_shape import SlopeShape
+from exopy_pulses.pulses.pulse import Pulse
+from exopy_pulses.pulses.sequences.base_sequences import RootSequence
+from exopy_pulses.testing.context import TestContext
+from exopy_pulses.pulses.shapes.slope_shape import SlopeShape
 
 
 def test_eval_start_stop():
@@ -139,9 +139,9 @@ def test_pulse_view(windows, workbench, process_and_sleep):
     """Test the view of the Pulse class.
 
     """
-    from ecpy.testing.util import show_widget
+    from exopy.testing.util import show_widget
     with enaml.imports():
-        from ecpy_pulses.pulses.sequences.views.base_sequences_views\
+        from exopy_pulses.pulses.sequences.views.base_sequences_views\
             import RootSequenceView
 
     pulse = Pulse(root=RootSequence(context=TestContext()))
@@ -156,7 +156,7 @@ def test_pulse_view(windows, workbench, process_and_sleep):
 
     # Test selecting a slope shape
     shape_select = pulse_view.widgets()[-1].widgets()[-1]
-    shape_select.selected = 'ecpy_pulses.SlopeShape'
+    shape_select.selected = 'exopy_pulses.SlopeShape'
     process_and_sleep()
 
     shape_view = pulse_view.widgets()[-1]

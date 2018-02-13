@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -13,8 +13,8 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 
-def test_ecpy_pulses_api():
+def test_exopy_pulses_api():
     """Test importing from the api.
 
     """
-    import ecpy_pulses.pulses.api
+    import exopy_pulses.pulses.api

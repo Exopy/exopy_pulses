@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -14,10 +14,10 @@ from __future__ import (division, unicode_literals, print_function,
 
 import pytest
 
-from ecpy_pulses.pulses.sequences.base_sequences import RootSequence
-from ecpy_pulses.pulses.sequences.template_sequence import TemplateSequence
+from exopy_pulses.pulses.sequences.base_sequences import RootSequence
+from exopy_pulses.pulses.sequences.template_sequence import TemplateSequence
 
-from ecpy_pulses.testing.context import TestContext
+from exopy_pulses.testing.context import TestContext
 
 pytestmark = pytest.mark.skipif('True')
 
@@ -38,9 +38,9 @@ def template_depependencies(pulses_plugin, template_preferences):
     """
     workbench = pulses_plugin.workbench
     core = workbench.get_plugin('enaml.workbench.core')
-    cmd = 'ecpy.app.dependencies.analyse'
+    cmd = 'exopy.app.dependencies.analyse'
     dep_analysis = core.invoke_command(cmd, {'obj': template_preferences})
-    cmd = 'ecpy.app.dependencies.collect'
+    cmd = 'exopy.app.dependencies.collect'
     dep = core.invoke_command(cmd, {'kind': 'build',
                                     'dependencies': dep_analysis.dependencies})
     dep = dep.dependencies

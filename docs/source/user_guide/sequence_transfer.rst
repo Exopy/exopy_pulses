@@ -5,7 +5,7 @@
 Sequence transfer
 =================
 
-Once you have created a sequence, you are ready to use it in a measure. To do so
+Once you have created a sequence, you are ready to use it in a.measurement. To do so
 you need to transfer it to the waveform generator. The following section will
 describe the interaction between the sequence and the transfer task.
 
@@ -25,8 +25,8 @@ values. It also allows to parametrize the context.
 The chosen instrument must match the selected context. If it is not so, a dialog
 will notify you that you should choose a new driver.
 
-As it may happen that you edit the sequence after building a measure, each time
-you reopen the measure the system will check whether you have loaded the last version
+As it may happen that you edit the sequence after building a.measurement, each time
+you reopen the.measurement the system will check whether you have loaded the last version
 of the pulse sequence. If the loaded version is outdated the refresh button will
 be red. In the same way, during enqueuing a warning will be emitted if the sequence
 is oudated.
@@ -39,7 +39,7 @@ Sequence re-edition
 -------------------
 
 No matter the care you take in writing the sequence it may well happen that
-you need to quickly re-edit it while modifying a measure. If it is opened in the
+you need to quickly re-edit it while modifying a.measurement. If it is opened in the
 Pulses workspace you can easily switch and simply reload, however it may prove
 cumbersome if it is not so.
 

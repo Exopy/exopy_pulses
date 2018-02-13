@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -14,11 +14,11 @@ from __future__ import (division, unicode_literals, print_function,
 
 from collections import OrderedDict
 
-from ecpy_pulses.pulses.pulse import Pulse
-from ecpy_pulses.pulses.sequences.base_sequences\
+from exopy_pulses.pulses.pulse import Pulse
+from exopy_pulses.pulses.sequences.base_sequences\
     import RootSequence, BaseSequence
-from ecpy_pulses.pulses.shapes.square_shape import SquareShape
-from ecpy_pulses.testing.context import TestContext
+from exopy_pulses.pulses.shapes.square_shape import SquareShape
+from exopy_pulses.testing.context import TestContext
 
 
 def add_children(seq, children):
@@ -320,13 +320,13 @@ def test_build_from_config():
     add_children(seq, [pulse4])
 
     pref = root.preferences_from_members()
-    dependecies = {'ecpy.pulses.item':
-                   {'ecpy_pulses.BaseSequence': BaseSequence,
-                    'ecpy_pulses.Pulse': Pulse},
-                   'ecpy.pulses.shape':
-                   {'ecpy_pulses.SquareShape': SquareShape},
-                   'ecpy.pulses.context':
-                   {'ecpy_pulses.TestContext': TestContext}}
+    dependecies = {'exopy.pulses.item':
+                   {'exopy_pulses.BaseSequence': BaseSequence,
+                    'exopy_pulses.Pulse': Pulse},
+                   'exopy.pulses.shape':
+                   {'exopy_pulses.SquareShape': SquareShape},
+                   'exopy.pulses.context':
+                   {'exopy_pulses.TestContext': TestContext}}
 
     aux = RootSequence.build_from_config(pref, dependecies)
     assert aux.external_vars == {'a': 1.5}

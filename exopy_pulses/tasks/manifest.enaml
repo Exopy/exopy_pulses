@@ -1,0 +1,36 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""Manifest contributing specific tasks.
+
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+from enaml.workbench.api import PluginManifest, Extension
+from exopy.tasks.api import Tasks, Task
+
+
+enamldef PulsesTasksManifest(PluginManifest):
+    """Declaration of the pulse sequences related tasks.
+
+    """
+    id = 'exopy.pulses.tasks'
+
+    Extension:
+        id = 'tasks'
+        point = 'exopy.tasks.declarations'
+        Tasks:
+            path = 'exopy_pulses.tasks.tasks.instrs'
+            Task:
+                task = 'transfer_sequence_task:TransferPulseSequenceTask'
+                view = ('views.transfer_sequence_task_view:'
+                        'TransferPulseSequenceView')
+                # Way to declare instrument dependencies without specifying
+                # any instrument.
+                instruments = [None]

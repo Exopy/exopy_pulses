@@ -1,0 +1,360 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""Dialogs specifc to the workspace use.
+
+"""
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+
+import os
+from ast import literal_eval
+from future.builtins import str as unicode
+from timeit import default_timer
+from enaml.core.api import Conditional
+from enaml.layout.api import hbox, vbox, spacer
+from enaml.validator import Validator
+from enaml.widgets.api import (Dialog, Container, Stack, StackItem,
+                               MultilineField, PushButton, ObjectCombo,
+                               Field, GroupBox, CheckBox, Label, Notebook,
+                               Page)
+
+from exopy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
+                                            FieldFieldCompleterEditor)
+from exopy.app.errors.widgets import BasicErrorsDisplay
+from ..utils.widgets.browsing import SequenceSelector
+
+
+class _VarValidator(Validator):
+
+    def validate(self, text):
+        try:
+            new = literal_eval(text)
+            return True
+        except Exception:
+            return False
+
+
+enamldef _ValEditor(Container):
+    attr model
+    constraints = [hbox(lab, val)]
+
+    Label: lab:
+        text = model.key
+    Field: val:
+        text << repr(model.value)
+        text :: model.value = literal_eval(text)
+        validator = _VarValidator()
+
+
+enamldef CompilationWidget(Container): main:
+    """ Widget allowing to compile the currently edited sequence.
+
+    The compilation of the sequence is timed and any error occuring is
+    reported. The external variables values can be edited to fix compilation
+    errors.
+
+    """
+    #: Reference to the pulse sequence edition workspace
+    attr workspace
+
+    #: Time that took the last compilation.
+    attr elapsed_time
+
+    #: Errors reported by the context when compiling.
+    attr errors = {}
+
+    #: Event emitted at the end of a compilation attempt.
+    event outcome
+
+    constraints = [vbox(nb, hbox(dur_lab, dur_val, comp))]
+
+    Notebook: nb:
+        tabs_closable = False
+
+        Page:
+            title = 'Variables'
+            DictEditor(_ValEditor): de:
+                de.mapping := workspace.state.sequence.external_vars
+                de.operations = []
+
+        Page:
+            title = 'Errors'
+            enabled << bool(errors)
+            BasicErrorsDisplay:
+                errors << main.errors
+                kind = 'Compilation errors'
+
+    Label: dur_lab:
+        text = 'Compilation duration (mus)'
+
+    Field: dur_val:
+        read_only = True
+        text << unicode(elapsed_time)
+
+    PushButton: comp:
+        text = 'Compile'
+        clicked ::
+            seq = workspace.state.sequence
+            context = seq.context
+            start = default_timer()
+            res, infos, errors = context.compile_and_transfer_sequence(seq)
+            stop = default_timer()
+            main.elapsed_time = (stop - start)*1e6
+
+            if not res:
+                dur_val.background = 'red'
+                main.errors = errors
+                outcome(False)
+            else:
+                dur_val.background = 'green'
+                main.errors = {}
+                outcome(True)
+
+#TYPE_EXPLANATION = \
+#'''Standard mode :
+#- the sequence is saved as is and can be used in the measurement program
+#directly. It should have a valid context (matching the instrument to be used).
+#The value of the external vars are specified in the measurement program.
+#Template mode :
+#- the sequence is a model that can be reused in other sequences, to make
+#sequence development easier and avoid duplicating standard sequences. The only
+#accessible part of a template sequence are the template vars and the
+#TemplateContext which specifies how to map the real channels to the one defined
+#in the template.'''
+#
+#
+#enamldef TypeSelectionDialog(Dialog): dial:
+#    """ Dialog allowing to choose how to save the edited sequence.
+#
+#    """
+#    attr type
+#    title = 'How to save sequence ?'
+#    initial_size = (700, 250)
+#
+#    Container:
+#        padding = 2
+#        constraints = [vbox(doc, hbox(canc, spacer, temp, std))]
+#
+#        MultilineField: doc:
+#            read_only = True
+#            text = TYPE_EXPLANATION
+#        PushButton: canc:
+#            text = 'Cancel'
+#            clicked :: dial.reject()
+#        PushButton: temp:
+#            text = 'Template'
+#            clicked ::
+#                dial.type = 'template'
+#                dial.accept()
+#        PushButton: std:
+#            text = 'Standard'
+#            clicked ::
+#                dial.type = 'file'
+#                dial.accept()
+#
+#
+#enamldef TemplateLoadDialog(Dialog): dial:
+#    """ Dialog used to load a template sequence for edition.
+#
+#    """
+#    alias manager : selector.manager
+#    attr doc = ''
+#    attr prefs
+#    attr t_infos
+#
+#    title = 'Load template.'
+#
+#
+#    #: Reference to the sequence selector.
+#    alias selector : selector
+#
+#    title = 'Select the sequence you want to add'
+#
+#    func _update():
+#        if selector.selected_sequence:
+#            t_infos, _ = manager.get_sequence_infos(selector.selected_sequence)
+#            if t_infos is None:
+#                dial.prefs = None
+#                conf.doc = [Label(text=('This template has no Docs'))]
+#                return
+#            dial.prefs = t_infos.metadata['config']
+#            dial.doc = t_infos.metadata['doc']
+#            dial.t_infos = t_infos
+#
+#        else:
+#            dial.prefs = None
+#            dial.doc = []
+#
+#
+#    initialized :: _update()
+#
+#    Container:
+#        constraints << [hbox(selector, fie, vbox(load, cancel,spacer))]
+#        SequenceSelector: selector:
+#            hug_width = 'strong'
+#            display_filters = False
+#            selected_filter << 'Templates'
+#            selected_sequence :: _update()
+#
+#        MultilineField: fie:
+#            read_only = True
+#            text << dial.doc
+#
+#        PushButton: load:
+#            text = 'Load'
+#            enabled << prefs is not None
+#            clicked :: dial.accept()
+#
+#        PushButton: cancel:
+#            text = 'Cancel'
+#            clicked ::
+#                dial.reject()
+#
+#
+#def _format_path(folder, filename):
+#    """ Simple formatter for template saving path.
+#
+#    """
+#    if not filename.endswith('.temp_pulse.ini'):
+#        filename += '.pulse.ini'
+#    return os.path.join(folder, filename)
+#
+#
+#WRONG_CONTEXT = \
+#''' To save a sequence as a template, its context must be a TemplateContext.
+#Please change this and try again.'''
+#
+#
+#RIGHT_CONTEXT = \
+#''' Right type of context found, you can continue.'''
+#
+#
+#def _validate_context(context):
+#    test = context is not None and context.context_id == 'exopy_pulses.TemplateContext'
+#    return WRONG_CONTEXT if not test else RIGHT_CONTEXT
+#
+#
+#enamldef TemplateSaveDialog(Dialog): dial:
+#    """Dialog allowing to save a sequence as a template.
+#
+#    """
+#    #: Refrence to the workspace.
+#    attr workspace
+#
+#    #: Path to which save the template.
+#    attr path
+#
+#    #: Description of the template usage.
+#    attr doc = ''
+#
+#    alias step : sta.index
+#
+#    attr can_proceed : bool << sta.stack_items()[step].valid
+#
+#
+#    title = 'Save sequence as template.'
+#
+#    Container:
+#        constraints << [vbox(sta, hbox(canc, spacer,
+#                                       *prev.items + nex.items + sav.items))]
+#        Stack: sta:
+#
+#            StackItem: c_type:
+#                attr valid : bool << typ.text == RIGHT_CONTEXT
+#                Container:
+#                    MultilineField: typ:
+#                        text << _validate_context(workspace.state.sequence.context)
+#
+#            StackItem: f_sel:
+#                attr valid : bool = False
+#                Container:
+#                    padding = 2
+#
+#                    ObjectCombo: fol:
+#                        items = workspace.plugin.templates_folders
+#                        selected = (os.path.dirname(dial.path)
+#                                    if dial.path else '')
+#                        selected ::
+#                            dial.path = _format_path(selected, fil.text)
+#                            if dial.path and dial.doc:
+#                                f_sel.valid = True
+#                            else:
+#                                f_sel.valid = False
+#                    Field: fil:
+#                        submit_triggers = ['lost_focus', 'return_pressed',
+#                                           'auto_sync']
+#                        text = (os.path.split(dial.path)[1]
+#                                if dial.path else '')
+#                        text ::
+#                            dial.path = _format_path(fol.selected, text)
+#                            if dial.path and dial.doc:
+#                                f_sel.valid = True
+#                            else:
+#                                f_sel.valid = False
+#                    GroupBox:
+#                        title = 'Description'
+#                        padding = 2
+#                        MultilineField:
+#                            text := dial.doc
+#                            text ::
+#                                if dial.path and dial.doc:
+#                                    f_sel.valid = True
+#                                else:
+#                                    f_sel.valid = False
+#
+#            StackItem: comp:
+#                attr valid : bool = False
+#                CompilationWidget:
+#                    workspace = dial.workspace
+#                    outcome ::
+#                        comp.valid = change['value']
+#
+#        PushButton: canc:
+#            text = 'Cancel'
+#            clicked :: dial.reject()
+#
+#        Conditional: prev:
+#            condition << step != 0
+#            PushButton:
+#                text = 'Previous'
+#                clicked ::
+#                    dial.step -= 1
+#
+#        Conditional: nex:
+#            condition << step < len(sta.stack_items())-1
+#            PushButton:
+#                text = 'Next'
+#                enabled << can_proceed
+#                clicked ::
+#                    dial.step += 1
+#
+#        Conditional: sav:
+#            condition << step == len(sta.stack_items())-1
+#            PushButton:
+#                text = 'Save'
+#                enabled << can_proceed
+#                clicked ::
+#                    dial.accept()
+
+
+enamldef CompileDialog(Dialog): dial:
+    """ Simple dialog use to compile the edited sequence without saving.
+
+    """
+    alias workspace : comp.workspace
+
+    title = 'Test sequence compilation'
+
+    Container:
+        constraints = [vbox(comp, cl), contents_right == cl.right]
+        CompilationWidget: comp:
+            pass
+        PushButton: cl:
+            text = 'Close'
+            clicked :: dial.accept()

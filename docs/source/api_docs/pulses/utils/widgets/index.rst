@@ -1,7 +1,7 @@
-ecpy_pulses.pulses.utils.widgets package
+exopy_pulses.pulses.utils.widgets package
 ========================================
 
-.. automodule:: ecpy_pulses.pulses.utils.widgets
+.. automodule:: exopy_pulses.pulses.utils.widgets
     :members:
     :undoc-members:
     :show-inheritance:

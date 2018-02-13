@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2017 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -16,10 +16,10 @@ import pytest
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from ecpy_pulses.pulses.pulse import Pulse
-from ecpy_pulses.pulses.sequences.base_sequences import RootSequence
-from ecpy_pulses.pulses.shapes.square_shape import SquareShape
-from ecpy_pulses.testing.context import TestContext
+from exopy_pulses.pulses.pulse import Pulse
+from exopy_pulses.pulses.sequences.base_sequences import RootSequence
+from exopy_pulses.pulses.shapes.square_shape import SquareShape
+from exopy_pulses.testing.context import TestContext
 
 
 @pytest.fixture
@@ -630,9 +630,9 @@ def test_pulse_view(windows, workbench, pulse, process_and_sleep):
 
     """
     import enaml
-    from ecpy.testing.util import show_widget
+    from exopy.testing.util import show_widget
     with enaml.imports():
-        from ecpy_pulses.pulses.sequences.views.base_sequences_views\
+        from exopy_pulses.pulses.sequences.views.base_sequences_views\
             import RootSequenceView
 
     pulse.kind = 'Analogical'
@@ -656,7 +656,7 @@ def test_pulse_view(windows, workbench, pulse, process_and_sleep):
 
     # Test selecting a shape
     shape_select = pulse_view.widgets()[-1].widgets()[-1]
-    shape_select.selected = 'ecpy_pulses.SquareShape'
+    shape_select.selected = 'exopy_pulses.SquareShape'
     process_and_sleep()
     assert widgets_num + 1 == len(pulse_view.widgets())
     shape_select.selected = ''
@@ -678,9 +678,9 @@ def test_pulse_view2(windows, workbench, pulse):
 
     """
     import enaml
-    from ecpy.testing.util import show_and_close_widget
+    from exopy.testing.util import show_and_close_widget
     with enaml.imports():
-        from ecpy_pulses.pulses.sequences.views.base_sequences_views\
+        from exopy_pulses.pulses.sequences.views.base_sequences_views\
             import RootSequenceView
 
     pulse.kind = 'Logical'
@@ -696,9 +696,9 @@ def test_pulse_view3(windows, workbench, pulse):
 
     """
     import enaml
-    from ecpy.testing.util import show_and_close_widget
+    from exopy.testing.util import show_and_close_widget
     with enaml.imports():
-        from ecpy_pulses.pulses.sequences.views.base_sequences_views\
+        from exopy_pulses.pulses.sequences.views.base_sequences_views\
             import RootSequenceView
 
     pulse.kind = 'Analogical'

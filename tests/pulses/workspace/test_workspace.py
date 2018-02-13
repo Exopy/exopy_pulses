@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -15,7 +15,7 @@ from __future__ import (division, unicode_literals, print_function,
 import os
 
 import pytest
-from ecpy.testing.util import handle_question, handle_dialog
+from exopy.testing.util import handle_question, handle_dialog
 
 
 def test_workspace_lifecycle(workspace, process_and_sleep):
@@ -27,16 +27,16 @@ def test_workspace_lifecycle(workspace, process_and_sleep):
     ui.show_window()
     process_and_sleep()
 
-    log = workbench.get_plugin('ecpy.app.logging')
+    log = workbench.get_plugin('exopy.app.logging')
     # Check UI creation
     assert workspace.log_model
     assert workspace.state
     assert workspace.content
     assert workspace.dock_area
-    assert workbench.get_manifest('ecpy.pulses.workspace.menus')
+    assert workbench.get_manifest('exopy.pulses.workspace.menus')
 
     # Check log handling
-    assert 'ecpy.pulses.workspace' in log.handler_ids
+    assert 'exopy.pulses.workspace' in log.handler_ids
 
     w_state = workspace.state
     plugin = workspace.plugin
@@ -44,15 +44,15 @@ def test_workspace_lifecycle(workspace, process_and_sleep):
     # Test stopping the workspace
     core = workbench.get_plugin('enaml.workbench.core')
     cmd = 'enaml.workbench.ui.close_workspace'
-    core.invoke_command(cmd, {'workspace': 'ecpy.pulses.workspace'})
+    core.invoke_command(cmd, {'workspace': 'exopy.pulses.workspace'})
 
     assert workspace.plugin.workspace is None
-    assert workbench.get_manifest('ecpy.pulses.workspace.menus') is None
-    assert 'ecpy.measure.workspace' not in log.handler_ids
+    assert workbench.get_manifest('exopy.pulses.workspace.menus') is None
+    assert 'exopy.measurement.workspace' not in log.handler_ids
 
     # Test restarting now that state exists.
     cmd = 'enaml.workbench.ui.select_workspace'
-    core.invoke_command(cmd, {'workspace': 'ecpy.pulses.workspace'})
+    core.invoke_command(cmd, {'workspace': 'exopy.pulses.workspace'})
     assert plugin.workspace.state is w_state
 
 
@@ -69,14 +69,14 @@ def test_new_sequence(workspace, windows, process_and_sleep):
     old_seq = workspace.state.sequence
 
     with handle_question('yes'):
-        cmd = 'ecpy.pulses.workspace.new'
+        cmd = 'exopy.pulses.workspace.new'
         core.invoke_command(cmd, dict())
 
     assert old_seq is not workspace.state.sequence
     old_seq = workspace.state.sequence
 
     with handle_question('no'):
-        cmd = 'ecpy.pulses.workspace.new'
+        cmd = 'exopy.pulses.workspace.new'
         core.invoke_command(cmd, dict())
 
     assert old_seq is workspace.state.sequence
@@ -93,7 +93,7 @@ def test_save_load_sequence(workspace, windows, process_and_sleep, tmpdir,
 
     """
     # Monkeypatch file dialog to avoid dealing with native file dialogs.
-    from ecpy_pulses.pulses.workspace.workspace import FileDialogEx
+    from exopy_pulses.pulses.workspace.workspace import FileDialogEx
 
     class MockDialogFactory(object):
         path = ''
@@ -118,14 +118,14 @@ def test_save_load_sequence(workspace, windows, process_and_sleep, tmpdir,
 
     # Test saving a sequence for the first time
     MockDialogFactory.path = incomplete_path
-    cmd = 'ecpy.pulses.workspace.save'
+    cmd = 'exopy.pulses.workspace.save'
     core.invoke_command(cmd, dict(mode='default'))
 
     assert os.path.isfile(path)
     os.remove(path)
 
     # Test saving a previously saved sequence
-    cmd = 'ecpy.pulses.workspace.save'
+    cmd = 'exopy.pulses.workspace.save'
     core.invoke_command(cmd, dict(mode='default'))
 
     assert os.path.isfile(path)
@@ -134,7 +134,7 @@ def test_save_load_sequence(workspace, windows, process_and_sleep, tmpdir,
     path2 = os.path.join(str(tmpdir), 'test2.pulse.ini')
 
     MockDialogFactory.path = path2
-    cmd = 'ecpy.pulses.workspace.save_as'
+    cmd = 'exopy.pulses.workspace.save_as'
     core.invoke_command(cmd, dict(mode='default'))
 
     assert os.path.isfile(path2)
@@ -143,8 +143,8 @@ def test_save_load_sequence(workspace, windows, process_and_sleep, tmpdir,
     with pytest.raises(ValueError):
         workspace.save_sequence(mode='__dummy__')
 
-    # Test loading a measure.
-    cmd = 'ecpy.pulses.workspace.load'
+    # Test loading a.measurement.
+    cmd = 'exopy.pulses.workspace.load'
     core.invoke_command(cmd, dict(mode='file'))
 
     assert workspace.state.sequence
@@ -158,7 +158,7 @@ def test_save_load_sequence(workspace, windows, process_and_sleep, tmpdir,
     type(workspace)._load_sequence_from_file = make_raise
 
     with handle_dialog('accept'):
-        cmd = 'ecpy.pulses.workspace.load'
+        cmd = 'exopy.pulses.workspace.load'
         core.invoke_command(cmd, dict(mode='file'))
 
     # Test handling an incorrect mode.

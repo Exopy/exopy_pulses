@@ -1,7 +1,7 @@
-ecpy_pulses.pulses package
+exopy_pulses.pulses package
 ==========================
 
-.. automodule:: ecpy_pulses.pulses
+.. automodule:: exopy_pulses.pulses
     :members:
     :undoc-members:
     :show-inheritance:

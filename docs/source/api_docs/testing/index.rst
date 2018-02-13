@@ -1,7 +1,7 @@
-ecpy_pulses.testing package
+exopy_pulses.testing package
 ===========================
 
-.. automodule:: ecpy_pulses.testing
+.. automodule:: exopy_pulses.testing
     :members:
     :undoc-members:
     :show-inheritance:

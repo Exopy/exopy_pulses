@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -14,21 +14,22 @@ from __future__ import (division, unicode_literals, print_function,
 
 import pytest
 
-from ecpy_pulses.pulses.api import BaseSequence
-from ecpy_pulses.pulses.sequences.conditional_sequence\
+from exopy_pulses.pulses.api import BaseSequence
+from exopy_pulses.pulses.sequences.conditional_sequence\
     import ConditionalSequence
-from ecpy_pulses.pulses.infos import SequenceInfos
-from ecpy_pulses.pulses.filters import (SequenceFilter, PySequenceFilter,
-                                        TemplateFilter, MetadataSequenceFilter,
-                                        GroupSequenceFilter,
-                                        SubclassSequenceFilter)
+from exopy_pulses.pulses.infos import SequenceInfos
+from exopy_pulses.pulses.filters import (SequenceFilter, PySequenceFilter,
+                                         TemplateFilter,
+                                         MetadataSequenceFilter,
+                                         GroupSequenceFilter,
+                                         SubclassSequenceFilter)
 
 
 @pytest.fixture
 def sequences():
-    return {'ecpy_pulses.BaseSequence':
+    return {'exopy_pulses.BaseSequence':
             SequenceInfos(cls=BaseSequence, metadata={'meta': True}),
-            'ecpy_pulses.ConditionalSequence':
+            'exopy_pulses.ConditionalSequence':
             SequenceInfos(cls=ConditionalSequence,
                           metadata={'group': 'Logic', 'meta': False})}
 
@@ -68,7 +69,7 @@ def test_group_sequence_filter(sequences, templates):
     """
     filtered = GroupSequenceFilter(group='Logic').filter_sequences(sequences,
                                                                    templates)
-    assert sorted(filtered) == ['ecpy_pulses.ConditionalSequence']
+    assert sorted(filtered) == ['exopy_pulses.ConditionalSequence']
 
 
 def test_subclass_sequence_filter(sequences, templates):
@@ -77,7 +78,7 @@ def test_subclass_sequence_filter(sequences, templates):
     """
     filt = SubclassSequenceFilter(subclass=ConditionalSequence)
     filtered = filt.filter_sequences(sequences, templates)
-    assert sorted(filtered) == ['ecpy_pulses.ConditionalSequence']
+    assert sorted(filtered) == ['exopy_pulses.ConditionalSequence']
 
 
 def test_meta_sequence_filter(sequences, templates):
@@ -86,4 +87,4 @@ def test_meta_sequence_filter(sequences, templates):
     """
     filt = MetadataSequenceFilter(meta_key='meta', meta_value=True)
     filtered = filt.filter_sequences(sequences, templates)
-    assert sorted(filtered) == ['ecpy_pulses.BaseSequence']
+    assert sorted(filtered) == ['exopy_pulses.BaseSequence']

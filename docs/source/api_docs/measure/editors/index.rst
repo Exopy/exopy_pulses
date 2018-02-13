@@ -1,7 +1,7 @@
-ecpy_pulses.measure.editors package
+exopy_pulses.measurement.editors package
 ===================================
 
-.. automodule:: ecpy_pulses.measure.editors
+.. automodule:: exopy_pulses.measurement.editors
     :members:
     :undoc-members:
     :show-inheritance:

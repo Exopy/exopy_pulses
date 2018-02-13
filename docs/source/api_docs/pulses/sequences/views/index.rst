@@ -1,7 +1,7 @@
-ecpy_pulses.pulses.sequences.views package
+exopy_pulses.pulses.sequences.views package
 ==========================================
 
-.. automodule:: ecpy_pulses.pulses.sequences.views
+.. automodule:: exopy_pulses.pulses.sequences.views
     :members:
     :undoc-members:
     :show-inheritance:

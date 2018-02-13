@@ -1,0 +1,40 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""View for the conditional sequence.
+
+"""
+from enaml.layout.api import hbox, align, spacer, vbox
+from enaml.widgets.api import (Container, Label, ScrollArea, Action, Notebook,
+                               Page, CheckBox, ObjectCombo, Splitter,
+                               SplitItem)
+from enaml.core.api import Conditional
+
+from exopy.utils.widgets.qt_completers import QtLineCompleter
+from exopy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor,
+                                            FieldFieldCompleterEditor)
+
+from .base_sequences_views import BaseSequenceView
+from ...utils.entry_eval import EVALUATER_TOOLTIP
+
+
+enamldef ConditionalSequenceView(BaseSequenceView): view:
+    """ View for Sequence.
+
+    """
+    constraints << ([vbox(hbox(t_bool, cond_lab, cond_val),
+                          hbox(*t_def.items), nb)]
+                    if t_def.condition else
+                    [vbox(hbox(t_bool, cond_lab, cond_val), nb)])
+
+    Label: cond_lab:
+        text = 'Condition'
+    QtLineCompleter: cond_val:
+        text := item.condition
+        entries_updater = item.get_accessible_vars
+        tool_tip = EVALUATER_TOOLTIP

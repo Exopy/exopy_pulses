@@ -1,5 +1,5 @@
 package:
-  name: ecpy_pulses
+  name: exopy_pulses
   version: {{ environ.get('GIT_DESCRIBE_TAG', '') }}
 
 source:
@@ -15,15 +15,15 @@ requirements:
     - future
   run:
     - python
-    - ecpy
+    - exopy >= 0.1.0
     - numpy
 
 test:
   imports:
-    - ecpy_pulses
+    - exopy_pulses
 
 about:
-  home: https://github.com/Ecpy/ecpy_pulses
+  home: https://github.com/Exopy/exopy_pulses
   license: BSD
   license_file: LICENSE
-  summary: Pulse sequences generation for Ecpy
+  summary: Pulse sequences generation for Exopy

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -18,14 +18,14 @@ import pytest
 import enaml
 from enaml.colors import parse_color
 
-from ecpy_pulses.pulses.pulse import Pulse
-from ecpy_pulses.pulses.sequences.base_sequences\
+from exopy_pulses.pulses.pulse import Pulse
+from exopy_pulses.pulses.sequences.base_sequences\
     import RootSequence, BaseSequence
 
-from ecpy_pulses.testing.context import TestContext
+from exopy_pulses.testing.context import TestContext
 with enaml.imports():
-    from ecpy_pulses.pulses.workspace.dialogs import (CompileDialog,
-                                                      _VarValidator)
+    from exopy_pulses.pulses.workspace.dialogs import (CompileDialog,
+                                                       _VarValidator)
 
 
 @pytest.fixture
@@ -145,7 +145,7 @@ def test_compiling_a_sequence_not_compiling2(workspace, root, monkeypatch,
     """
     def __raise(*args, **kwargs):
         return False, {}, {'test': False}
-    from ecpy_pulses.testing.context import TestContext
+    from exopy_pulses.testing.context import TestContext
     monkeypatch.setattr(TestContext, 'compile_and_transfer_sequence',
                         __raise)
     workbench = workspace.workbench

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -12,11 +12,11 @@
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
-from ecpy_pulses.pulses.utils.normalizers import (normalize_sequence_name,
+from exopy_pulses.pulses.utils.normalizers import (normalize_sequence_name,
                                                   normalize_context_name,
                                                   normalize_shape_name)
 
-TEST = 'ecpy_pulses.AnIDIOTDumbDummy_Test'
+TEST = 'exopy_pulses.AnIDIOTDumbDummy_Test'
 
 
 def test_sequence_name_normalizer():
@@ -24,7 +24,7 @@ def test_sequence_name_normalizer():
 
     """
     assert (normalize_sequence_name(TEST + 'Sequence') ==
-            'ecpy_pulses.An IDIOT dumb dummy test')
+            'exopy_pulses.An IDIOT dumb dummy test')
 
     assert normalize_sequence_name('test.temp_pulse.ini') == 'Test'
 
@@ -34,7 +34,7 @@ def test_shape_name_normalizer():
 
     """
     assert (normalize_shape_name(TEST + 'Shape') ==
-            'ecpy_pulses.An IDIOT dumb dummy test')
+            'exopy_pulses.An IDIOT dumb dummy test')
 
 
 def test_context_name_normalizer():
@@ -42,4 +42,4 @@ def test_context_name_normalizer():
 
     """
     assert (normalize_context_name(TEST + 'Context') ==
-            'ecpy_pulses.An IDIOT dumb dummy test')
+            'exopy_pulses.An IDIOT dumb dummy test')

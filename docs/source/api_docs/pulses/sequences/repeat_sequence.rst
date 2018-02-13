@@ -1,7 +1,7 @@
-ecpy_pulses.pulses.sequences.repeat_sequence module
+exopy_pulses.pulses.sequences.repeat_sequence module
 ===================================================
 
-.. automodule:: ecpy_pulses.pulses.sequences.repeat_sequence
+.. automodule:: exopy_pulses.pulses.sequences.repeat_sequence
     :members:
     :undoc-members:
     :show-inheritance:

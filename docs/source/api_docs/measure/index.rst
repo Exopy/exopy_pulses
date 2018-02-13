@@ -1,7 +1,7 @@
-ecpy_pulses.measure package
+exopy_pulses.measurement package
 ===========================
 
-.. automodule:: ecpy_pulses.measure
+.. automodule:: exopy_pulses.measurement
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,15 +1,32 @@
-Ecpy Changelog
+Exopy Changelog
 ==============
 
+0.1.0 - unreleased
+------------------
 
-0.1.0.a2
---------
+- improve error message in sequence transfer task
+- add a slope shape for pulses
+- clean the context cache when cleaning all other caches
+- add missing scroll area in the root sequence view
+
+
+0.1.0.a3 - 24/11/2016
+---------------------
+
+- use ordered dinctionary for all variables (sequence_vars, external_vars, etc)
+- support zeo duration pulses
+- fix constraints of pulse view
+
+
+0.1.0.a2 - 09/10/2016
+---------------------
 
 - Update sequence compilation logic : context has now full power on compilation
   and a standard pre-processing method is provided.
 - fixes some issues in the UI
 
-0.1.0.a1
---------
+
+0.1.0.a1 - 29/09/2016
+---------------------
 
 - First numbered version

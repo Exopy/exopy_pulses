@@ -1,0 +1,39 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""Base view for all sequence views.
+
+"""
+from enaml.widgets.api import GroupBox
+
+from exopy.utils.enaml_destroy_hook import add_destroy_hook
+
+
+DestroyableGroupBox = add_destroy_hook(GroupBox)
+
+
+enamldef AbstractSequenceView(DestroyableGroupBox):
+    """Base class of all base sequence views.
+
+    """
+    #: Item (Actually sequence) that owns this view
+    attr item
+
+    #: Reference to the root view in which this object is displayed.
+    attr root
+
+    title << '{} {}'.format(item.index, item.name)
+    padding = 2
+
+    func refresh():
+        """Ensure that the view will be displayed properly.
+
+        This methods should be called after reparenting a view.
+
+        """
+        self.show()

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2017 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -19,36 +19,36 @@ from collections import OrderedDict
 import enaml
 import pytest
 from enaml.widgets.api import Window
-from ecpy.tasks.api import RootTask
-from ecpy.tasks.tasks.instr_task import (PROFILE_DEPENDENCY_ID,
-                                         DRIVER_DEPENDENCY_ID)
-from ecpy.testing.util import handle_dialog, show_widget, handle_question
+from exopy.tasks.api import RootTask
+from exopy.tasks.tasks.instr_task import (PROFILE_DEPENDENCY_ID,
+                                          DRIVER_DEPENDENCY_ID)
+from exopy.testing.util import handle_dialog, show_widget, handle_question
 
 with enaml.imports():
-    from ecpy.instruments.manifest import InstrumentManagerManifest
-    from ecpy.tasks.manifest import TasksManagerManifest
-    from ecpy.tasks.tasks.base_views import RootTaskView
+    from exopy.instruments.manifest import InstrumentManagerManifest
+    from exopy.tasks.manifest import TasksManagerManifest
+    from exopy.tasks.tasks.base_views import RootTaskView
 
-from ecpy_pulses.pulses.pulse import Pulse
-from ecpy_pulses.pulses.utils.sequences_io import save_sequence_prefs
-from ecpy_pulses.pulses.sequences.base_sequences\
+from exopy_pulses.pulses.pulse import Pulse
+from exopy_pulses.pulses.utils.sequences_io import save_sequence_prefs
+from exopy_pulses.pulses.sequences.base_sequences\
     import RootSequence
-from ecpy_pulses.testing.context import TestContext
-from ecpy_pulses.tasks.tasks.instrs.transfer_sequence_task\
+from exopy_pulses.testing.context import TestContext
+from exopy_pulses.tasks.tasks.instrs.transfer_sequence_task\
     import TransferPulseSequenceTask
 with enaml.imports():
-    from ecpy_pulses.tasks.tasks.instrs.views.transfer_sequence_task_view\
+    from exopy_pulses.tasks.tasks.instrs.views.transfer_sequence_task_view\
          import (TransferPulseSequenceView, validate_context_driver_pair,
                  load_sequence)
-    from ecpy_pulses.tasks.manifest import PulsesTasksManifest
+    from exopy_pulses.tasks.manifest import PulsesTasksManifest
 
 with enaml.imports():
-    from ...pulses.contributions import PulsesContributions
+    from .contributions import PulsesContributions
 
 p_id = PROFILE_DEPENDENCY_ID
 d_id = DRIVER_DEPENDENCY_ID
 
-pytest_plugins = str('ecpy_pulses.testing.fixtures'),
+pytest_plugins = str('exopy_pulses.testing.fixtures'),
 
 
 class FalseStarter(object):
@@ -127,11 +127,11 @@ def task_view(task, workbench):
     """
     workbench.register(TasksManagerManifest())
     core = workbench.get_plugin('enaml.workbench.core')
-    cmd = 'ecpy.pulses.get_context_infos'
-    c_infos = core.invoke_command(cmd,
-                                  dict(context_id='ecpy_pulses.TestContext'))
-    c_infos.instruments = set(['ecpy_pulses.TestDriver'])
-    task.selected_instrument = ('p', 'ecpy_pulses.TestDriver', 'c', 's')
+    cmd = 'exopy.pulses.get_context_infos'
+    c_infos = core.invoke_command(
+            cmd,  dict(context_id='exopy_pulses.TestContext'))
+    c_infos.instruments = set(['exopy_pulses.TestDriver'])
+    task.selected_instrument = ('p', 'exopy_pulses.TestDriver', 'c', 's')
     root_view = RootTaskView(task=task.root, core=core)
     view = TransferPulseSequenceView(task=task, root=root_view)
     return view
@@ -160,7 +160,7 @@ def test_dependencies_analysis(workbench, task):
     workbench.register(TasksManagerManifest())
     workbench.register(InstrumentManagerManifest())
     core = workbench.get_plugin('enaml.workbench.core')
-    build, runtime = core.invoke_command('ecpy.app.dependencies.analyse',
+    build, runtime = core.invoke_command('exopy.app.dependencies.analyse',
                                          dict(obj=task,
                                               dependencies=['build',
                                                             'runtime']))
@@ -176,9 +176,9 @@ def test_task_saving_building(workbench, task):
     workbench.register(PulsesTasksManifest())
     workbench.register(TasksManagerManifest())
     core = workbench.get_plugin('enaml.workbench.core')
-    deps = core.invoke_command('ecpy.app.dependencies.analyse',
+    deps = core.invoke_command('exopy.app.dependencies.analyse',
                                dict(obj=task, dependencies=['build']))
-    deps = core.invoke_command('ecpy.app.dependencies.collect',
+    deps = core.invoke_command('exopy.app.dependencies.collect',
                                dict(dependencies=deps.dependencies,
                                     kind='build'))
 
@@ -195,7 +195,7 @@ def test_task_saving_building(workbench, task):
     del task.sequence
     task.update_preferences_from_members()
     prefs = task.preferences
-    del deps.dependencies['ecpy.pulses.item']
+    del deps.dependencies['exopy.pulses.item']
     task3 = TransferPulseSequenceTask.build_from_config(prefs,
                                                         deps.dependencies)
 
@@ -318,7 +318,7 @@ def test_view_validate_driver_context(windows, task_view):
     """Test the validation of a context/driver pair.
 
     """
-    task_view.task.selected_instrument = ('p', 'ecpy_pulses.TestDriver',
+    task_view.task.selected_instrument = ('p', 'exopy_pulses.TestDriver',
                                           'c', 's')
 
     validate_context_driver_pair(task_view.root.core,
@@ -441,7 +441,7 @@ def test_load_refresh_save2(task_view, monkeypatch, process_and_sleep,
         raise Exception()
 
     with enaml.imports():
-        from ecpy_pulses.tasks.tasks.instrs.views\
+        from exopy_pulses.tasks.tasks.instrs.views\
             import transfer_sequence_task_view
     old = transfer_sequence_task_view.load_sequence
     monkeypatch.setattr(transfer_sequence_task_view, 'load_sequence',
@@ -465,7 +465,7 @@ def test_handling_error_in_loading(task_view, windows, monkeypatch):
     old = CorePlugin.invoke_command
 
     def false_invoke(self, cmd, *args, **kwargs):
-        if cmd == 'ecpy.pulses.build_sequence':
+        if cmd == 'exopy.pulses.build_sequence':
             raise Exception()
         else:
             old(self, cmd, *args, **kwargs)
@@ -486,7 +486,7 @@ def test_changing_context_sequence(task_view, windows):
     """
     show_widget(task_view)
     task = task_view.task
-    task.selected_instrument = ('p', 'ecpy_pulses.TestDriver', 'c', 's')
+    task.selected_instrument = ('p', 'exopy_pulses.TestDriver', 'c', 's')
 
     task.sequence.context = None
     assert task.selected_instrument[0]
@@ -503,7 +503,7 @@ def test_changing_context_sequence(task_view, windows):
     assert not task.selected_instrument[0]
 
     # Check  the observer has been installed on the new sequence.
-    task.selected_instrument = ('p', 'ecpy_pulses.TestDriver', 'c', 's')
+    task.selected_instrument = ('p', 'exopy_pulses.TestDriver', 'c', 's')
 
     task.sequence.context = None
     assert task.selected_instrument[0]
@@ -530,7 +530,7 @@ def test_profile_filtering(task_view):
         model = Value()
 
     p1 = PInfos(model=MInfos(drivers=[DInfos(id='__dummy__'),
-                                      DInfos(id='ecpy_pulses.TestDriver')]))
+                                      DInfos(id='exopy_pulses.TestDriver')]))
     p2 = PInfos(model=MInfos(drivers=[DInfos(id='dummy2')]))
 
     assert task_view.filter_profiles({'p1': p1, 'p2': p2}) == ['p1']
@@ -550,7 +550,7 @@ def test_drivers_filtering(task_view):
     class DInfos(Atom):
         id = Value()
 
-    d = DInfos(id='ecpy_pulses.TestDriver')
+    d = DInfos(id='exopy_pulses.TestDriver')
 
     drivers = task_view.filter_drivers([DInfos(id='__dummy__'), d])
     assert drivers == [d]

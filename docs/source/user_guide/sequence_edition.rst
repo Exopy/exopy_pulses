@@ -5,23 +5,23 @@
 Sequence edition
 ================
 
-Once the Ecpy application started, select the Pulses workspace to
+Once the Exopy application started, select the Pulses workspace to
 create a new sequence. The following section will guide through the
-required steps and explain the principle of pulse synthesis in Ecpy.
+required steps and explain the principle of pulse synthesis in Exopy.
 
 .. contents::
 
 Creating a sequence
 -------------------
 
-When selecting the Pulses workspace, the measure edition panels are replaced
+When selecting the Pulses workspace, the.measurement edition panels are replaced
 by three panels :
 
 - one is dedicated to the edition of a sequence
 - the second, tabbed beind the first, can be used to edit the variables of the sequence
   (more on their use will be said later on).
 - the thrid one is nothing else than a log panel similar to the one present in
-  the measure edition workspace.
+  the.measurement edition workspace.
 
 .. note::
 
@@ -58,7 +58,7 @@ the two previously diplayed buttons will disappear.
 
 .. note::
 
-    Just like when editing the tasks composing a measure, the button of the left
+    Just like when editing the tasks composing a.measurement, the button of the left
     of each item (pulse/sequence) can be used to add new items, move items or
     delete items.
 

@@ -1,7 +1,7 @@
-ecpy_pulses.measure.manifest module
+exopy_pulses.measurement.manifest module
 ===================================
 
-.. automodule:: ecpy_pulses.measure.manifest
+.. automodule:: exopy_pulses.measurement.manifest
     :members:
     :undoc-members:
     :show-inheritance:

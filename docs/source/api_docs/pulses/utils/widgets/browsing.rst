@@ -1,7 +1,7 @@
-ecpy_pulses.pulses.utils.widgets.browsing module
+exopy_pulses.pulses.utils.widgets.browsing module
 ================================================
 
-.. automodule:: ecpy_pulses.pulses.utils.widgets.browsing
+.. automodule:: exopy_pulses.pulses.utils.widgets.browsing
     :members:
     :undoc-members:
     :show-inheritance:

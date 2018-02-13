@@ -1,7 +1,7 @@
-ecpy_pulses.testing.fixtures module
+exopy_pulses.testing.fixtures module
 ===================================
 
-.. automodule:: ecpy_pulses.testing.fixtures
+.. automodule:: exopy_pulses.testing.fixtures
     :members:
     :undoc-members:
     :show-inheritance:
