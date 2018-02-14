@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -16,12 +16,12 @@ import pytest
 import enaml
 from atom.api import Atom, Dict, List
 
-from ecpy_pulses.pulses.infos import (SequenceInfos, ShapeInfos,
-                                      ContextInfos)
-from ecpy_pulses.pulses.declarations import (Sequences, Sequence,
-                                             Shapes, Shape,
-                                             SequenceConfigs, SequenceConfig,
-                                             Contexts, Context)
+from exopy_pulses.pulses.infos import (SequenceInfos, ShapeInfos,
+                                       ContextInfos)
+from exopy_pulses.pulses.declarations import (Sequences, Sequence,
+                                              Shapes, Shape,
+                                              SequenceConfigs, SequenceConfig,
+                                              Contexts, Context)
 
 
 class _DummyCollector(Atom):
@@ -42,7 +42,7 @@ def collector():
 
 @pytest.fixture
 def sequence_decl():
-    root = 'ecpy_pulses.pulses.sequences.'
+    root = 'exopy_pulses.pulses.sequences.'
     return Sequence(sequence=root + 'base_sequences:BaseSequence',
                     view=root + 'views.base_sequences_views:BaseSequenceView')
 
@@ -51,15 +51,15 @@ def test_register_sequence_decl1(collector, sequence_decl):
     """Test registering the base sequence.
 
     """
-    parent = Sequences(group='test', path='ecpy_pulses.pulses.sequences')
+    parent = Sequences(group='test', path='exopy_pulses.pulses.sequences')
     parent.insert_children(None, [sequence_decl])
     sequence_decl.sequence = 'base_sequences:BaseSequence'
     sequence_decl.view = 'views.base_sequences_views:BaseSequenceView'
     parent.register(collector, {})
-    infos = collector.contributions['ecpy_pulses.BaseSequence']
-    from ecpy_pulses.pulses.sequences.base_sequences import BaseSequence
+    infos = collector.contributions['exopy_pulses.BaseSequence']
+    from exopy_pulses.pulses.sequences.base_sequences import BaseSequence
     with enaml.imports():
-        from ecpy_pulses.pulses.sequences.views.base_sequences_views\
+        from exopy_pulses.pulses.sequences.views.base_sequences_views\
             import BaseSequenceView
     assert infos.cls is BaseSequence
     assert infos.view is BaseSequenceView
@@ -70,11 +70,11 @@ def test_register_sequence_decl_extend1(collector, sequence_decl):
     """Test extending a sequence.
 
     """
-    collector.contributions['ecpy_pulses.Sequence'] = SequenceInfos()
-    sequence_decl.sequence = 'ecpy_pulses.Sequence'
+    collector.contributions['exopy_pulses.Sequence'] = SequenceInfos()
+    sequence_decl.sequence = 'exopy_pulses.Sequence'
     sequence_decl.metadata = {'test': True}
     sequence_decl.register(collector, {})
-    infos = collector.contributions['ecpy_pulses.Sequence']
+    infos = collector.contributions['exopy_pulses.Sequence']
     assert 'test' in infos.metadata
 
 
@@ -82,7 +82,7 @@ def test_register_sequence_decl_extend2(collector, sequence_decl):
     """Test extending a yet to be defined sequence.
 
     """
-    sequence_decl.sequence = 'ecpy_pulses.Sequence'
+    sequence_decl.sequence = 'exopy_pulses.Sequence'
     sequence_decl.register(collector, {})
     assert collector._delayed == [sequence_decl]
 
@@ -95,7 +95,7 @@ def test_register_sequence_decl_path_1(collector, sequence_decl):
 
     """
     tb = {}
-    sequence_decl.sequence = 'ecpy_pulses.sequence'
+    sequence_decl.sequence = 'exopy_pulses.sequence'
     sequence_decl.register(collector, tb)
     assert sequence_decl in collector._delayed
 
@@ -105,30 +105,30 @@ def test_register_sequence_decl_path2(collector, sequence_decl):
 
     """
     tb = {}
-    sequence_decl.view = 'ecpy_pulses.sequences:sequences:Sequence'
+    sequence_decl.view = 'exopy_pulses.sequences:sequences:Sequence'
     sequence_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseSequence' in tb
+    assert 'exopy_pulses.BaseSequence' in tb
 
 
 def test_register_sequence_decl_duplicate1(collector, sequence_decl):
     """Test handling duplicate : in collector.
 
     """
-    collector.contributions['ecpy_pulses.BaseSequence'] = None
+    collector.contributions['exopy_pulses.BaseSequence'] = None
     tb = {}
-    sequence_decl.sequence = 'ecpy_pulses.pulses:BaseSequence'
+    sequence_decl.sequence = 'exopy_pulses.pulses:BaseSequence'
     sequence_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseSequence_duplicate1' in tb
+    assert 'exopy_pulses.BaseSequence_duplicate1' in tb
 
 
 def test_register_sequence_decl_duplicate2(collector, sequence_decl):
     """Test handling duplicate : in traceback.
 
     """
-    tb = {'ecpy_pulses.BaseSequence': 'rr'}
-    sequence_decl.sequence = 'ecpy_pulses.pulses:BaseSequence'
+    tb = {'exopy_pulses.BaseSequence': 'rr'}
+    sequence_decl.sequence = 'exopy_pulses.pulses:BaseSequence'
     sequence_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseSequence_duplicate1' in tb
+    assert 'exopy_pulses.BaseSequence_duplicate1' in tb
 
 
 def test_register_sequence_decl_cls1(collector, sequence_decl):
@@ -136,10 +136,10 @@ def test_register_sequence_decl_cls1(collector, sequence_decl):
 
     """
     tb = {}
-    sequence_decl.sequence = 'ecpy_pulses.foo:BaseSequence'
+    sequence_decl.sequence = 'exopy_pulses.foo:BaseSequence'
     sequence_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseSequence' in tb
-    assert 'import' in tb['ecpy_pulses.BaseSequence']
+    assert 'exopy_pulses.BaseSequence' in tb
+    assert 'import' in tb['exopy_pulses.BaseSequence']
 
 
 def test_register_sequence_decl_cls1_bis(collector, sequence_decl):
@@ -148,9 +148,9 @@ def test_register_sequence_decl_cls1_bis(collector, sequence_decl):
 
     """
     tb = {}
-    sequence_decl.sequence = 'ecpy.testing.broken_module:Sequence'
+    sequence_decl.sequence = 'exopy.testing.broken_module:Sequence'
     sequence_decl.register(collector, tb)
-    assert 'ecpy.Sequence' in tb and 'NameError' in tb['ecpy.Sequence']
+    assert 'exopy.Sequence' in tb and 'NameError' in tb['exopy.Sequence']
 
 
 def test_register_sequence_decl_cls2(collector, sequence_decl):
@@ -158,9 +158,10 @@ def test_register_sequence_decl_cls2(collector, sequence_decl):
 
     """
     tb = {}
-    sequence_decl.sequence = 'ecpy_pulses.pulses.sequences.base_sequences:Task'
+    sequence_decl.sequence =\
+        'exopy_pulses.pulses.sequences.base_sequences:Task'
     sequence_decl.register(collector, tb)
-    assert 'ecpy_pulses.Task' in tb and 'attribute' in tb['ecpy_pulses.Task']
+    assert 'exopy_pulses.Task' in tb and 'attribute' in tb['exopy_pulses.Task']
 
 
 def test_register_sequence_decl_cls3(collector, sequence_decl):
@@ -168,9 +169,10 @@ def test_register_sequence_decl_cls3(collector, sequence_decl):
 
     """
     tb = {}
-    sequence_decl.sequence = 'ecpy.tasks.tasks.database:TaskDatabase'
+    sequence_decl.sequence = 'exopy.tasks.tasks.database:TaskDatabase'
     sequence_decl.register(collector, tb)
-    assert 'ecpy.TaskDatabase' in tb and 'subclass' in tb['ecpy.TaskDatabase']
+    assert ('exopy.TaskDatabase' in tb and
+            'subclass' in tb['exopy.TaskDatabase'])
 
 
 def test_register_sequence_decl_view1(collector, sequence_decl):
@@ -178,10 +180,10 @@ def test_register_sequence_decl_view1(collector, sequence_decl):
 
     """
     tb = {}
-    sequence_decl.view = 'ecpy.tasks.foo:Task'
+    sequence_decl.view = 'exopy.tasks.foo:Task'
     sequence_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseSequence' in tb
-    assert'import' in tb['ecpy_pulses.BaseSequence']
+    assert 'exopy_pulses.BaseSequence' in tb
+    assert'import' in tb['exopy_pulses.BaseSequence']
 
 
 def test_register_sequence_decl_view1_bis(collector, sequence_decl):
@@ -189,11 +191,11 @@ def test_register_sequence_decl_view1_bis(collector, sequence_decl):
 
     """
     tb = {}
-    sequence_decl.view = 'ecpy.testing.broken_enaml:Task'
+    sequence_decl.view = 'exopy.testing.broken_enaml:Task'
     sequence_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseSequence' in tb
-    assert ('AttributeError' in tb['ecpy_pulses.BaseSequence'] or
-            'NameError' in tb['ecpy_pulses.BaseSequence'])
+    assert 'exopy_pulses.BaseSequence' in tb
+    assert ('AttributeError' in tb['exopy_pulses.BaseSequence'] or
+            'NameError' in tb['exopy_pulses.BaseSequence'])
 
 
 def test_register_sequence_decl_view2(collector, sequence_decl):
@@ -201,10 +203,10 @@ def test_register_sequence_decl_view2(collector, sequence_decl):
 
     """
     tb = {}
-    sequence_decl.view = 'ecpy.tasks.tasks.base_views:Task'
+    sequence_decl.view = 'exopy.tasks.tasks.base_views:Task'
     sequence_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseSequence' in tb
-    assert 'import' in tb['ecpy_pulses.BaseSequence']
+    assert 'exopy_pulses.BaseSequence' in tb
+    assert 'import' in tb['exopy_pulses.BaseSequence']
 
 
 def test_register_sequence_decl_view3(collector, sequence_decl):
@@ -212,10 +214,10 @@ def test_register_sequence_decl_view3(collector, sequence_decl):
 
     """
     tb = {}
-    sequence_decl.view = 'ecpy.tasks.tasks.database:TaskDatabase'
+    sequence_decl.view = 'exopy.tasks.tasks.database:TaskDatabase'
     sequence_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseSequence' in tb
-    assert 'subclass' in tb['ecpy_pulses.BaseSequence']
+    assert 'exopy_pulses.BaseSequence' in tb
+    assert 'subclass' in tb['exopy_pulses.BaseSequence']
 
 
 def test_unregister_sequence_decl1(collector, sequence_decl):
@@ -241,12 +243,12 @@ def test_unregister_sequence_decl3(collector, sequence_decl):
     """Test unregistering a sequence extending an existing one.
 
     """
-    collector.contributions['ecpy_pulses.BaseSequence'] = SequenceInfos()
-    sequence_decl.sequence = 'ecpy_pulses.BaseSequence'
+    collector.contributions['exopy_pulses.BaseSequence'] = SequenceInfos()
+    sequence_decl.sequence = 'exopy_pulses.BaseSequence'
     sequence_decl.metadata = {'test': True}
     sequence_decl.register(collector, {})
     sequence_decl.unregister(collector)
-    assert not collector.contributions['ecpy_pulses.BaseSequence'].metadata
+    assert not collector.contributions['exopy_pulses.BaseSequence'].metadata
 
 
 def test_str_sequence(sequence_decl):
@@ -262,7 +264,7 @@ def test_str_sequence(sequence_decl):
 
 @pytest.fixture
 def shape_decl():
-    root = 'ecpy_pulses.pulses.shapes.'
+    root = 'exopy_pulses.pulses.shapes.'
     return Shape(shape=root + 'square_shape:SquareShape',
                  view=root + 'views.square_shape_view:SquareShapeView')
 
@@ -271,15 +273,15 @@ def test_register_shape_decl1(collector, shape_decl):
     """Test registering the base sequence.
 
     """
-    parent = Shapes(group='test', path='ecpy_pulses.pulses.shapes')
+    parent = Shapes(group='test', path='exopy_pulses.pulses.shapes')
     parent.insert_children(None, [shape_decl])
     shape_decl.shape = 'square_shape:SquareShape'
     shape_decl.view = 'views.square_shape_view:SquareShapeView'
     parent.register(collector, {})
-    infos = collector.contributions['ecpy_pulses.SquareShape']
-    from ecpy_pulses.pulses.shapes.square_shape import SquareShape
+    infos = collector.contributions['exopy_pulses.SquareShape']
+    from exopy_pulses.pulses.shapes.square_shape import SquareShape
     with enaml.imports():
-        from ecpy_pulses.pulses.shapes.views.square_shape_view\
+        from exopy_pulses.pulses.shapes.views.square_shape_view\
             import SquareShapeView
     assert infos.cls is SquareShape
     assert infos.view is SquareShapeView
@@ -290,11 +292,11 @@ def test_register_shape_decl_extend1(collector, shape_decl):
     """Test extending a sequence.
 
     """
-    collector.contributions['ecpy_pulses.Shape'] = ShapeInfos()
-    shape_decl.shape = 'ecpy_pulses.Shape'
+    collector.contributions['exopy_pulses.Shape'] = ShapeInfos()
+    shape_decl.shape = 'exopy_pulses.Shape'
     shape_decl.metadata = {'test': True}
     shape_decl.register(collector, {})
-    infos = collector.contributions['ecpy_pulses.Shape']
+    infos = collector.contributions['exopy_pulses.Shape']
     assert 'test' in infos.metadata
 
 
@@ -302,7 +304,7 @@ def test_register_shape_decl_extend2(collector, shape_decl):
     """Test extending a yet to be defined sequence.
 
     """
-    shape_decl.shape = 'ecpy_pulses.Shape'
+    shape_decl.shape = 'exopy_pulses.Shape'
     shape_decl.register(collector, {})
     assert collector._delayed == [shape_decl]
 
@@ -315,7 +317,7 @@ def test_register_shape_decl_path_1(collector, shape_decl):
 
     """
     tb = {}
-    shape_decl.shape = 'ecpy_pulses.shape'
+    shape_decl.shape = 'exopy_pulses.shape'
     shape_decl.register(collector, tb)
     assert shape_decl in collector._delayed
 
@@ -325,30 +327,30 @@ def test_register_shape_decl_path2(collector, shape_decl):
 
     """
     tb = {}
-    shape_decl.view = 'ecpy_pulses.shapes:shapes:Shape'
+    shape_decl.view = 'exopy_pulses.shapes:shapes:Shape'
     shape_decl.register(collector, tb)
-    assert 'ecpy_pulses.SquareShape' in tb
+    assert 'exopy_pulses.SquareShape' in tb
 
 
 def test_register_shape_decl_duplicate1(collector, shape_decl):
     """Test handling duplicate : in collector.
 
     """
-    collector.contributions['ecpy_pulses.SquareShape'] = None
+    collector.contributions['exopy_pulses.SquareShape'] = None
     tb = {}
-    shape_decl.shape = 'ecpy_pulses.pulses:SquareShape'
+    shape_decl.shape = 'exopy_pulses.pulses:SquareShape'
     shape_decl.register(collector, tb)
-    assert 'ecpy_pulses.SquareShape_duplicate1' in tb
+    assert 'exopy_pulses.SquareShape_duplicate1' in tb
 
 
 def test_register_shape_decl_duplicate2(collector, shape_decl):
     """Test handling duplicate : in traceback.
 
     """
-    tb = {'ecpy_pulses.SquareShape': 'rr'}
-    shape_decl.shape = 'ecpy_pulses.pulses:SquareShape'
+    tb = {'exopy_pulses.SquareShape': 'rr'}
+    shape_decl.shape = 'exopy_pulses.pulses:SquareShape'
     shape_decl.register(collector, tb)
-    assert 'ecpy_pulses.SquareShape_duplicate1' in tb
+    assert 'exopy_pulses.SquareShape_duplicate1' in tb
 
 
 def test_register_shape_decl_cls1(collector, shape_decl):
@@ -356,10 +358,10 @@ def test_register_shape_decl_cls1(collector, shape_decl):
 
     """
     tb = {}
-    shape_decl.shape = 'ecpy_pulses.foo:SquareShape'
+    shape_decl.shape = 'exopy_pulses.foo:SquareShape'
     shape_decl.register(collector, tb)
-    assert 'ecpy_pulses.SquareShape' in tb
-    assert 'import' in tb['ecpy_pulses.SquareShape']
+    assert 'exopy_pulses.SquareShape' in tb
+    assert 'import' in tb['exopy_pulses.SquareShape']
 
 
 def test_register_shape_decl_cls1_bis(collector, shape_decl):
@@ -368,9 +370,9 @@ def test_register_shape_decl_cls1_bis(collector, shape_decl):
 
     """
     tb = {}
-    shape_decl.shape = 'ecpy.testing.broken_module:SquareShape'
+    shape_decl.shape = 'exopy.testing.broken_module:SquareShape'
     shape_decl.register(collector, tb)
-    assert 'ecpy.SquareShape' in tb and 'NameError' in tb['ecpy.SquareShape']
+    assert 'exopy.SquareShape' in tb and 'NameError' in tb['exopy.SquareShape']
 
 
 def test_register_shape_decl_cls2(collector, shape_decl):
@@ -378,9 +380,9 @@ def test_register_shape_decl_cls2(collector, shape_decl):
 
     """
     tb = {}
-    shape_decl.shape = 'ecpy_pulses.pulses.shapes.base_shape:Task'
+    shape_decl.shape = 'exopy_pulses.pulses.shapes.base_shape:Task'
     shape_decl.register(collector, tb)
-    assert 'ecpy_pulses.Task' in tb and 'attribute' in tb['ecpy_pulses.Task']
+    assert 'exopy_pulses.Task' in tb and 'attribute' in tb['exopy_pulses.Task']
 
 
 def test_register_shape_decl_cls3(collector, shape_decl):
@@ -388,9 +390,10 @@ def test_register_shape_decl_cls3(collector, shape_decl):
 
     """
     tb = {}
-    shape_decl.shape = 'ecpy.tasks.tasks.database:TaskDatabase'
+    shape_decl.shape = 'exopy.tasks.tasks.database:TaskDatabase'
     shape_decl.register(collector, tb)
-    assert 'ecpy.TaskDatabase' in tb and 'subclass' in tb['ecpy.TaskDatabase']
+    assert ('exopy.TaskDatabase' in tb and
+            'subclass' in tb['exopy.TaskDatabase'])
 
 
 def test_register_shape_decl_view1(collector, shape_decl):
@@ -398,10 +401,10 @@ def test_register_shape_decl_view1(collector, shape_decl):
 
     """
     tb = {}
-    shape_decl.view = 'ecpy.tasks.foo:Task'
+    shape_decl.view = 'exopy.tasks.foo:Task'
     shape_decl.register(collector, tb)
-    assert 'ecpy_pulses.SquareShape' in tb
-    assert'import' in tb['ecpy_pulses.SquareShape']
+    assert 'exopy_pulses.SquareShape' in tb
+    assert'import' in tb['exopy_pulses.SquareShape']
 
 
 def test_register_shape_decl_view1_bis(collector, shape_decl):
@@ -409,11 +412,11 @@ def test_register_shape_decl_view1_bis(collector, shape_decl):
 
     """
     tb = {}
-    shape_decl.view = 'ecpy.testing.broken_enaml:Task'
+    shape_decl.view = 'exopy.testing.broken_enaml:Task'
     shape_decl.register(collector, tb)
-    assert 'ecpy_pulses.SquareShape' in tb
-    assert ('AttributeError' in tb['ecpy_pulses.SquareShape'] or
-            'NameError' in tb['ecpy_pulses.SquareShape'])
+    assert 'exopy_pulses.SquareShape' in tb
+    assert ('AttributeError' in tb['exopy_pulses.SquareShape'] or
+            'NameError' in tb['exopy_pulses.SquareShape'])
 
 
 def test_register_shape_decl_view2(collector, shape_decl):
@@ -421,10 +424,10 @@ def test_register_shape_decl_view2(collector, shape_decl):
 
     """
     tb = {}
-    shape_decl.view = 'ecpy.tasks.tasks.base_views:Task'
+    shape_decl.view = 'exopy.tasks.tasks.base_views:Task'
     shape_decl.register(collector, tb)
-    assert 'ecpy_pulses.SquareShape' in tb
-    assert 'import' in tb['ecpy_pulses.SquareShape']
+    assert 'exopy_pulses.SquareShape' in tb
+    assert 'import' in tb['exopy_pulses.SquareShape']
 
 
 def test_register_shape_decl_view3(collector, shape_decl):
@@ -432,10 +435,10 @@ def test_register_shape_decl_view3(collector, shape_decl):
 
     """
     tb = {}
-    shape_decl.view = 'ecpy.tasks.tasks.database:TaskDatabase'
+    shape_decl.view = 'exopy.tasks.tasks.database:TaskDatabase'
     shape_decl.register(collector, tb)
-    assert 'ecpy_pulses.SquareShape' in tb
-    assert 'subclass' in tb['ecpy_pulses.SquareShape']
+    assert 'exopy_pulses.SquareShape' in tb
+    assert 'subclass' in tb['exopy_pulses.SquareShape']
 
 
 def test_unregister_shape_decl1(collector, shape_decl):
@@ -461,12 +464,12 @@ def test_unregister_shape_decl3(collector, shape_decl):
     """Test unregistering a sequence extending an existing one.
 
     """
-    collector.contributions['ecpy_pulses.SquareShape'] = ShapeInfos()
-    shape_decl.shape = 'ecpy_pulses.SquareShape'
+    collector.contributions['exopy_pulses.SquareShape'] = ShapeInfos()
+    shape_decl.shape = 'exopy_pulses.SquareShape'
     shape_decl.metadata = {'test': True}
     shape_decl.register(collector, {})
     shape_decl.unregister(collector)
-    assert not collector.contributions['ecpy_pulses.SquareShape'].metadata
+    assert not collector.contributions['exopy_pulses.SquareShape'].metadata
 
 
 def test_str_shape(shape_decl):
@@ -482,7 +485,7 @@ def test_str_shape(shape_decl):
 
 @pytest.fixture
 def context_decl():
-    root = 'ecpy_pulses.pulses.contexts.'
+    root = 'exopy_pulses.pulses.contexts.'
     return Context(context=root + 'base_context:BaseContext',
                    view=root + 'views.base_context_view:BaseContextView')
 
@@ -491,17 +494,17 @@ def test_register_context_decl1(collector, context_decl):
     """Test registering the base context.
 
     """
-    parent = Contexts(group='test', path='ecpy_pulses.pulses.contexts')
+    parent = Contexts(group='test', path='exopy_pulses.pulses.contexts')
     parent.insert_children(None, [context_decl])
     context_decl.context = 'base_context:BaseContext'
     context_decl.view = 'views.base_context_view:BaseContextView'
     context_decl.metadata = {'test': True}
-    context_decl.instruments = ['ecpy.Legacy.TektronixAWG5014B']
+    context_decl.instruments = ['exopy.Legacy.TektronixAWG5014B']
     parent.register(collector, {})
-    infos = collector.contributions['ecpy_pulses.BaseContext']
-    from ecpy_pulses.pulses.contexts.base_context import BaseContext
+    infos = collector.contributions['exopy_pulses.BaseContext']
+    from exopy_pulses.pulses.contexts.base_context import BaseContext
     with enaml.imports():
-        from ecpy_pulses.pulses.contexts.views.base_context_view\
+        from exopy_pulses.pulses.contexts.views.base_context_view\
             import BaseContextView
     assert infos.cls is BaseContext
     assert infos.view is BaseContextView
@@ -514,13 +517,13 @@ def test_register_context_decl_extend1(collector, context_decl):
 
     """
     infos = ContextInfos(metadata={'test2': False},
-                         instruments=['ecpy.Legacy.TektronixAWG5014B'])
-    collector.contributions['ecpy_pulses.Context'] = infos
-    context_decl.context = 'ecpy_pulses.Context'
+                         instruments=['exopy.Legacy.TektronixAWG5014B'])
+    collector.contributions['exopy_pulses.Context'] = infos
+    context_decl.context = 'exopy_pulses.Context'
     context_decl.metadata = {'test': True}
-    context_decl.instruments = ['ecpy.i3py.TektronixAWG5014B']
+    context_decl.instruments = ['exopy.i3py.TektronixAWG5014B']
     context_decl.register(collector, {})
-    infos = collector.contributions['ecpy_pulses.Context']
+    infos = collector.contributions['exopy_pulses.Context']
     assert len(infos.metadata) == 2
     assert 'test' in infos.metadata
     assert len(infos.instruments) == 2
@@ -530,7 +533,7 @@ def test_register_context_decl_extend2(collector, context_decl):
     """Test extending a yet to be defined context.
 
     """
-    context_decl.context = 'ecpy_pulses.Context'
+    context_decl.context = 'exopy_pulses.Context'
     context_decl.register(collector, {})
     assert collector._delayed == [context_decl]
 
@@ -543,7 +546,7 @@ def test_register_context_decl_path_1(collector, context_decl):
 
     """
     tb = {}
-    context_decl.context = 'ecpy_pulses.context'
+    context_decl.context = 'exopy_pulses.context'
     context_decl.register(collector, tb)
     assert context_decl in collector._delayed
 
@@ -553,30 +556,30 @@ def test_register_context_decl_path2(collector, context_decl):
 
     """
     tb = {}
-    context_decl.view = 'ecpy_pulses.sequences:sequences:Context'
+    context_decl.view = 'exopy_pulses.sequences:sequences:Context'
     context_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseContext' in tb
+    assert 'exopy_pulses.BaseContext' in tb
 
 
 def test_register_context_decl_duplicate1(collector, context_decl):
     """Test handling duplicate : in collector.
 
     """
-    collector.contributions['ecpy_pulses.BaseContext'] = None
+    collector.contributions['exopy_pulses.BaseContext'] = None
     tb = {}
-    context_decl.context = 'ecpy_pulses.pulses:BaseContext'
+    context_decl.context = 'exopy_pulses.pulses:BaseContext'
     context_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseContext_duplicate1' in tb
+    assert 'exopy_pulses.BaseContext_duplicate1' in tb
 
 
 def test_register_context_decl_duplicate2(collector, context_decl):
     """Test handling duplicate : in traceback.
 
     """
-    tb = {'ecpy_pulses.BaseContext': 'rr'}
-    context_decl.context = 'ecpy_pulses.pulses:BaseContext'
+    tb = {'exopy_pulses.BaseContext': 'rr'}
+    context_decl.context = 'exopy_pulses.pulses:BaseContext'
     context_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseContext_duplicate1' in tb
+    assert 'exopy_pulses.BaseContext_duplicate1' in tb
 
 
 def test_register_context_decl_cls1(collector, context_decl):
@@ -584,10 +587,10 @@ def test_register_context_decl_cls1(collector, context_decl):
 
     """
     tb = {}
-    context_decl.context = 'ecpy_pulses.foo:BaseContext'
+    context_decl.context = 'exopy_pulses.foo:BaseContext'
     context_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseContext' in tb
-    assert 'import' in tb['ecpy_pulses.BaseContext']
+    assert 'exopy_pulses.BaseContext' in tb
+    assert 'import' in tb['exopy_pulses.BaseContext']
 
 
 def test_register_context_decl_cls1_bis(collector, context_decl):
@@ -596,9 +599,9 @@ def test_register_context_decl_cls1_bis(collector, context_decl):
 
     """
     tb = {}
-    context_decl.context = 'ecpy.testing.broken_module:Context'
+    context_decl.context = 'exopy.testing.broken_module:Context'
     context_decl.register(collector, tb)
-    assert 'ecpy.Context' in tb and 'NameError' in tb['ecpy.Context']
+    assert 'exopy.Context' in tb and 'NameError' in tb['exopy.Context']
 
 
 def test_register_context_decl_cls2(collector, context_decl):
@@ -606,9 +609,9 @@ def test_register_context_decl_cls2(collector, context_decl):
 
     """
     tb = {}
-    context_decl.context = 'ecpy_pulses.pulses.sequences.base_sequences:Task'
+    context_decl.context = 'exopy_pulses.pulses.sequences.base_sequences:Task'
     context_decl.register(collector, tb)
-    assert 'ecpy_pulses.Task' in tb and 'attribute' in tb['ecpy_pulses.Task']
+    assert 'exopy_pulses.Task' in tb and 'attribute' in tb['exopy_pulses.Task']
 
 
 def test_register_context_decl_cls3(collector, context_decl):
@@ -616,9 +619,10 @@ def test_register_context_decl_cls3(collector, context_decl):
 
     """
     tb = {}
-    context_decl.context = 'ecpy.tasks.tasks.database:TaskDatabase'
+    context_decl.context = 'exopy.tasks.tasks.database:TaskDatabase'
     context_decl.register(collector, tb)
-    assert 'ecpy.TaskDatabase' in tb and 'subclass' in tb['ecpy.TaskDatabase']
+    assert ('exopy.TaskDatabase' in tb and
+            'subclass' in tb['exopy.TaskDatabase'])
 
 
 def test_register_context_decl_view1(collector, context_decl):
@@ -626,10 +630,10 @@ def test_register_context_decl_view1(collector, context_decl):
 
     """
     tb = {}
-    context_decl.view = 'ecpy.tasks.foo:Task'
+    context_decl.view = 'exopy.tasks.foo:Task'
     context_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseContext' in tb
-    assert'import' in tb['ecpy_pulses.BaseContext']
+    assert 'exopy_pulses.BaseContext' in tb
+    assert'import' in tb['exopy_pulses.BaseContext']
 
 
 def test_register_context_decl_view1_bis(collector, context_decl):
@@ -637,11 +641,11 @@ def test_register_context_decl_view1_bis(collector, context_decl):
 
     """
     tb = {}
-    context_decl.view = 'ecpy.testing.broken_enaml:Task'
+    context_decl.view = 'exopy.testing.broken_enaml:Task'
     context_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseContext' in tb
-    assert ('AttributeError' in tb['ecpy_pulses.BaseContext'] or
-            'NameError' in tb['ecpy_pulses.BaseContext'])
+    assert 'exopy_pulses.BaseContext' in tb
+    assert ('AttributeError' in tb['exopy_pulses.BaseContext'] or
+            'NameError' in tb['exopy_pulses.BaseContext'])
 
 
 def test_register_context_decl_view2(collector, context_decl):
@@ -649,10 +653,10 @@ def test_register_context_decl_view2(collector, context_decl):
 
     """
     tb = {}
-    context_decl.view = 'ecpy.tasks.tasks.base_views:Task'
+    context_decl.view = 'exopy.tasks.tasks.base_views:Task'
     context_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseContext' in tb
-    assert 'import' in tb['ecpy_pulses.BaseContext']
+    assert 'exopy_pulses.BaseContext' in tb
+    assert 'import' in tb['exopy_pulses.BaseContext']
 
 
 def test_register_context_decl_view3(collector, context_decl):
@@ -660,10 +664,10 @@ def test_register_context_decl_view3(collector, context_decl):
 
     """
     tb = {}
-    context_decl.view = 'ecpy.tasks.tasks.database:TaskDatabase'
+    context_decl.view = 'exopy.tasks.tasks.database:TaskDatabase'
     context_decl.register(collector, tb)
-    assert 'ecpy_pulses.BaseContext' in tb
-    assert 'subclass' in tb['ecpy_pulses.BaseContext']
+    assert 'exopy_pulses.BaseContext' in tb
+    assert 'subclass' in tb['exopy_pulses.BaseContext']
 
 
 def test_unregister_context_decl1(collector, context_decl):
@@ -689,14 +693,14 @@ def test_unregister_context_decl3(collector, context_decl):
     """Test unregistering a context extending an existing one.
 
     """
-    collector.contributions['ecpy_pulses.BaseContext'] = ContextInfos()
-    context_decl.context = 'ecpy_pulses.BaseContext'
+    collector.contributions['exopy_pulses.BaseContext'] = ContextInfos()
+    context_decl.context = 'exopy_pulses.BaseContext'
     context_decl.metadata = {'test': True}
-    context_decl.instruments = ['ecpy.i3py.TektronixAWG5014B']
+    context_decl.instruments = ['exopy.i3py.TektronixAWG5014B']
     context_decl.register(collector, {})
     context_decl.unregister(collector)
-    assert not collector.contributions['ecpy_pulses.BaseContext'].metadata
-    assert not collector.contributions['ecpy_pulses.BaseContext'].instruments
+    assert not collector.contributions['exopy_pulses.BaseContext'].metadata
+    assert not collector.contributions['exopy_pulses.BaseContext'].instruments
 
 
 def test_str_context(context_decl):
@@ -714,11 +718,11 @@ def test_str_context(context_decl):
 def config_decl():
     class Config(SequenceConfig):
         def get_sequence_class(self):
-            from ecpy_pulses.pulses.sequences.base_sequences\
+            from exopy_pulses.pulses.sequences.base_sequences\
                 import BaseSequence
             return BaseSequence
 
-    root = 'ecpy_pulses.pulses.configs.'
+    root = 'exopy_pulses.pulses.configs.'
 
     return Config(
         config=root + 'base_config:SequenceConfig',
@@ -729,17 +733,17 @@ def test_register_config_decl(collector, config_decl):
     """Test registering the sequence config.
 
     """
-    parent = SequenceConfigs(group='test', path='ecpy_pulses.pulses.configs')
+    parent = SequenceConfigs(group='test', path='exopy_pulses.pulses.configs')
     parent.insert_children(None, [config_decl])
     config_decl.config = 'base_config:SequenceConfig'
     config_decl.view = 'base_config_views:SequenceConfigView'
     errors = {}
     parent.register(collector, errors)
-    from ecpy_pulses.pulses.sequences.base_sequences import BaseSequence
+    from exopy_pulses.pulses.sequences.base_sequences import BaseSequence
     infos = collector.contributions[BaseSequence]
-    from ecpy_pulses.pulses.configs.base_config import SequenceConfig
+    from exopy_pulses.pulses.configs.base_config import SequenceConfig
     with enaml.imports():
-        from ecpy_pulses.pulses.configs.base_config_views \
+        from exopy_pulses.pulses.configs.base_config_views \
             import SequenceConfigView
     assert infos.cls is SequenceConfig
     assert infos.view is SequenceConfigView
@@ -755,7 +759,7 @@ def test_register_config_fail_to_get_sequence(collector, config_decl):
         raise Exception()
     type(config_decl).get_sequence_class = dummy
     config_decl.register(collector, tb)
-    assert 'ecpy_pulses.SequenceConfig' in tb
+    assert 'exopy_pulses.SequenceConfig' in tb
 
 
 def test_register_config_decl_path_1(collector, config_decl):
@@ -763,9 +767,9 @@ def test_register_config_decl_path_1(collector, config_decl):
 
     """
     tb = {}
-    config_decl.config = 'ecpy.tasks'
+    config_decl.config = 'exopy.tasks'
     config_decl.register(collector, tb)
-    assert 'ecpy.tasks' in tb
+    assert 'exopy.tasks' in tb
 
 
 def test_register_config_decl_path2(collector, config_decl):
@@ -773,29 +777,29 @@ def test_register_config_decl_path2(collector, config_decl):
 
     """
     tb = {}
-    config_decl.view = 'ecpy.tasks:tasks:Task'
+    config_decl.view = 'exopy.tasks:tasks:Task'
     config_decl.register(collector, tb)
-    assert 'ecpy_pulses.SequenceConfig' in tb
+    assert 'exopy_pulses.SequenceConfig' in tb
 
 
 def test_register_config_decl_duplicate1(collector, config_decl):
     """Test handling duplicate config for a task.
 
     """
-    from ecpy_pulses.pulses.sequences.base_sequences import BaseSequence
+    from exopy_pulses.pulses.sequences.base_sequences import BaseSequence
     collector.contributions[BaseSequence] = None
     tb = {}
     config_decl.register(collector, tb)
-    assert 'ecpy_pulses.SequenceConfig' in tb
+    assert 'exopy_pulses.SequenceConfig' in tb
 
 
 def test_register_config_decl_duplicate2(collector, config_decl):
     """Test handling duplicate : in traceback.
 
     """
-    tb = {'ecpy_pulses.SequenceConfig': 'rr'}
+    tb = {'exopy_pulses.SequenceConfig': 'rr'}
     config_decl.register(collector, tb)
-    assert 'ecpy_pulses.SequenceConfig_duplicate1' in tb
+    assert 'exopy_pulses.SequenceConfig_duplicate1' in tb
 
 
 def test_register_config_decl_cls1(collector, config_decl):
@@ -803,9 +807,9 @@ def test_register_config_decl_cls1(collector, config_decl):
 
     """
     tb = {}
-    config_decl.config = 'ecpy.tasks.foo:Task'
+    config_decl.config = 'exopy.tasks.foo:Task'
     config_decl.register(collector, tb)
-    assert 'ecpy.Task' in tb and 'import' in tb['ecpy.Task']
+    assert 'exopy.Task' in tb and 'import' in tb['exopy.Task']
 
 
 def test_register_config_decl_cls1_bis(collector, config_decl):
@@ -813,9 +817,9 @@ def test_register_config_decl_cls1_bis(collector, config_decl):
 
     """
     tb = {}
-    config_decl.config = 'ecpy.testing.broken_module:Task'
+    config_decl.config = 'exopy.testing.broken_module:Task'
     config_decl.register(collector, tb)
-    assert 'ecpy.Task' in tb and 'NameError' in tb['ecpy.Task']
+    assert 'exopy.Task' in tb and 'NameError' in tb['exopy.Task']
 
 
 def test_register_config_decl_cls2(collector, config_decl):
@@ -823,9 +827,9 @@ def test_register_config_decl_cls2(collector, config_decl):
 
     """
     tb = {}
-    config_decl.config = 'ecpy.tasks.tasks.base_tasks:Task'
+    config_decl.config = 'exopy.tasks.tasks.base_tasks:Task'
     config_decl.register(collector, tb)
-    assert 'ecpy.Task' in tb and 'attribute' in tb['ecpy.Task']
+    assert 'exopy.Task' in tb and 'attribute' in tb['exopy.Task']
 
 
 def test_register_config_decl_cls3(collector, config_decl):
@@ -833,9 +837,10 @@ def test_register_config_decl_cls3(collector, config_decl):
 
     """
     tb = {}
-    config_decl.config = 'ecpy.tasks.tasks.database:TaskDatabase'
+    config_decl.config = 'exopy.tasks.tasks.database:TaskDatabase'
     config_decl.register(collector, tb)
-    assert 'ecpy.TaskDatabase' in tb and 'subclass' in tb['ecpy.TaskDatabase']
+    assert ('exopy.TaskDatabase' in tb and
+            'subclass' in tb['exopy.TaskDatabase'])
 
 
 def test_register_config_decl_view1(collector, config_decl):
@@ -843,10 +848,10 @@ def test_register_config_decl_view1(collector, config_decl):
 
     """
     tb = {}
-    config_decl.view = 'ecpy.tasks.foo:Task'
+    config_decl.view = 'exopy.tasks.foo:Task'
     config_decl.register(collector, tb)
-    assert 'ecpy_pulses.SequenceConfig' in tb
-    assert 'import' in tb['ecpy_pulses.SequenceConfig']
+    assert 'exopy_pulses.SequenceConfig' in tb
+    assert 'import' in tb['exopy_pulses.SequenceConfig']
 
 
 def test_register_config_decl_view1bis(collector, config_decl):
@@ -854,10 +859,10 @@ def test_register_config_decl_view1bis(collector, config_decl):
 
     """
     tb = {}
-    config_decl.view = 'ecpy.testing.broken_module:Task'
+    config_decl.view = 'exopy.testing.broken_module:Task'
     config_decl.register(collector, tb)
-    assert 'ecpy_pulses.SequenceConfig' in tb
-    assert 'NameError' in tb['ecpy_pulses.SequenceConfig']
+    assert 'exopy_pulses.SequenceConfig' in tb
+    assert 'NameError' in tb['exopy_pulses.SequenceConfig']
 
 
 def test_register_config_decl_view2(collector, config_decl):
@@ -865,10 +870,10 @@ def test_register_config_decl_view2(collector, config_decl):
 
     """
     tb = {}
-    config_decl.view = 'ecpy.tasks.tasks.base_views:Task'
+    config_decl.view = 'exopy.tasks.tasks.base_views:Task'
     config_decl.register(collector, tb)
-    assert 'ecpy_pulses.SequenceConfig' in tb
-    assert 'import' in tb['ecpy_pulses.SequenceConfig']
+    assert 'exopy_pulses.SequenceConfig' in tb
+    assert 'import' in tb['exopy_pulses.SequenceConfig']
 
 
 def test_register_config_decl_view3(collector, config_decl):
@@ -876,10 +881,10 @@ def test_register_config_decl_view3(collector, config_decl):
 
     """
     tb = {}
-    config_decl.view = 'ecpy.tasks.tasks.database:TaskDatabase'
+    config_decl.view = 'exopy.tasks.tasks.database:TaskDatabase'
     config_decl.register(collector, tb)
-    assert 'ecpy_pulses.SequenceConfig' in tb
-    assert 'subclass' in tb['ecpy_pulses.SequenceConfig']
+    assert 'exopy_pulses.SequenceConfig' in tb
+    assert 'subclass' in tb['exopy_pulses.SequenceConfig']
 
 
 def test_unregister_config_decl1(collector, config_decl):

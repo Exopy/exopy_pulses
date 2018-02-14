@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -14,9 +14,9 @@ from __future__ import (division, unicode_literals, print_function,
 
 import pytest
 
-from ecpy_pulses.pulses.item import Item
-from ecpy_pulses.pulses.sequences.base_sequences import RootSequence
-from ecpy_pulses.testing.context import TestContext
+from exopy_pulses.pulses.item import Item
+from exopy_pulses.pulses.sequences.base_sequences import RootSequence
+from exopy_pulses.testing.context import TestContext
 
 
 @pytest.fixture
@@ -28,7 +28,7 @@ def test_item_id(item):
     """Test getting the id of an item.
 
     """
-    assert item.item_id == 'ecpy_pulses.Item'
+    assert item.item_id == 'exopy_pulses.Item'
 
 
 def test_removing_root(item):

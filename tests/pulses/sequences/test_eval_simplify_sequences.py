@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -16,12 +16,12 @@ from collections import OrderedDict
 
 import pytest
 
-from ecpy_pulses.pulses.pulse import Pulse
-from ecpy_pulses.pulses.shapes.square_shape import SquareShape
-from ecpy_pulses.pulses.sequences.base_sequences\
+from exopy_pulses.pulses.pulse import Pulse
+from exopy_pulses.pulses.shapes.square_shape import SquareShape
+from exopy_pulses.pulses.sequences.base_sequences\
     import RootSequence, BaseSequence
 
-from ecpy_pulses.testing.context import TestContext
+from exopy_pulses.testing.context import TestContext
 
 
 @pytest.fixture

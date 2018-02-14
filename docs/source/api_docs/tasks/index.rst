@@ -1,7 +1,7 @@
-ecpy_pulses.tasks package
+exopy_pulses.tasks package
 =========================
 
-.. automodule:: ecpy_pulses.tasks
+.. automodule:: exopy_pulses.tasks
     :members:
     :undoc-members:
     :show-inheritance:

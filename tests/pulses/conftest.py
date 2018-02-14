@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyHqcLegacy Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyHqcLegacy Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -18,7 +18,7 @@ import pytest
 with enaml.imports():
     from .contributions import PulsesContributions
 
-pytest_plugins = str('ecpy_pulses.testing.fixtures'),
+pytest_plugins = str('exopy_pulses.testing.fixtures'),
 
 
 @pytest.fixture

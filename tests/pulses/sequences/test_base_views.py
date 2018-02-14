@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -14,14 +14,14 @@ from __future__ import (division, unicode_literals, print_function,
 
 import enaml
 
-from ecpy.testing.util import show_widget, handle_dialog
+from exopy.testing.util import show_widget, handle_dialog
 
-from ecpy_pulses.pulses.sequences.base_sequences import (BaseSequence,
-                                                         RootSequence)
+from exopy_pulses.pulses.sequences.base_sequences import (BaseSequence,
+                                                          RootSequence)
 with enaml.imports():
-    from ecpy_pulses.pulses.sequences.views.abstract_sequence_view\
+    from exopy_pulses.pulses.sequences.views.abstract_sequence_view\
         import AbstractSequenceView
-    from ecpy_pulses.pulses.sequences.views.base_sequences_views\
+    from exopy_pulses.pulses.sequences.views.base_sequences_views\
         import BaseSequenceView, RootSequenceView
 
 

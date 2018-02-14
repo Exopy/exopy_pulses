@@ -1,7 +1,7 @@
-ecpy_pulses.testing.workspace.fixtures module
+exopy_pulses.testing.workspace.fixtures module
 =============================================
 
-.. automodule:: ecpy_pulses.testing.workspace.fixtures
+.. automodule:: exopy_pulses.testing.workspace.fixtures
     :members:
     :undoc-members:
     :show-inheritance:

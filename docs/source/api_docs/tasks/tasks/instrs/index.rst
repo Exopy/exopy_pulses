@@ -1,7 +1,7 @@
-ecpy_pulses.tasks.tasks.instrs package
+exopy_pulses.tasks.tasks.instrs package
 ======================================
 
-.. automodule:: ecpy_pulses.tasks.tasks.instrs
+.. automodule:: exopy_pulses.tasks.tasks.instrs
     :members:
     :undoc-members:
     :show-inheritance:

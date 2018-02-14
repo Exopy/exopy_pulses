@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -14,15 +14,16 @@ from __future__ import (division, unicode_literals, print_function,
 
 from math import exp, pi as Pi
 import cmath as cm
-                        
+
 import numpy as np
 from atom.api import Unicode
 
-from ecpy_pulses.pulses.utils.entry_eval import HasEvaluableFields
-from ecpy_pulses.pulses.utils.validators import Feval, SkipEmpty
+from exopy_pulses.pulses.utils.entry_eval import HasEvaluableFields
+from exopy_pulses.pulses.utils.validators import Feval, SkipEmpty
 
 
 FORMULA = 'Pi*np.array(cm.sqrt(exp(2*{feval2}))).real'
+
 
 class EvalFmtTest(HasEvaluableFields):
     """Test class for HasEvaluableFields.
@@ -59,7 +60,7 @@ def test_automatic_evaluation():
     assert 'fmt1' in glob and 'feval1' in glob
     assert 'fmt2' not in glob and 'feval2' not in glob
     assert glob['fmt1'] == '+r' and glob['feval1'] == 2
-    
+
     formula_val = eval(FORMULA.format(**loc))
     for k, v in dict(fmt1='+r', fmt2='+t', feval1=2,
                      feval2=formula_val).items():

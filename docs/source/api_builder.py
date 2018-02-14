@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-    ecpy.api_builder
+    exopy.api_builder
     ~~~~~~~~~~~~~~~~
     This is derived from the sphinx-apidoc but modified to allow generation
     of hierarchically organized .rst for the api docs.

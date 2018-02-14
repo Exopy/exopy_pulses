@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -15,9 +15,9 @@ from __future__ import (division, unicode_literals, print_function,
 import enaml
 
 with enaml.imports():
-    from ecpy_pulses.tasks.manifest import PulsesTasksManifest
+    from exopy_pulses.tasks.manifest import PulsesTasksManifest
 
-pytest_plugins = (str('ecpy.testing.tasks.fixtures'),)
+pytest_plugins = (str('exopy.testing.tasks.fixtures'),)
 
 
 def test_manifest(task_workbench):
@@ -25,6 +25,6 @@ def test_manifest(task_workbench):
 
     """
     task_workbench.register(PulsesTasksManifest())
-    pl = task_workbench.get_plugin('ecpy.tasks')
+    pl = task_workbench.get_plugin('exopy.tasks')
 
-    assert pl.get_task_infos('ecpy_pulses.TransferPulseSequenceTask')
+    assert pl.get_task_infos('exopy_pulses.TransferPulseSequenceTask')

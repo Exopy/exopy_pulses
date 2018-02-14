@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -13,13 +13,14 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 import enaml
-from ecpy.testing.util import show_widget, process_app_events
+from exopy.testing.util import show_widget, process_app_events
 
-from ecpy_pulses.pulses.api import BaseSequence
-from ecpy_pulses.pulses.configs.base_config import SequenceConfig
+from exopy_pulses.pulses.api import BaseSequence
+from exopy_pulses.pulses.configs.base_config import SequenceConfig
 
 with enaml.imports():
-    from ecpy_pulses.pulses.configs.base_config_views import SequenceConfigView
+    from exopy_pulses.pulses.configs.base_config_views\
+        import SequenceConfigView
 
 
 def test_sequence_config(pulses_plugin):

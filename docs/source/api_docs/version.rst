@@ -1,7 +1,7 @@
-ecpy_pulses.version module
+exopy_pulses.version module
 ==========================
 
-.. automodule:: ecpy_pulses.version
+.. automodule:: exopy_pulses.version
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,9 +1,9 @@
-.. Ecpy pulses documentation master file
+.. ExopyPulses documentation master file
 
-Welcome to Ecpy pulses' documentation!
+Welcome to ExopyPulses' documentation!
 ======================================
 
-Ecpy pulses adds pulse sequences synthesis capabilities
+ExopyPulses adds pulse sequences synthesis capabilities
 
 
 .. toctree::
@@ -16,11 +16,11 @@ Ecpy pulses adds pulse sequences synthesis capabilities
 
 - :doc:`user_guide/index`
 
-    How to set up Ecpy pulses and use it in your lab.
+    How to set up ExopyPulses and use it in your lab.
 
 - :doc:`dev_guide/index`
 
-   You need to extend Ecpy pulses functionalities, you should definitively start here.
+   You need to extend ExopyPulses functionalities, you should definitively start here.
 
 - :doc:`faqs/index`
 
@@ -30,7 +30,7 @@ Ecpy pulses adds pulse sequences synthesis capabilities
 
     When all else fails, consult the API docs to find the answer you need.
     The API docs also include convenient links to the most definitive
-    Ecpy documentation: the source.
+    Exopy documentation: the source.
 
 
 Indices and tables

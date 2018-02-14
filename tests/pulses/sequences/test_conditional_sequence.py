@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -14,9 +14,9 @@ from __future__ import (division, unicode_literals, print_function,
 
 from collections import OrderedDict
 
-from ecpy_pulses.pulses.pulse import Pulse
-from ecpy_pulses.pulses.sequences.base_sequences import BaseSequence
-from ecpy_pulses.pulses.sequences.conditional_sequence\
+from exopy_pulses.pulses.pulse import Pulse
+from exopy_pulses.pulses.sequences.base_sequences import BaseSequence
+from exopy_pulses.pulses.sequences.conditional_sequence\
      import ConditionalSequence
 
 from .test_eval_simplify_sequences import root, add_children
@@ -134,9 +134,9 @@ def test_conditional_sequence_view(windows, workbench, root,
 
     """
     import enaml
-    from ecpy.testing.util import show_and_close_widget
+    from exopy.testing.util import show_and_close_widget
     with enaml.imports():
-        from ecpy_pulses.pulses.sequences.views.base_sequences_views\
+        from exopy_pulses.pulses.sequences.views.base_sequences_views\
             import RootSequenceView
 
     core = workbench.get_plugin('enaml.workbench.core')

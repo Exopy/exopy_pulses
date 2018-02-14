@@ -67,7 +67,7 @@ be passed as a tuple/list.
     from numbers import Real
 
     from atom.api import Unicode, Int
-    from ecpy_pulses.pulses.api import Feval
+    from exopy_pulses.pulses.api import Feval
 
     class MyContext(BaseContext):
         """MyContext description.
@@ -131,10 +131,10 @@ meaningful tool tips.
 
 
 For more informations about the Enaml syntax please give a look at
-the relevant section in the Ecpy documentation.
+the relevant section in the Exopy documentation.
 
 
-At this point your context is ready to be registered in Ecpy, however writing a
+At this point your context is ready to be registered in Exopy, however writing a
 bunch of unit tests for your context making sure it works as expected and will go
 on doing so is good idea. Give a look at :doc:`testing` for more details about
 writing tests and checking that your tests do cover all the possible cases.
@@ -145,11 +145,11 @@ Registering your context
 
 The last thing you need to do is to declare your shape in a plugin manifest so
 that the main application can find it. To do so your plugin should contribute
-an extension to 'ecpy.pulses.contexts' providing |Contexts| and/or |Context|
+an extension to 'exopy.pulses.contexts' providing |Contexts| and/or |Context|
 objects.
 
 Let's say we need to declare a single context named 'MyContext'. The name of our
-extension package (see the glossary in Ecpy documentation) is named 'my_ecpy_plugin'.
+extension package (see the glossary in Exopy documentation) is named 'my_exopy_plugin'.
 Let's look at the example below:
 
 .. code-block:: enaml
@@ -159,10 +159,10 @@ Let's look at the example below:
         id = 'my_plugin_id'
 
         Extension:
-            point = 'ecpy.pulses.contexts'
+            point = 'exopy.pulses.contexts'
 
             Contexts:
-                path = 'my_ecpy_plugin'
+                path = 'my_exopy_plugin'
 
                 Context:
                     context = 'my_context:MyContext'
@@ -189,7 +189,7 @@ but only three of them must be given non-default values :
 - 'metadata': Any additional informations about the context. Those should be
   specified as a dictionary.
 
-This is it. Now when starting Ecpy your new context should be listed and work
+This is it. Now when starting Exopy your new context should be listed and work
 with the specified drivers. Note that just for tasks, you can extend the list
 of supported drivers by redeclaring a context but specifying only its id
 (package_name.class_name) and the additionally supported drivers.

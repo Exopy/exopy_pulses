@@ -4,72 +4,72 @@
    the file.
 
 .. ============================================================================
-.. Ecpy pulses substitutions
+.. ExopyPulses substitutions
 .. ============================================================================
 
-.. |EVALUATER_TOOLTIP| replace:: :py:const:`~ecpy_pulses.pulses.utils.entry_eval.EVALUATER_TOOLTIP`
+.. |EVALUATER_TOOLTIP| replace:: :py:const:`~exopy_pulses.pulses.utils.entry_eval.EVALUATER_TOOLTIP`
 
-.. |SequenceFilter| replace:: :py:class:`~ecpy_pulses.pulses.filters.SequenceFilter`
+.. |SequenceFilter| replace:: :py:class:`~exopy_pulses.pulses.filters.SequenceFilter`
 
-.. |SubclassSequenceFilter| replace:: :py:class:`~ecpy_pulses.pulses.filters.SubclassSequenceFilter`
+.. |SubclassSequenceFilter| replace:: :py:class:`~exopy_pulses.pulses.filters.SubclassSequenceFilter`
 
-.. |MetadataSequenceFilter| replace:: :py:class:`~ecpy_pulses.pulses.filters.MetadataSequenceFilter`
+.. |MetadataSequenceFilter| replace:: :py:class:`~exopy_pulses.pulses.filters.MetadataSequenceFilter`
 
-.. |HasEvaluableFields| replace:: :py:class:`~ecpy_pulses.pulses.utils.entry_eval.HasEvaluableFields`
+.. |HasEvaluableFields| replace:: :py:class:`~exopy_pulses.pulses.utils.entry_eval.HasEvaluableFields`
 
-.. |Feval| replace:: :py:class:`~ecpy_pulses.pulses.utils.validators.Feval`
+.. |Feval| replace:: :py:class:`~exopy_pulses.pulses.utils.validators.Feval`
 
-.. |TransferPulseSequenceTask| replace:: :py:class:`~ecpy_pulses.tasks.tasks.instrs.transfer_sequence_task.TransferPulseSequenceTask`
+.. |TransferPulseSequenceTask| replace:: :py:class:`~exopy_pulses.tasks.tasks.instrs.transfer_sequence_task.TransferPulseSequenceTask`
 
 .. Sequence configs
 .. ----------------------------------------------------------------------------
 
-.. |AbstractConfig| replace:: :py:class:`~ecpy_pulses.pulses.configs.base_config.AbstractConfig`
+.. |AbstractConfig| replace:: :py:class:`~exopy_pulses.pulses.configs.base_config.AbstractConfig`
 
-.. |AbstractConfigView| replace:: :py:class:`~ecpy_pulses.pulses.configs.base_config_views.AbstractConfigView`
+.. |AbstractConfigView| replace:: :py:class:`~exopy_pulses.pulses.configs.base_config_views.AbstractConfigView`
 
-.. |SequenceConfigs| replace:: :py:class:`~ecpy_pulses.pulses.declarations.SequenceConfigs`
+.. |SequenceConfigs| replace:: :py:class:`~exopy_pulses.pulses.declarations.SequenceConfigs`
 
-.. |SequenceConfig| replace:: :py:class:`~ecpy_pulses.pulses.declarations.SequenceConfig`
+.. |SequenceConfig| replace:: :py:class:`~exopy_pulses.pulses.declarations.SequenceConfig`
 
 .. Shapes
 .. ----------------------------------------------------------------------------
 
-.. |AbstractShape| replace:: :py:class:`~ecpy_pulses.pulses.shapes.base_shape.AbstractShape`
+.. |AbstractShape| replace:: :py:class:`~exopy_pulses.pulses.shapes.base_shape.AbstractShape`
 
-.. |AbstractShapeView| replace:: :py:class:`~ecpy_pulses.pulses.shapes.views.base_shape_view.AbstractShapeView`
+.. |AbstractShapeView| replace:: :py:class:`~exopy_pulses.pulses.shapes.views.base_shape_view.AbstractShapeView`
 
-.. |Shapes| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Shapes`
+.. |Shapes| replace:: :py:class:`~exopy_pulses.pulses.declarations.Shapes`
 
-.. |Shape| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Shape`
+.. |Shape| replace:: :py:class:`~exopy_pulses.pulses.declarations.Shape`
 
 .. Sequences
 .. ----------------------------------------------------------------------------
 
-.. |AbstractSequence| replace:: :py:class:`~ecpy_pules.pulses.sequences.base_sequences.AbstractSequence`
+.. |AbstractSequence| replace:: :py:class:`~exopy_pules.pulses.sequences.base_sequences.AbstractSequence`
 
-.. |BaseSequence| replace:: :py:class:`~ecpy_pules.pulses.sequences.base_sequences.BaseSequence`
+.. |BaseSequence| replace:: :py:class:`~exopy_pules.pulses.sequences.base_sequences.BaseSequence`
 
-.. |AbstractSequenceView| replace:: :py:class:`~ecpy_pules.pulses.sequences.views.abstract_sequence_view.AbstractSequenceView`
+.. |AbstractSequenceView| replace:: :py:class:`~exopy_pules.pulses.sequences.views.abstract_sequence_view.AbstractSequenceView`
 
-.. |BaseSequenceView| replace:: :py:class:`~ecpy_pules.pulses.sequences.views.base_sequences_views.BaseSequence`
+.. |BaseSequenceView| replace:: :py:class:`~exopy_pules.pulses.sequences.views.base_sequences_views.BaseSequence`
 
-.. |ConditionalSequence| replace:: :py:class:`~ecpy_pules.pulses.sequences.conditional_sequence.ConditionalSequence`
+.. |ConditionalSequence| replace:: :py:class:`~exopy_pules.pulses.sequences.conditional_sequence.ConditionalSequence`
 
-.. |Sequences| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Sequences`
+.. |Sequences| replace:: :py:class:`~exopy_pulses.pulses.declarations.Sequences`
 
-.. |Sequence| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Sequence`
+.. |Sequence| replace:: :py:class:`~exopy_pulses.pulses.declarations.Sequence`
 
 .. Contexts
 .. ----------------------------------------------------------------------------
 
-.. |BaseContext| replace:: :py:class:`~ecpy_pulses.pulses.contexts.base_context.BaseContext`
+.. |BaseContext| replace:: :py:class:`~exopy_pulses.pulses.contexts.base_context.BaseContext`
 
-.. |BaseContextView| replace:: :py:class:`~ecpy_pulses.pulses.contexts.views.base_context_view.BaseContextView`
+.. |BaseContextView| replace:: :py:class:`~exopy_pulses.pulses.contexts.views.base_context_view.BaseContextView`
 
-.. |Contexts| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Contexts`
+.. |Contexts| replace:: :py:class:`~exopy_pulses.pulses.declarations.Contexts`
 
-.. |Context| replace:: :py:class:`~ecpy_pulses.pulses.declarations.Context`
+.. |Context| replace:: :py:class:`~exopy_pulses.pulses.declarations.Context`
 
 .. ============================================================================
 .. Enaml substitutions
@@ -113,7 +113,7 @@
 .. Utils substitutions
 .. ----------------------------------------------------------------------------
 
-.. |QtLineCompleter| replace:: :py:class:`~ecpy.utils.widgets.qt_completers.QtLineCompleter`
+.. |QtLineCompleter| replace:: :py:class:`~exopy.utils.widgets.qt_completers.QtLineCompleter`
 
-.. |QtTextCompleter| replace:: :py:class:`~ecpy.utils.widgets.qt_completers.QtTextCompleter`
+.. |QtTextCompleter| replace:: :py:class:`~exopy.utils.widgets.qt_completers.QtTextCompleter`
 

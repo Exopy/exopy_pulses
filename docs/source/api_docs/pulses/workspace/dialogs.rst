@@ -1,7 +1,7 @@
-ecpy_pulses.pulses.workspace.dialogs module
+exopy_pulses.pulses.workspace.dialogs module
 ===========================================
 
-.. automodule:: ecpy_pulses.pulses.workspace.dialogs
+.. automodule:: exopy_pulses.pulses.workspace.dialogs
     :members:
     :undoc-members:
     :show-inheritance:

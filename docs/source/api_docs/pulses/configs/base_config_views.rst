@@ -1,7 +1,7 @@
-ecpy_pulses.pulses.configs.base_config_views module
+exopy_pulses.pulses.configs.base_config_views module
 ===================================================
 
-.. automodule:: ecpy_pulses.pulses.configs.base_config_views
+.. automodule:: exopy_pulses.pulses.configs.base_config_views
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,7 +1,7 @@
 API docs
 ========
 
-.. automodule:: ecpy_pulses
+.. automodule:: exopy_pulses
     :members:
     :undoc-members:
     :show-inheritance:
@@ -11,7 +11,7 @@ Subpackages
 
 .. toctree::
 
-    measure <measure/index>
+   .measurement .measurement/index>
     pulses <pulses/index>
     tasks <tasks/index>
     testing <testing/index>

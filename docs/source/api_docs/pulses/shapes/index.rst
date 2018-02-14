@@ -1,7 +1,7 @@
-ecpy_pulses.pulses.shapes package
+exopy_pulses.pulses.shapes package
 =================================
 
-.. automodule:: ecpy_pulses.pulses.shapes
+.. automodule:: exopy_pulses.pulses.shapes
     :members:
     :undoc-members:
     :show-inheritance:

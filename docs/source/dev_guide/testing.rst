@@ -2,9 +2,9 @@
 
 .. include:: ../substitutions.sub
 
-Ecpy pulses tests
+ExopyPulses tests
 =================
 
-Test in ecpy_pulses uses the same architecture as the ones found in
-ecpy. And just like ecpy, ecpy_pulses provides some useful fixtures that
+Test in exopy_pulses uses the same architecture as the ones found in
+exopy. And just like exopy, exopy_pulses provides some useful fixtures that
 can be found in the testing package.

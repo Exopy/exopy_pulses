@@ -1,7 +1,7 @@
-ecpy_pulses.pulses.plugin module
+exopy_pulses.pulses.plugin module
 ================================
 
-.. automodule:: ecpy_pulses.pulses.plugin
+.. automodule:: exopy_pulses.pulses.plugin
     :members:
     :undoc-members:
     :show-inheritance:

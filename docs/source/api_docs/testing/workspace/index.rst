@@ -1,7 +1,7 @@
-ecpy_pulses.testing.workspace package
+exopy_pulses.testing.workspace package
 =====================================
 
-.. automodule:: ecpy_pulses.testing.workspace
+.. automodule:: exopy_pulses.testing.workspace
     :members:
     :undoc-members:
     :show-inheritance:

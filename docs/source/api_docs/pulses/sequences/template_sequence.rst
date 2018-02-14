@@ -1,7 +1,7 @@
-ecpy_pulses.pulses.sequences.template_sequence module
+exopy_pulses.pulses.sequences.template_sequence module
 =====================================================
 
-.. automodule:: ecpy_pulses.pulses.sequences.template_sequence
+.. automodule:: exopy_pulses.pulses.sequences.template_sequence
     :members:
     :undoc-members:
     :show-inheritance:

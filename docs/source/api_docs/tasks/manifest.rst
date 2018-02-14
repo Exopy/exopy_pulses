@@ -1,7 +1,7 @@
-ecpy_pulses.tasks.manifest module
+exopy_pulses.tasks.manifest module
 =================================
 
-.. automodule:: ecpy_pulses.tasks.manifest
+.. automodule:: exopy_pulses.tasks.manifest
     :members:
     :undoc-members:
     :show-inheritance:

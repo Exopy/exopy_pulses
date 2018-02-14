@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -16,9 +16,9 @@ from ast import literal_eval
 
 import pytest
 
-from ecpy_pulses.pulses.api import RootSequence, BaseSequence
-from ecpy_pulses.pulses.sequences.template_sequence import TemplateSequence
-from ecpy_pulses.pulses.configs.template_config import TemplateConfig
+from exopy_pulses.pulses.api import RootSequence, BaseSequence
+from exopy_pulses.pulses.sequences.template_sequence import TemplateSequence
+from exopy_pulses.pulses.configs.template_config import TemplateConfig
 
 
 def test_init(pulses_plugin, template_sequence):
@@ -62,7 +62,7 @@ def test_building_template2(pulses_plugin, template_sequence):
     """Test building a template for which some dependencies are missing.
 
     """
-    del pulses_plugin._sequences.contributions['ecpy_pulses.BaseSequence']
+    del pulses_plugin._sequences.contributions['exopy_pulses.BaseSequence']
     infos = pulses_plugin.get_item_infos('__dummy__')
     meta = infos.metadata
     t_config = TemplateConfig(manager=pulses_plugin,

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2016 by EcpyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -14,7 +14,7 @@ from __future__ import (division, unicode_literals, print_function,
 
 import pytest
 
-from ecpy_pulses.testing.context import TestContext
+from exopy_pulses.testing.context import TestContext
 
 
 @pytest.fixture
@@ -63,4 +63,4 @@ def test_context_id(context):
     """Test getting the context id.
 
     """
-    assert context.context_id == 'ecpy_pulses.TestContext'
+    assert context.context_id == 'exopy_pulses.TestContext'
