@@ -4,6 +4,12 @@ omit =
     */testing/*
 plugins = 
   enaml_coverage_plugin
+  
+[paths]
+# needed to test installed packaged on travis
+source =
+    exopy_pulses/exopy_pulses
+    ~/anaconda/env/travisci/Lib/site-packages/exopy_pulses
 
 [report]
 # Regexes for lines to exclude from consideration
