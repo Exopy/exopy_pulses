@@ -15,7 +15,7 @@ requirements:
     - future
   run:
     - python
-    - exopy >= 0.1.0
+    - exopy
     - numpy
 
 test:
