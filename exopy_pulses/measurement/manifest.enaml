@@ -9,9 +9,6 @@
 """Manifest contributing specific.measurement editors.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import enaml
 from enaml.workbench.api import PluginManifest, Extension
 from exopy.measurement.editors.api import Editor

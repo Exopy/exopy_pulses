@@ -9,9 +9,6 @@
 """Definition of the interface for base pulse sequence context.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from atom.api import (Enum, Unicode, Bool, Float, Property, Tuple, List,
                       Constant)
 

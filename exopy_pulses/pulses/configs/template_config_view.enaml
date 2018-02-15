@@ -9,9 +9,6 @@
 """Declaration for the view used by TemplateConfig.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from inspect import cleandoc
 from textwrap import fill
 

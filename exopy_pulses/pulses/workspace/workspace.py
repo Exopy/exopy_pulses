@@ -9,9 +9,6 @@
 """Workspace dedicated to the edition of pulse sequences.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import os
 import logging
 from collections import OrderedDict

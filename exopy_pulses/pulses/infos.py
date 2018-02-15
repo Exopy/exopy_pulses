@@ -9,11 +9,8 @@
 """Objects used to store filters, sequences and configs in the manager.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
-from atom.api import Atom, Subclass, Dict, Coerced
 import enaml
+from atom.api import Atom, Subclass, Dict, Coerced
 
 from .sequences.base_sequences import AbstractSequence
 from .configs.base_config import AbstractConfig

@@ -9,9 +9,6 @@
 """Task editor allowing to edit a pulse sequence to transfer.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from collections import OrderedDict
 
 from enaml.widgets.api import Container, ScrollArea, Page, Field

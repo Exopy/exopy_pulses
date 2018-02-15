@@ -9,10 +9,6 @@
 """View for the Modulation class..
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
-
 from enaml.layout.api import hbox, vbox, align
 from enaml.widgets.api import (Container, Label, GroupBox, SplitItem,
                                ObjectCombo, Splitter)

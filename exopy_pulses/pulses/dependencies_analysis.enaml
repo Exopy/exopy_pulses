@@ -9,9 +9,6 @@
 """Depndencies analysis and collection machinery for pulses.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from enaml.workbench.api import PluginManifest, Extension, ExtensionPoint
 
 from exopy.app.dependencies.api import BuildDependency, RuntimeDependencyAnalyser

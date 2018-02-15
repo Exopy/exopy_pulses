@@ -9,11 +9,6 @@
 """Enaml objects used to declare sequences in a plugin manifest.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
-
-from future.utils import python_2_unicode_compatible
 from inspect import cleandoc
 
 from atom.api import Unicode, Dict, Property, List
@@ -34,7 +29,6 @@ class Sequences(GroupDeclarator):
     pass
 
 
-@python_2_unicode_compatible
 class Sequence(Declarator):
     """Declarator used to contribute a Sequence
 
@@ -194,7 +188,6 @@ class SequenceConfigs(GroupDeclarator):
     pass
 
 
-@python_2_unicode_compatible
 class SequenceConfig(Declarator):
     """Declarator used to contribute a Sequence configurator
 
@@ -343,7 +336,6 @@ class Contexts(GroupDeclarator):
     pass
 
 
-@python_2_unicode_compatible
 class Context(Declarator):
     """Declarator used to contribute a Context
 
@@ -511,7 +503,6 @@ class Shapes(GroupDeclarator):
     pass
 
 
-@python_2_unicode_compatible
 class Shape(Declarator):
     """Declarator used to contribute a Shape
 

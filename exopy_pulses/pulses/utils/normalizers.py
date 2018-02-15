@@ -12,8 +12,6 @@ Those should be use as formatting function argument to the ids_to_unique_names
 function found in exopy.utils.transformers
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
 
 
 def _normalize(name):

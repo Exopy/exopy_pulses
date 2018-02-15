@@ -11,10 +11,6 @@
 """
 # TODO this is unfinished and requires a update to exopy to support declaring
 # multiple build dependencies
-
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from copy import deepcopy
 from ast import literal_eval
 

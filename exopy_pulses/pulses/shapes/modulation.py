@@ -9,9 +9,6 @@
 """Modulation to overlap on the shape of the pulse.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from math import pi as Pi
 from numbers import Real
 

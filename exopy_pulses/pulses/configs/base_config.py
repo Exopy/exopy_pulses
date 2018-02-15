@@ -9,11 +9,8 @@
 """Base classes for sequence configurers.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from inspect import getdoc
-from atom.api import (Atom, Unicode, Bool, Subclass, ForwardTyped, Typed, Dict)
+from atom.api import (Atom, Unicode, Bool, Subclass, ForwardTyped, Typed)
 
 from ..item import Item
 

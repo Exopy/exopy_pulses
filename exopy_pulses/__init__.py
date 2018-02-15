@@ -9,13 +9,6 @@
 """Extension package for the Exopy application.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
-# HINT workaround a completely stupid bug in Py2
-from exopy_pulses.pulses.utils.normalizers import (normalize_sequence_name,
-                                                   normalize_context_name,
-                                                   normalize_shape_name)
 
 
 def list_manifests():

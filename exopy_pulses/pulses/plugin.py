@@ -10,9 +10,6 @@
 objects : sequences, shapes, configs, contexts
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import os
 import logging
 import enaml

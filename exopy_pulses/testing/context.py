@@ -9,9 +9,6 @@
 """Sequence context used for testing.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from atom.api import Float, set_default
 from exopy_pulses.pulses.contexts.base_context import BaseContext
 

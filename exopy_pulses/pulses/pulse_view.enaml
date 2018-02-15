@@ -11,9 +11,6 @@
 This is the view that is displayed in the SequenceEditor.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from enaml.layout.api import hbox, vbox, spacer, align
 from enaml.widgets.api import (Container, Label, GroupBox, CheckBox, Splitter,
                                SplitItem, FlowArea, ObjectCombo)
