@@ -9,14 +9,12 @@
 """Test the workspace dialogs.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from collections import OrderedDict
 
 import pytest
 import enaml
 from enaml.colors import parse_color
+from exopy.testing.util import wait_for_window_displayed
 
 from exopy_pulses.pulses.pulse import Pulse
 from exopy_pulses.pulses.sequences.base_sequences\
@@ -53,15 +51,15 @@ def test_var_validator():
     assert not v.validate('1*')
 
 
-def test_compiling_a_working_sequence(workspace, root, process_and_sleep,
-                                      windows):
+def test_compiling_a_working_sequence(workspace, root, exopy_qtbot,
+                                      dialog_sleep):
     """Test using the dialog to compile a working sequence.
 
     """
     workbench = workspace.workbench
     ui = workbench.get_plugin('enaml.workbench.ui')
     ui.show_window()
-    process_and_sleep()
+    exopy_qtbot.wait(10 + dialog_sleep)
 
     root.external_vars = OrderedDict({'a': 1.5})
 
@@ -84,26 +82,29 @@ def test_compiling_a_working_sequence(workspace, root, process_and_sleep,
 
     dial = CompileDialog(workspace=workspace)
     dial.show()
-    process_and_sleep()
+    wait_for_window_displayed(exopy_qtbot, dial)
+    exopy_qtbot.wait(dialog_sleep)
+
     comp_widget = dial.central_widget().widgets()[0]
 
     comp_widget.widgets()[-1].clicked = True
-    process_and_sleep()
 
-    assert comp_widget.elapsed_time
-    assert not comp_widget.errors
-    assert comp_widget.widgets()[-2].background == parse_color('green')
+    def assert_exec():
+        assert comp_widget.elapsed_time
+        assert not comp_widget.errors
+        assert comp_widget.widgets()[-2].background == parse_color('green')
+    exopy_qtbot.wait_until(assert_exec)
 
 
-def test_compiling_a_sequence_not_compiling(workspace, process_and_sleep, root,
-                                            windows):
+def test_compiling_a_sequence_not_compiling(workspace, root, exopy_qtbot,
+                                            dialog_sleep):
     """Test compiling that cannot compile as the sequence does not evaluate.
 
     """
     workbench = workspace.workbench
     ui = workbench.get_plugin('enaml.workbench.ui')
     ui.show_window()
-    process_and_sleep()
+    exopy_qtbot.wait(10 + dialog_sleep)
 
     root.external_vars = OrderedDict({'a': 1.5})
 
@@ -127,19 +128,23 @@ def test_compiling_a_sequence_not_compiling(workspace, process_and_sleep, root,
 
     dial = CompileDialog(workspace=workspace)
     dial.show()
-    process_and_sleep()
+    wait_for_window_displayed(exopy_qtbot, dial)
+    exopy_qtbot.wait(dialog_sleep)
+
     comp_widget = dial.central_widget().widgets()[0]
 
     comp_widget.widgets()[-1].clicked = True
-    process_and_sleep()
 
-    assert comp_widget.elapsed_time
-    assert comp_widget.errors
-    assert comp_widget.widgets()[-2].background == parse_color('red')
+    def assert_exec():
+        assert comp_widget.elapsed_time
+        assert comp_widget.errors
+        assert comp_widget.widgets()[-2].background == parse_color('red')
+    exopy_qtbot.wait_until(assert_exec)
+    exopy_qtbot.wait(dialog_sleep)
 
 
 def test_compiling_a_sequence_not_compiling2(workspace, root, monkeypatch,
-                                             process_and_sleep, windows):
+                                             exopy_qtbot, dialog_sleep):
     """Test compiling a sequence that can be evaluated but not compiled.
 
     """
@@ -151,7 +156,7 @@ def test_compiling_a_sequence_not_compiling2(workspace, root, monkeypatch,
     workbench = workspace.workbench
     ui = workbench.get_plugin('enaml.workbench.ui')
     ui.show_window()
-    process_and_sleep()
+    exopy_qtbot.wait(10 + dialog_sleep)
 
     root.external_vars = OrderedDict({'a': 1.5})
 
@@ -174,12 +179,14 @@ def test_compiling_a_sequence_not_compiling2(workspace, root, monkeypatch,
 
     dial = CompileDialog(workspace=workspace)
     dial.show()
-    process_and_sleep()
+    wait_for_window_displayed(exopy_qtbot, dial)
+
     comp_widget = dial.central_widget().widgets()[0]
 
     comp_widget.widgets()[-1].clicked = True
-    process_and_sleep()
 
-    assert comp_widget.elapsed_time
-    assert comp_widget.errors
-    assert comp_widget.widgets()[-2].background == parse_color('red')
+    def assert_exec():
+        assert comp_widget.elapsed_time
+        assert comp_widget.errors
+        assert comp_widget.widgets()[-2].background == parse_color('red')
+    exopy_qtbot.wait_until(assert_exec)

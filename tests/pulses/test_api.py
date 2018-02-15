@@ -9,8 +9,6 @@
 """Test importing from the api
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
 
 
 def test_exopy_pulses_api():

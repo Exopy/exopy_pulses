@@ -9,11 +9,8 @@
 """Tests for the base configuration.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import enaml
-from exopy.testing.util import show_widget, process_app_events
+from exopy.testing.util import show_widget
 
 from exopy_pulses.pulses.api import BaseSequence
 from exopy_pulses.pulses.configs.base_config import SequenceConfig
@@ -37,12 +34,14 @@ def test_sequence_config(pulses_plugin):
     assert isinstance(seq, BaseSequence) and seq.name == 'test'
 
 
-def test_sequence_config_view(windows):
+def test_sequence_config_view(exopy_qtbot):
     """Test the view of the base config.
 
     """
     w = SequenceConfigView(model=SequenceConfig(sequence_doc='test',))
-    show_widget(w)
+    show_widget(exopy_qtbot, w)
     w.widgets()[1].text = 'test'
-    process_app_events()
-    assert w.model.ready
+
+    def assert_ready():
+        assert w.model.ready
+    exopy_qtbot.wait_until(assert_ready)

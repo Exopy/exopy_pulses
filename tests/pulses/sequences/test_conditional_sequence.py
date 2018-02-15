@@ -9,9 +9,6 @@
 """Test the conditional sequence evaluation and simplification.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from collections import OrderedDict
 
 from exopy_pulses.pulses.pulse import Pulse
@@ -128,8 +125,7 @@ def test_conditional_sequence_compilation3(root):
     assert '2_condition' in errors
 
 
-def test_conditional_sequence_view(windows, workbench, root,
-                                   process_and_sleep):
+def test_conditional_sequence_view(workbench, root, exopy_qtbot):
     """Test the view of the Pulse class.
 
     """
@@ -141,4 +137,4 @@ def test_conditional_sequence_view(windows, workbench, root,
 
     core = workbench.get_plugin('enaml.workbench.core')
     root.add_child_item(0, ConditionalSequence())
-    show_and_close_widget(RootSequenceView(item=root, core=core))
+    show_and_close_widget(exopy_qtbot, RootSequenceView(item=root, core=core))

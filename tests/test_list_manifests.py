@@ -9,9 +9,6 @@
 """Test listing the contributed manifests.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from exopy_pulses import list_manifests
 
 

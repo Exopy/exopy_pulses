@@ -9,9 +9,6 @@
 """Tests for the base configuration.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from ast import literal_eval
 
 import pytest

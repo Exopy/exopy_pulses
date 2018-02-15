@@ -11,9 +11,6 @@
 The view is tested as part of the pulse view.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import pytest
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal

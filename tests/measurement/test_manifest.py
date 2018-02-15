@@ -9,16 +9,13 @@
 """Check that the manifest does register the editor.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import enaml
 
 from exopy_pulses.tasks.tasks.instrs.transfer_sequence_task\
     import TransferPulseSequenceTask
 
 with enaml.imports():
-    from exopy_pulses.measurement.manifest import PulsesMeasureManifest
+    from exopy_pulses.measurement.manifest import PulsesMeasurementManifest
 
 pytest_plugins = (str('exopy.testing.measurement.fixtures'),)
 
@@ -27,7 +24,7 @@ def test_manifest(measurement_workbench):
     """Test the addition of the sequence editor.
 
     """
-    measurement_workbench.register(PulsesMeasureManifest())
+    measurement_workbench.register(PulsesMeasurementManifest())
     pl = measurement_workbench.get_plugin('exopy.measurement')
 
     assert 'exopy_pulses.pulse_sequence' in pl.editors

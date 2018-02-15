@@ -22,7 +22,7 @@ pytests_plugin = str('exopy_pulses.testing.fixtures'),
 
 
 @pytest.yield_fixture
-def pulses_workspace(pulses_workbench, ecpy_qtbot):
+def pulses_workspace(pulses_workbench, exopy_qtbot):
     """Create a measure workspace.
 
     """

@@ -10,9 +10,8 @@ branches:
 
 matrix:
   include:
-    - env: PYTHON=2.7 CONDA_PY=27
-    - env: PYTHON=3.5 CONDA_PY=35
-    - env: PYTHON=3.6 CONDA_PY=36
+    - env: PYTHON=3.5 CONDA_PY=35 QT_VERSION=5
+    - env: PYTHON=3.6 CONDA_PY=36 QT_VERSION=5
 
 before_install:
 
@@ -39,12 +38,12 @@ before_install:
   - cd conda-bld-out
   - export CONDA_BLD_PATH=$(pwd)
 
-  # Install exopy dependencies
-  - $CONDA_INSTALL pyqt numpy exopy
+  # Install ecpy dependencies
+  - $CONDA_INSTALL pyqt=$QT_VERSION numpy exopy
 
   # Intall test tools
   - $CONDA_INSTALL pytest
-  - $PIP_INSTALL pytest-cov pytest-catchlog pytest-timeout
+  - $PIP_INSTALL pytest-cov pytest-catchlog pytest-timeout pytest-qt
   - $PIP_INSTALL https://github.com/MatthieuDartiailh/enaml_coverage_plugin/tarball/master
 
   # Install codecov report tools

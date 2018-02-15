@@ -9,23 +9,20 @@
 """Test the pulse sequence edition workspace.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import os
 
 import pytest
 from exopy.testing.util import handle_question, handle_dialog
 
 
-def test_workspace_lifecycle(workspace, process_and_sleep):
+def test_workspace_lifecycle(workspace, exopy_qtbot, dialog_sleep):
     """Test the workspace life cycle.
 
     """
     workbench = workspace.workbench
     ui = workbench.get_plugin('enaml.workbench.ui')
     ui.show_window()
-    process_and_sleep()
+    exopy_qtbot.wait(10 + dialog_sleep)
 
     log = workbench.get_plugin('exopy.app.logging')
     # Check UI creation
@@ -56,33 +53,33 @@ def test_workspace_lifecycle(workspace, process_and_sleep):
     assert plugin.workspace.state is w_state
 
 
-def test_new_sequence(workspace, windows, process_and_sleep):
+def test_new_sequence(workspace, exopy_qtbot, dialog_sleep):
     """Test creating a new sequence.
 
     """
     workbench = workspace.workbench
     ui = workbench.get_plugin('enaml.workbench.ui')
     ui.show_window()
-    process_and_sleep()
+    exopy_qtbot.wait(10 + dialog_sleep)
 
     core = workbench.get_plugin('enaml.workbench.core')
     old_seq = workspace.state.sequence
 
-    with handle_question('yes'):
+    with handle_question(exopy_qtbot, 'yes'):
         cmd = 'exopy.pulses.workspace.new'
         core.invoke_command(cmd, dict())
 
     assert old_seq is not workspace.state.sequence
     old_seq = workspace.state.sequence
 
-    with handle_question('no'):
+    with handle_question(exopy_qtbot, 'no'):
         cmd = 'exopy.pulses.workspace.new'
         core.invoke_command(cmd, dict())
 
     assert old_seq is workspace.state.sequence
 
 
-def test_save_load_sequence(workspace, windows, process_and_sleep, tmpdir,
+def test_save_load_sequence(workspace, exopy_qtbot, dialog_sleep, tmpdir,
                             monkeypatch):
     """Test saving and reloading a sequence.
 
@@ -109,7 +106,7 @@ def test_save_load_sequence(workspace, windows, process_and_sleep, tmpdir,
     workbench = workspace.workbench
     ui = workbench.get_plugin('enaml.workbench.ui')
     ui.show_window()
-    process_and_sleep()
+    exopy_qtbot.wait(10 + dialog_sleep)
 
     core = workbench.get_plugin('enaml.workbench.core')
     old_seq = workspace.state.sequence
@@ -157,7 +154,7 @@ def test_save_load_sequence(workspace, windows, process_and_sleep, tmpdir,
         raise Exception()
     type(workspace)._load_sequence_from_file = make_raise
 
-    with handle_dialog('accept'):
+    with handle_dialog(exopy_qtbot, 'accept'):
         cmd = 'exopy.pulses.workspace.load'
         core.invoke_command(cmd, dict(mode='file'))
 

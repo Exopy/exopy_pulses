@@ -9,9 +9,6 @@
 """Test for the slope shape.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import enaml
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -135,7 +132,7 @@ def test_eval_issue_on_slope_stop():
     assert '1_shape_slope' in errors
 
 
-def test_pulse_view(windows, workbench, process_and_sleep):
+def test_pulse_view(workbench, exopy_qtbot, dialog_sleep):
     """Test the view of the Pulse class.
 
     """
@@ -151,19 +148,21 @@ def test_pulse_view(windows, workbench, process_and_sleep):
     core = workbench.get_plugin('enaml.workbench.core')
     root_view = RootSequenceView(item=root, core=core)
     pulse_view = root_view.view_for(pulse)
-    show_widget(root_view)
-    process_and_sleep()
+    show_widget(exopy_qtbot, root_view)
+    exopy_qtbot.wait(dialog_sleep)
 
     # Test selecting a slope shape
     shape_select = pulse_view.widgets()[-1].widgets()[-1]
     shape_select.selected = 'exopy_pulses.SlopeShape'
-    process_and_sleep()
+    exopy_qtbot.wait(10 + dialog_sleep)
 
     shape_view = pulse_view.widgets()[-1]
     sv_widgets = shape_view.split_items()[0].split_widget().widgets()
 
     for mode in ('Start/Stop', 'Start/Slope', 'Slope/Stop'):
         sv_widgets[1].selected = mode
-        process_and_sleep()
-        assert sv_widgets[2].text == mode.split('/')[0]
-        assert sv_widgets[4].text == mode.split('/')[1]
+
+        def assert_mode():
+            assert sv_widgets[2].text == mode.split('/')[0]
+            assert sv_widgets[4].text == mode.split('/')[1]
+        exopy_qtbot.wait_until(assert_mode)

@@ -9,9 +9,6 @@
 """Test basic capabilities of an item.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import pytest
 
 from exopy_pulses.pulses.item import Item

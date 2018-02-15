@@ -14,7 +14,7 @@ from enaml.workbench.api import PluginManifest, Extension
 from exopy.measurement.editors.api import Editor
 
 
-enamldef PulsesMeasureManifest(PluginManifest):
+enamldef PulsesMeasurementManifest(PluginManifest):
     """Declaration of the pulse sequences related tasks.
 
     """

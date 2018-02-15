@@ -9,9 +9,6 @@
 """Contribution to exopy.pulses plugin for testing.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from enaml.workbench.api import PluginManifest, Extension
 
 from exopy_pulses.pulses.declarations import Context
