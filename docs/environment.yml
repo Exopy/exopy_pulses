@@ -37,10 +37,10 @@ dependencies:
 - pygments
 - pyqt
 - pytest
-- python=3.5
+- python=3.6
 - pytz
 - pyyaml
-- qt=4.8
+- qt
 - readline
 - setuptools
 - sip
