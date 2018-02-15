@@ -1,9 +1,10 @@
 Exopy Changelog
 ==============
 
-0.1.0 - unreleased
+0.1.0 - 15/02/2018
 ------------------
 
+- rename project to exopy_pulses
 - improve error message in sequence transfer task
 - add a slope shape for pulses
 - clean the context cache when cleaning all other caches

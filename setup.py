@@ -11,13 +11,21 @@ from exopy_pulses.version import __version__
 
 PROJECT_NAME = 'exopy_pulses'
 
+
+def long_description():
+    """Read the project description from the README file.
+
+    """
+    with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
+        return f.read()
+
 setup(
     name=PROJECT_NAME,
     description='ExopyPulses plugin package',
     version=__version__,
-    long_description=open('README.md').read(),
+    long_description=long_description(),
     author='see AUTHORS',
-    author_email='',
+    author_email='m.dartiailh@gmail.com',
     url='https://github.com/exopy/exopy_pulses',
     download_url='https://github.com/exopy/exopy_pulses/tarball/master',
     keywords='experiment automation GUI',
