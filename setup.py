@@ -19,6 +19,7 @@ def long_description():
     with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
         return f.read()
 
+
 setup(
     name=PROJECT_NAME,
     description='ExopyPulses plugin package',
@@ -36,7 +37,6 @@ setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Topic :: Scientific/Engineering :: Physics',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         ],

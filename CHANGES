@@ -5,7 +5,8 @@ ExopyPulses Changelog
 0.2.0 - unreleased
 ------------------
 
-Nothing yet
+- drop Python 2 support
+- use pytest-qt for the tests
 
 
 0.1.0 - 15/02/2018
