@@ -27,7 +27,7 @@ before_install:
   - conda config --append channels exopy
   - conda install conda-build anaconda-client -q
   - conda info -a
-  - conda create -n travisci --yes python=$PYTHON pip
+  - travis_retry conda create -n travisci --yes python=$PYTHON pip
   - source activate travisci
   - CONDA_INSTALL="conda install -q"
   - PIP_INSTALL="pip install -q"
@@ -43,7 +43,7 @@ before_install:
 
   # Intall test tools
   - $CONDA_INSTALL pytest
-  - $PIP_INSTALL pytest-cov pytest-catchlog pytest-timeout pytest-qt
+  - $PIP_INSTALL pytest-cov pytest-timeout pytest-qt
   - $PIP_INSTALL https://github.com/MatthieuDartiailh/enaml_coverage_plugin/tarball/master
 
   # Install codecov report tools
