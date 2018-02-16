@@ -9,9 +9,6 @@
 """Pulse edition workspace manifest contributing to the UI.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from enaml.widgets.api import (Container, DockArea, DockItem, Menu, Action,
                                PopupView, Label)
 from enaml.layout.api import HSplitLayout, VSplitLayout

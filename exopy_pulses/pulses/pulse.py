@@ -9,9 +9,6 @@
 """Definition of a pulse, the elementary building block of sequences.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import numpy as np
 from atom.api import (Unicode, Enum, Typed, Property, set_default)
 from exopy.utils.atom_util import (update_members_from_preferences)

@@ -9,9 +9,6 @@
 """Test the commands defined in the plugin manifest
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import os
 
 import pytest
@@ -33,25 +30,25 @@ def root():
     return root
 
 
-def test_create_sequence(root, workbench, windows, monkeypatch):
+def test_create_sequence(root, workbench, exopy_qtbot, monkeypatch):
     """Test creating a sequence.
 
     """
     core = workbench.get_plugin('enaml.workbench.core')
 
-    def select_sequence(dial):
+    def select_sequence(exopy_qtbot, dial):
         """Select the sequence to build.
 
         """
         dial.selector.selected_sequence = 'exopy_pulses.BaseSequence'
 
-    with handle_dialog('accept', select_sequence):
+    with handle_dialog(exopy_qtbot, 'accept', select_sequence):
         cmd = 'exopy.pulses.create_sequence'
         seq = core.invoke_command(cmd, dict(root=root))
 
     assert seq is not None
 
-    with handle_dialog('reject'):
+    with handle_dialog(exopy_qtbot, 'reject'):
         cmd = 'exopy.pulses.create_sequence'
         seq = core.invoke_command(cmd, dict(root=root))
 
@@ -63,8 +60,8 @@ def test_create_sequence(root, workbench, windows, monkeypatch):
     from exopy_pulses.pulses.configs.base_config import SequenceConfig
     monkeypatch.setattr(SequenceConfig, 'build_sequence', raise_on_build)
 
-    with handle_dialog('accept', cls=ErrorsDialog, time=500):
-        with handle_dialog('accept', cls=BuilderView):
+    with handle_dialog(exopy_qtbot, 'accept', cls=ErrorsDialog, time=500):
+        with handle_dialog(exopy_qtbot, 'accept', cls=BuilderView):
             cmd = 'exopy.pulses.create_sequence'
             seq = core.invoke_command(cmd, dict(root=root))
 
@@ -119,20 +116,20 @@ def test_build_sequence_handle_dependencies_issues(workbench, root):
         core.invoke_command(cmd, dict(prefs=prefs))
 
 
-def test_create_context(workbench, root, windows):
+def test_create_context(workbench, root, exopy_qtbot):
     """Test creating a context for a sequence.
 
     """
     core = workbench.get_plugin('enaml.workbench.core')
 
-    def select_context(dial):
+    def select_context(exopy_qtbot, dial):
         """Select the sequence to build.
 
         """
         obj_combo = dial.central_widget().widgets()[0]
         obj_combo.selected_item = 'Test'
 
-    with handle_dialog('accept', select_context):
+    with handle_dialog(exopy_qtbot, 'accept', select_context):
         cmd = 'exopy.pulses.create_context'
         core.invoke_command(cmd, dict(root=root))
 
@@ -140,7 +137,7 @@ def test_create_context(workbench, root, windows):
 
     del root.context
 
-    with handle_dialog('reject'):
+    with handle_dialog(exopy_qtbot, 'reject'):
         cmd = 'exopy.pulses.create_context'
         core.invoke_command(cmd, dict(root=root))
 

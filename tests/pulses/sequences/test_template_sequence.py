@@ -9,9 +9,6 @@
 """Test the templates sequences functionalities.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import pytest
 
 from exopy_pulses.pulses.sequences.base_sequences import RootSequence

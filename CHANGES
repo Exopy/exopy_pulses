@@ -1,6 +1,5 @@
-ExopyPulses Changelog
+Ecpy pulses Changelog
 =====================
-
 
 0.2.0 - unreleased
 ------------------
@@ -8,23 +7,30 @@ ExopyPulses Changelog
 - drop Python 2 support
 - use pytest-qt for the tests
 
-
 0.1.0 - 15/02/2018
 ------------------
 
-- rename project to exopy_pulses
-- improve error message in sequence transfer task
-- add a slope shape for pulses
-- clean the context cache when cleaning all other caches
-- add missing scroll area in the root sequence view
+- testing: use pytest-qt for testing
+- use ecpy format_exc to avoid errors (#15)
+- pulses: add a slope shape (#12)
+- tasks: improve error messages in checks (no sequence) (#13)
+- testing: switch to pytest-catchlog
+- tests: ensure that Python 2 str does not cause issue in saving
 
-
-0.1.0.a3 - 24/11/2016
----------------------
-
-- use ordered dinctionary for all variables (sequence_vars, external_vars, etc)
-- support zeo duration pulses
-- fix constraints of pulse view
+0.1.0.a3
+--------
+- pulses: support zero duration pulses
+- pulses: final fixes for broken tests
+- pulses: more fixes (no local test available ...)
+- pulses: preserve sequence vars for entries that did not change.
+- tests: more fixes following OrderedDict use
+- pulses: use OrderedDict for local_vars too and update tests
+- pulses and tasks: use ordered dict for external vars
+- pulses: fix constraints for pulse view
+- tasks: pass computed sequence vars to test compilation
+- pulses: fix edition of external variables in editor/task
+- pulses: do not use type constrained dict for external vars
+- tests : try to make one test more stable [ci skip]
 
 
 0.1.0.a2 - 09/10/2016

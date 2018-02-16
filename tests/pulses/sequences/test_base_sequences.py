@@ -9,9 +9,6 @@
 """Test for the handling of indexing b sequences.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from collections import OrderedDict
 
 from exopy_pulses.pulses.pulse import Pulse

@@ -9,15 +9,12 @@
 """Manifest contributing specific.measurement editors.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import enaml
 from enaml.workbench.api import PluginManifest, Extension
 from exopy.measurement.editors.api import Editor
 
 
-enamldef PulsesMeasureManifest(PluginManifest):
+enamldef PulsesMeasurementManifest(PluginManifest):
     """Declaration of the pulse sequences related tasks.
 
     """

@@ -9,9 +9,6 @@
 """Pulse sequence workspace fixture functions.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import pytest
 import enaml
 
@@ -25,8 +22,8 @@ pytests_plugin = str('exopy_pulses.testing.fixtures'),
 
 
 @pytest.yield_fixture
-def pulses_workspace(pulses_workbench, windows):
-    """Create a.measurement workspace.
+def pulses_workspace(pulses_workbench, exopy_qtbot):
+    """Create a measure workspace.
 
     """
     pulses_workbench.register(UIManifest())

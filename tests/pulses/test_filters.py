@@ -9,9 +9,6 @@
 """Test for base sequences filters.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import pytest
 
 from exopy_pulses.pulses.api import BaseSequence

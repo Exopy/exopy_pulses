@@ -9,9 +9,6 @@
 """Dialog used to build a new sequence to insert in a sequznce.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from inspect import getdoc
 
 from atom.api import (Atom, Instance, Str, observe, ForwardTyped, Bool,

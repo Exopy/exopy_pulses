@@ -9,9 +9,6 @@
 """Test the transfer pulse sequence task.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import os
 from time import sleep
 from collections import OrderedDict
@@ -314,7 +311,7 @@ def test_task_perform3(task, monkeypatch):
         task.perform()
 
 
-def test_view_validate_driver_context(windows, task_view):
+def test_view_validate_driver_context(exopy_qtbot, task_view):
     """Test the validation of a context/driver pair.
 
     """
@@ -330,7 +327,7 @@ def test_view_validate_driver_context(windows, task_view):
 
     task_view.task.selected_instrument = ('p', '__dummy__',
                                           'c', 's')
-    with handle_dialog('accept'):
+    with handle_dialog(exopy_qtbot, 'accept'):
         validate_context_driver_pair(task_view.root.core,
                                      task_view.task.sequence.context,
                                      task_view.task, task_view)
@@ -338,7 +335,7 @@ def test_view_validate_driver_context(windows, task_view):
     assert not task_view.task.selected_instrument[0]
 
 
-def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
+def test_load_refresh_save(task_view, monkeypatch, exopy_qtbot, dialog_sleep):
     """Test loading a sequence, refreshing, modifying and saving.
 
     """
@@ -351,7 +348,7 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
 
     task_view.task.sequence_timestamp = -1
 
-    show_widget(task_view)
+    show_widget(exopy_qtbot, task_view)
     # Check detection of outdated sequence
     assert task_view.widgets()[4].style_class
 
@@ -359,18 +356,20 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     task_view.task.sequence_vars = OrderedDict([('a', '1*23'), ('c', '1')])
     # Load
     task_view.widgets()[2].clicked = True
-    process_and_sleep()
-    assert task_view.task.sequence is not old_seq
-    assert task_view.task.sequence_vars == OrderedDict({'a': '1*23'})
-    assert not task_view.widgets()[4].style_class
+
+    def assert_exec():
+        assert task_view.task.sequence is not old_seq
+        assert task_view.task.sequence_vars == OrderedDict({'a': '1*23'})
+        assert not task_view.widgets()[4].style_class
+    exopy_qtbot.wait_until(assert_exec)
 
     old_seq = task_view.task.sequence
     task_view.task.sequence_vars = OrderedDict()
     # Refresh
-    with handle_question('no'):
+    with handle_question(exopy_qtbot, 'no'):
         task_view.widgets()[4].clicked = True
     assert task_view.task.sequence is old_seq
-    with handle_question('yes'):
+    with handle_question(exopy_qtbot, 'yes'):
         task_view.widgets()[4].clicked = True
     assert task_view.task.sequence is not old_seq
     assert task_view.task.sequence_vars == OrderedDict({'a': ''})
@@ -379,11 +378,11 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     # Save
     btn = task_view.widgets()[5]
     actions = btn.menu().items()
-    with handle_question('no'):
+    with handle_question(exopy_qtbot, 'no'):
         btn.clicked = True
         actions[0].triggered = True
     assert task_view.task.sequence_timestamp == old_timestamp
-    with handle_question('yes'):
+    with handle_question(exopy_qtbot, 'yes'):
         btn.clicked = True
         actions[0].triggered = True
     sleep(0.1)
@@ -414,8 +413,7 @@ def test_load_refresh_save(task_view, monkeypatch, process_and_sleep, windows):
     assert task_view.task.sequence_path == new_path + '.pulse.ini'
 
 
-def test_load_refresh_save2(task_view, monkeypatch, process_and_sleep,
-                            windows):
+def test_load_refresh_save2(task_view, monkeypatch, exopy_qtbot):
     """Test loading a sequence, refreshing, modifying and saving.
 
     Test handling the case of an empty sequence_path
@@ -430,7 +428,7 @@ def test_load_refresh_save2(task_view, monkeypatch, process_and_sleep,
 
     task_view.task.sequence_path = ''
 
-    show_widget(task_view)
+    show_widget(exopy_qtbot, task_view)
 
     task_view.task.sequence_vars = OrderedDict()
     # Refresh
@@ -446,7 +444,7 @@ def test_load_refresh_save2(task_view, monkeypatch, process_and_sleep,
     old = transfer_sequence_task_view.load_sequence
     monkeypatch.setattr(transfer_sequence_task_view, 'load_sequence',
                         false_load)
-    with handle_question('OK'):
+    with handle_question(exopy_qtbot, 'OK'):
         button.clicked = True
 
     monkeypatch.setattr(transfer_sequence_task_view, 'load_sequence', old)
@@ -457,7 +455,7 @@ def test_load_refresh_save2(task_view, monkeypatch, process_and_sleep,
     assert not actions[0].enabled
 
 
-def test_handling_error_in_loading(task_view, windows, monkeypatch):
+def test_handling_error_in_loading(task_view, exopy_qtbot, monkeypatch):
     """Test handling an error when re-building the sequence.
 
     """
@@ -472,19 +470,19 @@ def test_handling_error_in_loading(task_view, windows, monkeypatch):
 
     monkeypatch.setattr(CorePlugin, 'invoke_command', false_invoke)
 
-    with handle_dialog('accept'):
+    with handle_dialog(exopy_qtbot, 'accept'):
         load_sequence(task_view.root.core, task_view.task, task_view,
                       task_view.task.sequence_path)
 
 
 @pytest.mark.timeout(10)
-def test_changing_context_sequence(task_view, windows):
+def test_changing_context_sequence(task_view, exopy_qtbot):
     """Test changing the context of a sequence.
 
     This should trigger a new validation of the driver.
 
     """
-    show_widget(task_view)
+    show_widget(exopy_qtbot, task_view)
     task = task_view.task
     task.selected_instrument = ('p', 'exopy_pulses.TestDriver', 'c', 's')
 
@@ -492,13 +490,13 @@ def test_changing_context_sequence(task_view, windows):
     assert task.selected_instrument[0]
 
     task.selected_instrument = ('p', '__dummy__',  'c', 's')
-    with handle_question('yes'):
+    with handle_question(exopy_qtbot, 'yes'):
         task.sequence.context = TestContext()
     assert not task.selected_instrument[0]
 
     # Test changing the sequence.
     task.selected_instrument = ('p', '__dummy__',  'c', 's')
-    with handle_question('yes'):
+    with handle_question(exopy_qtbot, 'yes'):
         task.sequence = sequence()
     assert not task.selected_instrument[0]
 
@@ -509,7 +507,7 @@ def test_changing_context_sequence(task_view, windows):
     assert task.selected_instrument[0]
 
     task.selected_instrument = ('p', '__dummy__',  'c', 's')
-    with handle_question('yes'):
+    with handle_question(exopy_qtbot, 'yes'):
         task.sequence.context = TestContext()
     assert not task.selected_instrument[0]
 

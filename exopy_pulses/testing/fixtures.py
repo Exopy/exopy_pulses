@@ -9,9 +9,6 @@
 """Fixtures for testing exopy_pulses related components.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import os
 from collections import OrderedDict
 

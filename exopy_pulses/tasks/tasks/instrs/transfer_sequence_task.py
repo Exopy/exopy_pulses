@@ -9,9 +9,6 @@
 """Task to transfer a sequence on an AWG.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import os
 from pprint import pformat
 from collections import OrderedDict

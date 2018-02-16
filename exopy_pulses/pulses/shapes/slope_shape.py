@@ -9,9 +9,6 @@
 """Ramp like shape for a pulse.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from numbers import Real
 
 import numpy as np

@@ -9,9 +9,6 @@
 """Basic element of a sequence. Pulse is a subclass of Item.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from numbers import Real
 
 from atom.api import (Int, Unicode, List, Bool, Float, Enum, ForwardTyped,

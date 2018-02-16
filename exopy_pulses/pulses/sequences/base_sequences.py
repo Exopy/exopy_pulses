@@ -9,9 +9,6 @@
 """Base classes for pulse sequences.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from copy import deepcopy
 from collections import Mapping
 from numbers import Real

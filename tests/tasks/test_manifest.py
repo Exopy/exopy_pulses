@@ -9,9 +9,6 @@
 """Check that the manifest does register the tasks.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import enaml
 
 with enaml.imports():

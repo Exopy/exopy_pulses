@@ -6,13 +6,9 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Widget used to browse the available sequences.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
-
 from atom.api import Atom, List, Unicode
 from enaml.core.api import Conditional
 from enaml.widgets.api import (ObjectCombo, Container)

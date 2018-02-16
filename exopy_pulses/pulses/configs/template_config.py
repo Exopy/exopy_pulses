@@ -12,9 +12,6 @@ Template config is used to gather required infomation to add a templateSequence
 to the sequence beeing edited.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from copy import deepcopy
 from ast import literal_eval
 from pprint import pformat

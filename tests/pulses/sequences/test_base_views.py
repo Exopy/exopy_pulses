@@ -9,9 +9,6 @@
 """Test the base sequences views.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import enaml
 
 from exopy.testing.util import show_widget, handle_dialog
@@ -25,29 +22,29 @@ with enaml.imports():
         import BaseSequenceView, RootSequenceView
 
 
-def test_abstract_refresh(windows):
+def test_abstract_refresh(exopy_qtbot):
     """Test the refresh function of the abstract view.
 
     """
     view = AbstractSequenceView(item=BaseSequence())
-    show_widget(view)
+    show_widget(exopy_qtbot, view)
     view.hide()
     view.refresh()
     assert view.visible
 
 
-def test_base_sequence_refresh(windows):
+def test_base_sequence_refresh(exopy_qtbot):
     """Test the refresh function of the base sequence view.
 
     """
     view = BaseSequenceView(item=BaseSequence())
-    show_widget(view)
+    show_widget(exopy_qtbot, view)
     view.hide()
     view.refresh()
     assert view.visible
 
 
-def test_root_sequence_view(windows, workbench):
+def test_root_sequence_view(exopy_qtbot, workbench):
     """Test the root sequence view.
 
     """
@@ -55,7 +52,7 @@ def test_root_sequence_view(windows, workbench):
     view = RootSequenceView(item=RootSequence(),
                             core=core)
 
-    show_widget(view)
+    show_widget(exopy_qtbot, view)
     seq = BaseSequence()
     view.item.add_child_item(0, seq)
     assert seq in view._cache
@@ -63,5 +60,5 @@ def test_root_sequence_view(windows, workbench):
     assert seq not in view._cache
 
     but = view.widgets()[-1].pages()[1].page_widget().widgets()[0]
-    with handle_dialog('reject'):
+    with handle_dialog(exopy_qtbot, 'reject'):
         but.clicked = True

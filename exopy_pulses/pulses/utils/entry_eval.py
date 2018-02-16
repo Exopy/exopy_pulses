@@ -10,9 +10,6 @@
 objects of the sequence.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from inspect import cleandoc
 from textwrap import fill
 from math import (cos, sin, tan, acos, asin, atan, sqrt, log10,

@@ -9,9 +9,6 @@
 """Test evaluation of pulses entries.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import pytest
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -625,7 +622,7 @@ def test_traversing_pulse(pulse):
     assert list(pulse.traverse()) == [pulse, pulse.modulation, pulse.shape]
 
 
-def test_pulse_view(windows, workbench, pulse, process_and_sleep):
+def test_pulse_view(exopy_qtbot, workbench, pulse, dialog_sleep):
     """Test the view of the Pulse class.
 
     """
@@ -641,39 +638,58 @@ def test_pulse_view(windows, workbench, pulse, process_and_sleep):
     core = workbench.get_plugin('enaml.workbench.core')
     root_view = RootSequenceView(item=root, core=core)
     pulse_view = root_view.view_for(pulse)
-    show_widget(root_view)
-    process_and_sleep()
+    show_widget(exopy_qtbot, root_view)
+    exopy_qtbot.wait(dialog_sleep)
 
     # Test swithcing between logical and analogical
     widgets_num = len(pulse_view.widgets())
     pulse.kind = 'Logical'
-    process_and_sleep()
-    process_and_sleep()
-    assert widgets_num - 1 == len(pulse_view.widgets())
+
+    def assert_widgets():
+        assert widgets_num - 1 == len(pulse_view.widgets())
+    exopy_qtbot.wait_until(assert_widgets)
+    exopy_qtbot.wait(dialog_sleep)
+
     pulse.kind = 'Analogical'
-    process_and_sleep()
-    assert widgets_num == len(pulse_view.widgets())
+
+    def assert_widgets():
+        assert widgets_num == len(pulse_view.widgets())
+    exopy_qtbot.wait_until(assert_widgets)
+    exopy_qtbot.wait(dialog_sleep)
 
     # Test selecting a shape
     shape_select = pulse_view.widgets()[-1].widgets()[-1]
     shape_select.selected = 'exopy_pulses.SquareShape'
-    process_and_sleep()
-    assert widgets_num + 1 == len(pulse_view.widgets())
+
+    def assert_widgets():
+        assert widgets_num + 1 == len(pulse_view.widgets())
+    exopy_qtbot.wait_until(assert_widgets)
+    exopy_qtbot.wait(dialog_sleep)
+
     shape_select.selected = ''
-    process_and_sleep()
-    assert widgets_num == len(pulse_view.widgets())
+
+    def assert_widgets():
+        assert widgets_num == len(pulse_view.widgets())
+    exopy_qtbot.wait_until(assert_widgets)
+    exopy_qtbot.wait(dialog_sleep)
 
     # Test adding a modulation
     mod_check = pulse_view.widgets()[-1].widgets()[0]
     mod_check.checked = True
-    process_and_sleep()
-    assert widgets_num + 1 == len(pulse_view.widgets())
+
+    def assert_widgets():
+        assert widgets_num + 1 == len(pulse_view.widgets())
+    exopy_qtbot.wait_until(assert_widgets)
+    exopy_qtbot.wait(dialog_sleep)
     mod_check.checked = False
-    process_and_sleep()
-    assert widgets_num == len(pulse_view.widgets())
+
+    def assert_widgets():
+        assert widgets_num == len(pulse_view.widgets())
+    exopy_qtbot.wait_until(assert_widgets)
+    exopy_qtbot.wait(dialog_sleep)
 
 
-def test_pulse_view2(windows, workbench, pulse):
+def test_pulse_view2(exopy_qtbot, workbench, pulse):
     """Test showing a pulse logical at the start.
 
     """
@@ -688,10 +704,10 @@ def test_pulse_view2(windows, workbench, pulse):
     root.add_child_item(0, pulse)
     core = workbench.get_plugin('enaml.workbench.core')
     root_view = RootSequenceView(item=root, core=core)
-    show_and_close_widget(root_view)
+    show_and_close_widget(exopy_qtbot, root_view)
 
 
-def test_pulse_view3(windows, workbench, pulse):
+def test_pulse_view3(exopy_qtbot, workbench, pulse):
     """Test showing a pulse with a shape at the start at the start.
 
     """
@@ -707,4 +723,4 @@ def test_pulse_view3(windows, workbench, pulse):
     root.add_child_item(0, pulse)
     core = workbench.get_plugin('enaml.workbench.core')
     root_view = RootSequenceView(item=root, core=core)
-    show_and_close_widget(root_view)
+    show_and_close_widget(exopy_qtbot, root_view)

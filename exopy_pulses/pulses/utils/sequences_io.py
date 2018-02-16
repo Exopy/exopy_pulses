@@ -6,12 +6,9 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""
+"""Helper functions for sequences IO.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from configobj import ConfigObj
 from textwrap import wrap
 

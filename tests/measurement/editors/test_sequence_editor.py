@@ -9,9 +9,6 @@
 """Check that the manifest does register the editor.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import os
 from collections import OrderedDict
 
@@ -25,7 +22,7 @@ from exopy.tasks.tasks.instr_task import (PROFILE_DEPENDENCY_ID,
 
 with enaml.imports():
     from exopy_pulses.pulses.manifest import PulsesManagerManifest
-    from exopy_pulses.measurement.manifest import PulsesMeasureManifest
+    from exopy_pulses.measurement.manifest import PulsesMeasurementManifest
 
 from exopy_pulses.pulses.pulse import Pulse
 from exopy_pulses.pulses.utils.sequences_io import save_sequence_prefs
@@ -109,7 +106,7 @@ def editor(measurement_workbench):
 
     """
     measurement_workbench.register(PulsesManagerManifest())
-    measurement_workbench.register(PulsesMeasureManifest())
+    measurement_workbench.register(PulsesMeasurementManifest())
     measurement_workbench.register(PulsesContributions())
     pl = measurement_workbench.get_plugin('exopy.measurement')
 
@@ -120,14 +117,14 @@ def editor(measurement_workbench):
 
 
 def test_sequence_vars_update(measurement_workbench, editor, task,
-                              process_and_sleep, windows):
+                              exopy_qtbot, dialog_sleep):
     """Test that when unselecting the editor we properly synchronize the vars.
 
     """
     task.sequence_vars = OrderedDict({'a': '1.5', 'b': '2'})
-    win = show_widget(editor)
+    win = show_widget(exopy_qtbot, editor)
     editor.selected_task = task
-    process_and_sleep()
+    exopy_qtbot.wait(10 + dialog_sleep)
 
     root_view = editor.page_widget().widgets()[0].scroll_widget().widgets()[0]
     vars_editor = root_view.additional_pages[0]
@@ -138,24 +135,24 @@ def test_sequence_vars_update(measurement_workbench, editor, task,
     win.close()
 
 
-def test_sequence_replacement(editor, task, windows, process_and_sleep):
+def test_sequence_replacement(editor, task, exopy_qtbot, dialog_sleep):
     """Test replacing the sequence (a priori not possible).
 
     """
     editor.selected_task = task
-    show_widget(editor)
+    show_widget(exopy_qtbot, editor)
 
     root_view = editor.page_widget().widgets()[0].scroll_widget().widgets()[0]
     old = root_view.additional_pages[0]
 
     seq = task.sequence
     task.sequence = sequence()
-    process_and_sleep()
+    exopy_qtbot.wait(10 + dialog_sleep)
     task.sequence = seq
-    process_and_sleep()
+    exopy_qtbot.wait(10 + dialog_sleep)
 
     root_view = editor.page_widget().widgets()[0].scroll_widget().widgets()[0]
-    process_and_sleep()
+    exopy_qtbot.wait(10 + dialog_sleep)
     new = root_view.additional_pages[0]
 
     assert old is not new

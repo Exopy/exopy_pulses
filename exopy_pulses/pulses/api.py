@@ -9,9 +9,6 @@
 """Exopy Pulses plugin public interface.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import enaml
 
 from .declarations import (Sequence, Sequences, Shape, Shapes,

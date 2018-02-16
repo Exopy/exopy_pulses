@@ -9,9 +9,6 @@
 """Base class for all analogical pulses shapes.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from atom.api import Unicode, Constant, Int
 
 from ..utils.entry_eval import HasEvaluableFields

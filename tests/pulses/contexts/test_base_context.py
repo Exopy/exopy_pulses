@@ -9,9 +9,6 @@
 """Tests for the base context.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 import pytest
 
 from exopy_pulses.testing.context import TestContext

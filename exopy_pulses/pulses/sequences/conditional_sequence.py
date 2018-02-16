@@ -9,9 +9,6 @@
 """Sequence allowing conditional inclusion of its items.
 
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
 from atom.api import Unicode, Bool, set_default
 
 from .base_sequences import BaseSequence
