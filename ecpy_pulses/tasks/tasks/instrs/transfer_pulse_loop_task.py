@@ -131,6 +131,7 @@ class TransferPulseLoopTask(InstrumentTask):
                     self.driver.get_channel(cc+1).set_sequence_pos(infos[_seq],
                                                                    nn+1)
                     _used_channels.append(cc+1)
+            self.driver.set_jump_pos(nn+1, 1)
         for cc in set(_used_channels):
             self.driver.get_channel(cc).output_state = 'on'
 
