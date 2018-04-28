@@ -46,6 +46,9 @@ def test_template_observation(workbench, template_sequence, app_dir,
     """Test that new templates are properly detected.
 
     """
+    import logging
+    caplog.set_level(logging.WARNING)
+
     plugin = workbench.get_plugin('exopy.pulses')
     assert template_sequence in plugin.sequences
     template_path = os.path.join(app_dir, 'pulses', 'templates')
@@ -203,6 +206,9 @@ def test_list_sequences(workbench, template_sequence, caplog):
     """Test iltering sequences.
 
     """
+    import logging
+    caplog.set_level(logging.WARNING)
+
     plugin = workbench.get_plugin('exopy.pulses')
 
     seq = plugin.list_sequences('All')
