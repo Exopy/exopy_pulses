@@ -41,9 +41,10 @@ setup(
         'Programming Language :: Python :: 3.6'
         ],
     zip_safe=False,
+    python_requires='>=3.5',
     packages=find_packages(exclude=['tests', 'tests.*']),
     package_data={'': ['*.enaml']},
-    requires=['exopy', 'numpy'],
+    setup_requires=['setuptools'],
     install_requires=['exopy', 'numpy'],
     entry_points={
         'exopy_package_extension':
