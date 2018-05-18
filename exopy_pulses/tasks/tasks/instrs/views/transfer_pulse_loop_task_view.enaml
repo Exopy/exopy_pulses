@@ -72,7 +72,7 @@ def validate_context_driver_pair(core, context, task, parent=None):
 
     """
     if task.selected_instrument and task.selected_instrument[0]:
-        cmd = 'ecpy.pulses.get_context_infos'
+        cmd = 'exopy.pulses.get_context_infos'
         c_id = context.context_id
         c_infos = core.invoke_command(cmd, dict(context_id=c_id))
         driver_id = task.selected_instrument[1]
@@ -104,11 +104,11 @@ def load_sequence(core, task, parent=None, path=''):
         path = FileDialogEx.get_open_file_name(parent, current_path=path,
                                                name_filters=['*.pulse.ini'])
     if path:
-        cmd = 'ecpy.pulses.build_sequence'
+        cmd = 'exopy.pulses.build_sequence'
         try:
             seq = core.invoke_command(cmd, {'path': path})
         except Exception:
-            cmd = 'ecpy.app.errors.signal'
+            cmd = 'exopy.app.errors.signal'
             msg = 'Failed to load sequence {}: {}'.format(path, format_exc())
             core.invoke_command(cmd, dict(kind='error', message=msg))
             return
@@ -164,7 +164,7 @@ enamldef TransferPulseLoopView(InstrTaskView): view:
         if not task.sequence or not task.sequence.context:
             return profiles
 
-        cmd = 'ecpy.pulses.get_context_infos'
+        cmd = 'exopy.pulses.get_context_infos'
         c_id = task.sequence.context.context_id
         c_infos = self.root.core.invoke_command(cmd, dict(context_id=c_id))
 
@@ -179,7 +179,7 @@ enamldef TransferPulseLoopView(InstrTaskView): view:
         if not task.sequence or not task.sequence.context:
             return drivers
 
-        cmd = 'ecpy.pulses.get_context_infos'
+        cmd = 'exopy.pulses.get_context_infos'
         c_id = task.sequence.context.context_id
         c_infos = self.root.core.invoke_command(cmd, dict(context_id=c_id))
 
