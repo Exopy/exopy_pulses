@@ -438,6 +438,9 @@ enamldef PulsesManagerManifest(PluginManifest):
             Shape:
                 shape = 'tanh_shape:TanhShape'
                 view = 'views.tanh_shape_view:TanhShapeView'
+            Shape:
+                shape = 'arbitrary_shape:ArbitraryShape'
+                view = 'views.arbitrary_shape_view:ArbitraryShapeView'
 
     PulsesBuildingDependenciesExtension:
         pass

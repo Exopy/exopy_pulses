@@ -206,10 +206,9 @@ enamldef TransferPulseLoopView(InstrTaskView): view:
     """View for the TransferPulseSequenceTask.
 
     """
-    constraints << [vbox(hbox(seq, seq_name, seq_re, seq_sav, spacer,
+    constraints << [vbox(hbox(seq, seq_name, seq_re, seq_sav, spacer, operation_lab, operation_val,
                               instr_label, instr_selection), parameter,
-                         hbox(vbox(internal_trig,
-                              internal_trig_val), trig_period, trig_period_val),
+                         hbox(run_mode_lab, run_mode_val, trig_period_lab, trig_period_val),
                          nb)]
 
     initialized ::
@@ -336,25 +335,35 @@ enamldef TransferPulseLoopView(InstrTaskView): view:
                         tstmp = os.path.getmtime(path)
                         task.sequence_timestamp = tstmp
                         task.sequence_path = path
+                        
+    Label: operation_lab:
+        text = 'Operation :'
+    ObjectCombo: operation_val:
+        items << list(task.get_member('operation').items)
+        selected := task.operation
+        tool_tip = ("Clean: delete all previously loaded waveforms\n"
+                    "Load: load waveforms in the waveform list of the AWG \n"
+                    "Enqueue: build a sequence from loaded waveforms")
         
     DictListEditor(LoopEditor): parameter:
         parameter.mapping := task.parameters
         parameter.operations = ['add','remove']
         parameter.attributes = {'task' : task}
 
-    Label: internal_trig:
-        text = 'Internal trigger'
-    CheckBox: internal_trig_val:
-        checked := task.internal_trigger
-
-    Label: trig_period:
-        text = 'Trigger period (mus)'
+    Label: run_mode_lab:
+        text = 'Running mode'
+    ObjectCombo: run_mode_val:
+        items << list(task.get_member('run_mode').items)
+        selected := task.run_mode
+        
+    Label: trig_period_lab:
+        text = 'Int trigger period (us)'
     QtLineCompleter: trig_period_val:
         entries_updater << task.list_accessible_database_entries
         text := task.trigger_period
         tool_tip = EVALUATER_TOOLTIP
-        enabled << task.internal_trigger
-
+        enabled << (task.run_mode=='Int Trig')
+        
     Notebook: nb:
         tabs_closable = False
         visible << bool(task.sequence)
