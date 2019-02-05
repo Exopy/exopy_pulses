@@ -352,7 +352,7 @@ class SequenceEditor(Container):
             """Handler for the add entry of the menu.
 
             """
-            obj = root.create_new_sequence()
+            obj = self.root.create_new_sequence()
             if obj:
                 if obj:
                     if position == 'after':
