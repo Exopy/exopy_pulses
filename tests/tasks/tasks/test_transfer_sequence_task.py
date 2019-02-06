@@ -45,8 +45,6 @@ with enaml.imports():
 p_id = PROFILE_DEPENDENCY_ID
 d_id = DRIVER_DEPENDENCY_ID
 
-pytest_plugins = str('exopy_pulses.testing.fixtures'),
-
 
 class FalseStarter(object):
     """False instrument starter used for testing.

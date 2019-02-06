@@ -15,8 +15,6 @@ import enaml
 with enaml.imports():
     from ..contributions import PulsesContributions
 
-pytest_plugins = str('exopy_pulses.testing.workspace.fixtures'),
-
 
 @pytest.fixture
 def workspace(pulses_workspace):

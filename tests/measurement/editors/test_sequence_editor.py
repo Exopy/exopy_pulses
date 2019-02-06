@@ -35,8 +35,6 @@ from exopy_pulses.tasks.tasks.instrs.transfer_sequence_task\
 with enaml.imports():
     from .contributions import PulsesContributions
 
-pytest_plugins = (str('exopy.testing.measurement.fixtures'),)
-
 
 class FalseStarter(object):
     """False instrument starter used for testing.

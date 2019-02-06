@@ -14,8 +14,6 @@ import enaml
 with enaml.imports():
     from exopy_pulses.tasks.manifest import PulsesTasksManifest
 
-pytest_plugins = (str('exopy.testing.tasks.fixtures'),)
-
 
 def test_manifest(task_workbench):
     """Test the addition of the sequence editor.

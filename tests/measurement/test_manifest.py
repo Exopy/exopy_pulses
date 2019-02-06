@@ -17,8 +17,6 @@ from exopy_pulses.tasks.tasks.instrs.transfer_sequence_task\
 with enaml.imports():
     from exopy_pulses.measurement.manifest import PulsesMeasurementManifest
 
-pytest_plugins = (str('exopy.testing.measurement.fixtures'),)
-
 
 def test_manifest(measurement_workbench):
     """Test the addition of the sequence editor.
