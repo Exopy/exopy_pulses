@@ -15,8 +15,6 @@ import pytest
 with enaml.imports():
     from .contributions import PulsesContributions
 
-pytest_plugins = str('exopy_pulses.testing.fixtures'),
-
 
 @pytest.fixture
 def workbench(pulses_workbench):

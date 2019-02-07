@@ -16,12 +16,12 @@ from numpy.testing import assert_array_equal
 from exopy_pulses.pulses.pulse import Pulse
 from exopy_pulses.pulses.sequences.base_sequences import RootSequence
 from exopy_pulses.pulses.shapes.square_shape import SquareShape
-from exopy_pulses.testing.context import TestContext
+from exopy_pulses.testing.context import DummyContext
 
 
 @pytest.fixture
 def pulse():
-    return Pulse(root=RootSequence(context=TestContext()))
+    return Pulse(root=RootSequence(context=DummyContext()))
 
 
 def test_eval_pulse1(pulse):

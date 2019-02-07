@@ -438,8 +438,8 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                                              template_sequences_data)
         else:
             logger = logging.getLogger(__name__)
-            logger.warn("Did not find the filter " + str(filter_name) +
-                        " and returned zero elements.")
+            logger.warning("Did not find the filter " + str(filter_name) +
+                           " and returned zero elements.")
             return []
 
     # --- Private API ---------------------------------------------------------
@@ -490,7 +490,7 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
                     templates[template_name] = template_path
             else:
                 logger = logging.getLogger(__name__)
-                logger.warn('{} is not a valid directory'.format(path))
+                logger.warning('{} is not a valid directory'.format(path))
 
         self._template_sequences_data = templates
         aux = (list(self._sequences.contributions) +

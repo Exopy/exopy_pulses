@@ -13,12 +13,12 @@ import pytest
 
 from exopy_pulses.pulses.item import Item
 from exopy_pulses.pulses.sequences.base_sequences import RootSequence
-from exopy_pulses.testing.context import TestContext
+from exopy_pulses.testing.context import DummyContext
 
 
 @pytest.fixture
 def item():
-    return Item(root=RootSequence(context=TestContext()))
+    return Item(root=RootSequence(context=DummyContext()))
 
 
 def test_item_id(item):

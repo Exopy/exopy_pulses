@@ -27,5 +27,5 @@ enamldef PulsesContributions(PluginManifest):
         id = 'context'
         point = 'exopy.pulses.contexts'
         Context:
-            context = 'exopy_pulses.testing.context:TestContext'
-            view = 'exopy_pulses.testing.context_view:TestContextView'
+            context = 'exopy_pulses.testing.context:DummyContext'
+            view = 'exopy_pulses.testing.context_view:DummyContextView'

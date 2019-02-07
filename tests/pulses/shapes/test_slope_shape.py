@@ -15,7 +15,7 @@ from numpy.testing import assert_array_equal
 
 from exopy_pulses.pulses.pulse import Pulse
 from exopy_pulses.pulses.sequences.base_sequences import RootSequence
-from exopy_pulses.testing.context import TestContext
+from exopy_pulses.testing.context import DummyContext
 from exopy_pulses.pulses.shapes.slope_shape import SlopeShape
 
 
@@ -141,7 +141,7 @@ def test_pulse_view(workbench, exopy_qtbot, dialog_sleep):
         from exopy_pulses.pulses.sequences.views.base_sequences_views\
             import RootSequenceView
 
-    pulse = Pulse(root=RootSequence(context=TestContext()))
+    pulse = Pulse(root=RootSequence(context=DummyContext()))
     pulse.kind = 'Analogical'
     root = pulse.root
     root.add_child_item(0, pulse)

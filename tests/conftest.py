@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2018 by ExopyHqcLegacy Authors, see AUTHORS for more details.
+# Copyright 2015-2019 by ExopyHqcLegacy Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -10,4 +10,10 @@
 
 """
 
-pytest_plugins = (str('exopy.testing.fixtures'),)
+pytest_plugins = ('exopy.testing.fixtures',
+                  'exopy.testing.measurement.fixtures',
+                  'exopy.testing.measurement.fixtures',
+                  'exopy_pulses.testing.fixtures',
+                  'exopy_pulses.testing.workspace.fixtures',
+                  'exopy_pulses.testing.fixtures',
+                  'exopy.testing.tasks.fixtures')

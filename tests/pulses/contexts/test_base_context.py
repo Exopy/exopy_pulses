@@ -11,7 +11,7 @@
 """
 import pytest
 
-from exopy_pulses.testing.context import TestContext
+from exopy_pulses.testing.context import DummyContext
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def context():
     """BaseContext instance for testing.
 
     """
-    return TestContext(sampling=0.1)
+    return DummyContext(sampling=0.1)
 
 
 def test_len_sample(context):
@@ -60,4 +60,4 @@ def test_context_id(context):
     """Test getting the context id.
 
     """
-    assert context.context_id == 'exopy_pulses.TestContext'
+    assert context.context_id == 'exopy_pulses.DummyContext'

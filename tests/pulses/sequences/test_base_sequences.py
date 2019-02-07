@@ -15,7 +15,7 @@ from exopy_pulses.pulses.pulse import Pulse
 from exopy_pulses.pulses.sequences.base_sequences\
     import RootSequence, BaseSequence
 from exopy_pulses.pulses.shapes.square_shape import SquareShape
-from exopy_pulses.testing.context import TestContext
+from exopy_pulses.testing.context import DummyContext
 
 
 def add_children(seq, children):
@@ -31,7 +31,7 @@ def test_sequence_time_constaints_observation():
 
     """
     root = RootSequence()
-    context = TestContext()
+    context = DummyContext()
     root.context = context
     sequence = BaseSequence()
     root.add_child_item(0, sequence)
@@ -56,7 +56,7 @@ def test_root_handling():
 
     """
     root = RootSequence()
-    context = TestContext()
+    context = DummyContext()
     root.context = context
     sequence1 = BaseSequence()
     sequence2 = BaseSequence()
@@ -81,7 +81,7 @@ def test_get_accessible_vars():
     root = RootSequence(external_vars=OrderedDict({'a': 1}),
                         local_vars=OrderedDict({'a2': '5'}),
                         time_constrained=True)
-    context = TestContext()
+    context = DummyContext()
     root.context = context
     sequence1 = BaseSequence(local_vars=OrderedDict({'b': '1'}))
     sequence2 = BaseSequence(local_vars=OrderedDict({'c': '2'}))
@@ -127,7 +127,7 @@ def test_sequence_indexing1():
     root = RootSequence()
     root.time_constrained = True
     root.sequence_duration = '1.0'
-    context = TestContext()
+    context = DummyContext()
     root.context = context
 
     pulse1 = Pulse()
@@ -193,7 +193,7 @@ def test_sequence_indexing2():
 
     """
     root = RootSequence()
-    context = TestContext()
+    context = DummyContext()
     root.context = context
 
     pulse1 = Pulse()
@@ -276,7 +276,7 @@ def test_traverse_sequence():
 
     """
     root = RootSequence()
-    context = TestContext()
+    context = DummyContext()
     root.context = context
     root.external_vars = OrderedDict({'a': 1.5})
 
@@ -302,7 +302,7 @@ def test_build_from_config():
 
     """
     root = RootSequence()
-    context = TestContext()
+    context = DummyContext()
     root.context = context
     root.external_vars = OrderedDict({'a': 1.5})
 
@@ -323,12 +323,12 @@ def test_build_from_config():
                    'exopy.pulses.shape':
                    {'exopy_pulses.SquareShape': SquareShape},
                    'exopy.pulses.context':
-                   {'exopy_pulses.TestContext': TestContext}}
+                   {'exopy_pulses.DummyContext': DummyContext}}
 
     aux = RootSequence.build_from_config(pref, dependecies)
     assert aux.external_vars == {'a': 1.5}
     assert len(aux.items) == 4
-    assert isinstance(aux.context, TestContext)
+    assert isinstance(aux.context, DummyContext)
 
     pulse1 = aux.items[0]
     assert pulse1.parent
