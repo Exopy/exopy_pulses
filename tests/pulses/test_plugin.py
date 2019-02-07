@@ -130,7 +130,7 @@ def test_get_context_infos(workbench):
 
     """
     plugin = workbench.get_plugin('exopy.pulses')
-    infos = plugin.get_context_infos('exopy_pulses.TestContext')
+    infos = plugin.get_context_infos('exopy_pulses.TestingContext')
     assert infos and infos.cls and infos.view
     assert plugin.get_context_infos('__unknown__') is None
 
@@ -140,12 +140,12 @@ def test_get_context(workbench):
 
     """
     plugin = workbench.get_plugin('exopy.pulses')
-    cls = plugin.get_context('exopy_pulses.TestContext')
-    assert cls is plugin.get_context_infos('exopy_pulses.TestContext').cls
+    cls = plugin.get_context('exopy_pulses.TestingContext')
+    assert cls is plugin.get_context_infos('exopy_pulses.TestingContext').cls
 
-    cls, view = plugin.get_context('exopy_pulses.TestContext', True)
-    assert cls is plugin.get_context_infos('exopy_pulses.TestContext').cls
-    assert view is plugin.get_context_infos('exopy_pulses.TestContext').view
+    cls, view = plugin.get_context('exopy_pulses.TestingContext', True)
+    assert cls is plugin.get_context_infos('exopy_pulses.TestingContext').cls
+    assert view is plugin.get_context_infos('exopy_pulses.TestingContext').view
 
     assert plugin.get_context('__unknown__', True) == (None, None)
 

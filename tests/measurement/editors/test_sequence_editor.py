@@ -28,7 +28,7 @@ from exopy_pulses.pulses.pulse import Pulse
 from exopy_pulses.pulses.utils.sequences_io import save_sequence_prefs
 from exopy_pulses.pulses.sequences.base_sequences\
     import RootSequence
-from exopy_pulses.testing.context import TestContext
+from exopy_pulses.testing.context import TestingContext
 from exopy_pulses.tasks.tasks.instrs.transfer_sequence_task\
     import TransferPulseSequenceTask
 
@@ -55,13 +55,12 @@ class FalseStarter(object):
         FalseStarter.stop_called = True
 
 
-@pytest.fixture
 def sequence():
     """Create a sequence.
 
     """
     root = RootSequence()
-    context = TestContext(sampling=0.5)
+    context = TestingContext(sampling=0.5)
     root.context = context
 
     root.external_vars = OrderedDict({'a': None})
@@ -77,7 +76,7 @@ def sequence():
 
 
 @pytest.fixture
-def task(sequence, tmpdir):
+def task(tmpdir):
     """Transfer sequence task for testing.
 
     """
@@ -88,8 +87,9 @@ def task(sequence, tmpdir):
                      p_id: {'p': {'connections': {'c': {}, 'c2': {}},
                                   'settings': {'s': {}}}}}
     path = os.path.join(str(tmpdir), 'test.pulse.ini')
-    save_sequence_prefs(path, sequence.preferences_from_members())
-    task = TransferPulseSequenceTask(sequence=sequence, sequence_path=path,
+    seq = sequence()
+    save_sequence_prefs(path, seq.preferences_from_members())
+    task = TransferPulseSequenceTask(sequence=seq, sequence_path=path,
                                      sequence_timestamp=os.path.getmtime(path),
                                      sequence_vars=OrderedDict({'a': '1.5'}),
                                      name='Test',

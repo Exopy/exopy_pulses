@@ -6,13 +6,13 @@
 #
 # The full license is in the file LICENCE, distributed with this software.
 # -----------------------------------------------------------------------------
-"""View for the TestContext.
+"""View for the TestingContext.
 
 """
 from ..pulses.contexts.views.base_context_view import BaseContextView
 
 
-enamldef TestContextView(BaseContextView):
+enamldef TestingContextView(BaseContextView):
     """View for the base context.
 
     """

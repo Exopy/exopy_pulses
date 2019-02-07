@@ -30,7 +30,7 @@ from exopy_pulses.pulses.pulse import Pulse
 from exopy_pulses.pulses.utils.sequences_io import save_sequence_prefs
 from exopy_pulses.pulses.sequences.base_sequences\
     import RootSequence
-from exopy_pulses.testing.context import TestContext
+from exopy_pulses.testing.context import TestingContext
 from exopy_pulses.tasks.tasks.instrs.transfer_sequence_task\
     import TransferPulseSequenceTask
 with enaml.imports():
@@ -74,13 +74,12 @@ def workbench(pulses_workbench):
     return pulses_workbench
 
 
-@pytest.fixture
 def sequence():
     """Create a sequence.
 
     """
     root = RootSequence()
-    context = TestContext(sampling=0.5)
+    context = TestingContext(sampling=0.5)
     root.context = context
 
     root.external_vars = OrderedDict({'a': None})
@@ -96,7 +95,7 @@ def sequence():
 
 
 @pytest.fixture
-def task(sequence, tmpdir):
+def task(tmpdir):
     """Transfer sequence task for testing.
 
     """
@@ -105,8 +104,9 @@ def task(sequence, tmpdir):
                      p_id: {'p': {'connections': {'c': {}, 'c2': {}},
                                   'settings': {'s': {}}}}}
     path = os.path.join(str(tmpdir), 'test.pulse.ini')
-    save_sequence_prefs(path, sequence.preferences_from_members())
-    task = TransferPulseSequenceTask(sequence=sequence, sequence_path=path,
+    seq = sequence()
+    save_sequence_prefs(path, seq.preferences_from_members())
+    task = TransferPulseSequenceTask(sequence=seq, sequence_path=path,
                                      sequence_timestamp=os.path.getmtime(path),
                                      sequence_vars=OrderedDict({'a': '1.5'}),
                                      name='Test',
@@ -124,7 +124,7 @@ def task_view(task, workbench):
     core = workbench.get_plugin('enaml.workbench.core')
     cmd = 'exopy.pulses.get_context_infos'
     c_infos = core.invoke_command(
-            cmd,  dict(context_id='exopy_pulses.TestContext'))
+            cmd,  dict(context_id='exopy_pulses.TestingContext'))
     c_infos.instruments = set(['exopy_pulses.TestDriver'])
     task.selected_instrument = ('p', 'exopy_pulses.TestDriver', 'c', 's')
     root_view = RootTaskView(task=task.root, core=core)
@@ -201,7 +201,7 @@ def test_update_of_task_database_entries(task):
     """Test that changing of context does trigger the expected update.
 
     """
-    class FancyContext(TestContext):
+    class FancyContext(TestingContext):
         def list_sequence_infos(self):
             return {'dummy': True}
 
@@ -251,7 +251,7 @@ def test_task_check4(task, monkeypatch):
     """
     def fail_compil(*args, **kwargs):
         return False, {}, {'test': ''}
-    monkeypatch.setattr(TestContext, 'compile_and_transfer_sequence',
+    monkeypatch.setattr(TestingContext, 'compile_and_transfer_sequence',
                         fail_compil)
     res, traceback = task.check()
     assert not res
@@ -303,7 +303,7 @@ def test_task_perform3(task, monkeypatch):
     """
     def fail_compil(*args, **kwargs):
         return False, {}, {'test': ''}
-    monkeypatch.setattr(TestContext, 'compile_and_transfer_sequence',
+    monkeypatch.setattr(TestingContext, 'compile_and_transfer_sequence',
                         fail_compil)
     with pytest.raises(Exception):
         task.perform()
@@ -489,7 +489,7 @@ def test_changing_context_sequence(task_view, exopy_qtbot):
 
     task.selected_instrument = ('p', '__dummy__',  'c', 's')
     with handle_question(exopy_qtbot, 'yes'):
-        task.sequence.context = TestContext()
+        task.sequence.context = TestingContext()
     assert not task.selected_instrument[0]
 
     # Test changing the sequence.
@@ -506,7 +506,7 @@ def test_changing_context_sequence(task_view, exopy_qtbot):
 
     task.selected_instrument = ('p', '__dummy__',  'c', 's')
     with handle_question(exopy_qtbot, 'yes'):
-        task.sequence.context = TestContext()
+        task.sequence.context = TestingContext()
     assert not task.selected_instrument[0]
 
 

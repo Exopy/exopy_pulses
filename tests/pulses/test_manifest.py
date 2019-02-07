@@ -19,14 +19,14 @@ with enaml.imports():
     from exopy.app.errors.widgets import ErrorsDialog
 
 from exopy_pulses.pulses.sequences.base_sequences import RootSequence
-from exopy_pulses.testing.context import TestContext
+from exopy_pulses.testing.context import TestingContext
 with enaml.imports():
     from exopy_pulses.pulses.utils.widgets.building import BuilderView
 
 
 @pytest.fixture
 def root():
-    root = RootSequence(context=TestContext())
+    root = RootSequence(context=TestingContext())
     return root
 
 
