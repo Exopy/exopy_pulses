@@ -18,7 +18,7 @@ from exopy_pulses.pulses.sequences.base_sequences import BaseSequence
 from exopy_pulses.pulses.pulse import Pulse
 from exopy_pulses.pulses.shapes.modulation import Modulation
 from exopy_pulses.pulses.shapes.square_shape import SquareShape
-from exopy_pulses.testing.context import TestingContext
+from exopy_pulses.testing.context import DummyContext
 
 
 @pytest.fixture
@@ -172,11 +172,11 @@ def test_analysing_context_dependencies(workbench, context_dep_collector):
     """
     dep = set()
     errors = dict()
-    run = context_dep_collector.analyse(workbench, TestingContext(), getattr,
+    run = context_dep_collector.analyse(workbench, DummyContext(), getattr,
                                         dep, errors)
 
     assert not run
-    assert 'exopy_pulses.TestingContext' in dep
+    assert 'exopy_pulses.DummyContext' in dep
     assert not errors
 
     dep = set()
@@ -193,9 +193,9 @@ def test_validating_context_dependencies(workbench, context_dep_collector):
     """
     errors = {}
     context_dep_collector.validate(workbench,
-                                   {'exopy_pulses.TestingContext', '__dummy__'},
+                                   {'exopy_pulses.DummyContext', '__dummy__'},
                                    errors)
-    assert 'exopy_pulses.TestingContext' not in errors
+    assert 'exopy_pulses.DummyContext' not in errors
     assert '__dummy__' in errors
 
 
@@ -203,10 +203,10 @@ def test_collecting_context_dependencies(workbench, context_dep_collector):
     """Test collecting the dependencies found in a context.
 
     """
-    dependencies = dict.fromkeys(['exopy_pulses.TestingContext', '__dummy__'])
+    dependencies = dict.fromkeys(['exopy_pulses.DummyContext', '__dummy__'])
     errors = {}
     context_dep_collector.collect(workbench, dependencies, errors)
-    assert dependencies['exopy_pulses.TestingContext'] is not None
+    assert dependencies['exopy_pulses.DummyContext'] is not None
     assert '__dummy__' in errors
 
 
@@ -263,7 +263,7 @@ def test_collect_dependencies(workbench):
 
     """
     from exopy_pulses.pulses.sequences.base_sequences import RootSequence
-    root = RootSequence(context=TestingContext())
+    root = RootSequence(context=DummyContext())
 
     pulse1 = Pulse(def_1='1.0', def_2='{7_start} - 1.0')
     pulse2 = Pulse(def_1='{a} + 1.0', def_2='{6_start} + 1.0')

@@ -20,7 +20,7 @@ from exopy_pulses.pulses.pulse import Pulse
 from exopy_pulses.pulses.sequences.base_sequences\
     import RootSequence, BaseSequence
 
-from exopy_pulses.testing.context import TestingContext
+from exopy_pulses.testing.context import DummyContext
 with enaml.imports():
     from exopy_pulses.pulses.workspace.dialogs import (CompileDialog,
                                                        _VarValidator)
@@ -29,7 +29,7 @@ with enaml.imports():
 @pytest.fixture
 def root():
     root = RootSequence()
-    context = TestingContext(sampling=0.5)
+    context = DummyContext(sampling=0.5)
     root.context = context
     return root
 
@@ -150,8 +150,8 @@ def test_compiling_a_sequence_not_compiling2(workspace, root, monkeypatch,
     """
     def __raise(*args, **kwargs):
         return False, {}, {'test': False}
-    from exopy_pulses.testing.context import TestingContext
-    monkeypatch.setattr(TestingContext, 'compile_and_transfer_sequence',
+    from exopy_pulses.testing.context import DummyContext
+    monkeypatch.setattr(DummyContext, 'compile_and_transfer_sequence',
                         __raise)
     workbench = workspace.workbench
     ui = workbench.get_plugin('enaml.workbench.ui')

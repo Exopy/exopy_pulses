@@ -30,7 +30,7 @@ from exopy_pulses.pulses.pulse import Pulse
 from exopy_pulses.pulses.utils.sequences_io import save_sequence_prefs
 from exopy_pulses.pulses.sequences.base_sequences\
     import RootSequence
-from exopy_pulses.testing.context import TestingContext
+from exopy_pulses.testing.context import DummyContext
 from exopy_pulses.tasks.tasks.instrs.transfer_sequence_task\
     import TransferPulseSequenceTask
 with enaml.imports():
@@ -79,7 +79,7 @@ def sequence():
 
     """
     root = RootSequence()
-    context = TestingContext(sampling=0.5)
+    context = DummyContext(sampling=0.5)
     root.context = context
 
     root.external_vars = OrderedDict({'a': None})
@@ -124,7 +124,7 @@ def task_view(task, workbench):
     core = workbench.get_plugin('enaml.workbench.core')
     cmd = 'exopy.pulses.get_context_infos'
     c_infos = core.invoke_command(
-            cmd,  dict(context_id='exopy_pulses.TestingContext'))
+            cmd,  dict(context_id='exopy_pulses.DummyContext'))
     c_infos.instruments = set(['exopy_pulses.TestDriver'])
     task.selected_instrument = ('p', 'exopy_pulses.TestDriver', 'c', 's')
     root_view = RootTaskView(task=task.root, core=core)
@@ -201,7 +201,7 @@ def test_update_of_task_database_entries(task):
     """Test that changing of context does trigger the expected update.
 
     """
-    class FancyContext(TestingContext):
+    class FancyContext(DummyContext):
         def list_sequence_infos(self):
             return {'dummy': True}
 
@@ -251,7 +251,7 @@ def test_task_check4(task, monkeypatch):
     """
     def fail_compil(*args, **kwargs):
         return False, {}, {'test': ''}
-    monkeypatch.setattr(TestingContext, 'compile_and_transfer_sequence',
+    monkeypatch.setattr(DummyContext, 'compile_and_transfer_sequence',
                         fail_compil)
     res, traceback = task.check()
     assert not res
@@ -303,7 +303,7 @@ def test_task_perform3(task, monkeypatch):
     """
     def fail_compil(*args, **kwargs):
         return False, {}, {'test': ''}
-    monkeypatch.setattr(TestingContext, 'compile_and_transfer_sequence',
+    monkeypatch.setattr(DummyContext, 'compile_and_transfer_sequence',
                         fail_compil)
     with pytest.raises(Exception):
         task.perform()
@@ -489,7 +489,7 @@ def test_changing_context_sequence(task_view, exopy_qtbot):
 
     task.selected_instrument = ('p', '__dummy__',  'c', 's')
     with handle_question(exopy_qtbot, 'yes'):
-        task.sequence.context = TestingContext()
+        task.sequence.context = DummyContext()
     assert not task.selected_instrument[0]
 
     # Test changing the sequence.
@@ -506,7 +506,7 @@ def test_changing_context_sequence(task_view, exopy_qtbot):
 
     task.selected_instrument = ('p', '__dummy__',  'c', 's')
     with handle_question(exopy_qtbot, 'yes'):
-        task.sequence.context = TestingContext()
+        task.sequence.context = DummyContext()
     assert not task.selected_instrument[0]
 
 

@@ -19,14 +19,14 @@ with enaml.imports():
     from exopy.app.errors.widgets import ErrorsDialog
 
 from exopy_pulses.pulses.sequences.base_sequences import RootSequence
-from exopy_pulses.testing.context import TestingContext
+from exopy_pulses.testing.context import DummyContext
 with enaml.imports():
     from exopy_pulses.pulses.utils.widgets.building import BuilderView
 
 
 @pytest.fixture
 def root():
-    root = RootSequence(context=TestingContext())
+    root = RootSequence(context=DummyContext())
     return root
 
 
@@ -127,7 +127,7 @@ def test_create_context(workbench, root, exopy_qtbot):
 
         """
         obj_combo = dial.central_widget().widgets()[0]
-        obj_combo.selected_item = 'Test'
+        obj_combo.selected_item = 'Dummy'
 
     with handle_dialog(exopy_qtbot, 'accept', select_context):
         cmd = 'exopy.pulses.create_context'

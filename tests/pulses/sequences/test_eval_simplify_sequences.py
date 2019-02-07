@@ -18,13 +18,13 @@ from exopy_pulses.pulses.shapes.square_shape import SquareShape
 from exopy_pulses.pulses.sequences.base_sequences\
     import RootSequence, BaseSequence
 
-from exopy_pulses.testing.context import TestingContext
+from exopy_pulses.testing.context import DummyContext
 
 
 @pytest.fixture
 def root():
     root = RootSequence()
-    context = TestingContext(sampling=0.5)
+    context = DummyContext(sampling=0.5)
     root.context = context
     return root
 

@@ -14,7 +14,7 @@ import pytest
 from exopy_pulses.pulses.sequences.base_sequences import RootSequence
 from exopy_pulses.pulses.sequences.template_sequence import TemplateSequence
 
-from exopy_pulses.testing.context import TestingContext
+from exopy_pulses.testing.context import DummyContext
 
 pytestmark = pytest.mark.skipif('True')
 
@@ -50,7 +50,7 @@ def root_with_template(template_sequence, template_dependencies):
 
     """
     root = RootSequence()
-    root.context = TestingContext(sampling=0.5)
+    root.context = DummyContext(sampling=0.5)
 
     conf = {'template_id': template_sequence, 'name': 'Template',
             'template_vars': "{'b': '19'}"}
@@ -102,7 +102,7 @@ def test_build_from_config2(template_sequence, template_dependencies):
     seq.context.channel_mapping = {'A': 'Ch1_L', 'B': 'Ch2_L',
                                    'Ch1': 'Ch2_A', 'Ch2': 'Ch1_A'}
     root = RootSequence()
-    context = TestingContext(sampling=0.5)
+    context = DummyContext(sampling=0.5)
     root.context = context
     root.add_child_item(0, seq)
     pref = root.preferences_from_members()
@@ -144,7 +144,7 @@ def test_build_from_config3(template_sequence, template_dependencies):
                                     'Ch1': 'Ch1_A', 'Ch2': 'Ch2_A'}
 
     root = RootSequence()
-    context = TestingContext(sampling=0.5)
+    context = DummyContext(sampling=0.5)
     root.context = context
     root.add_child_item(0, seq)
     root.add_child_item(0, seq2)

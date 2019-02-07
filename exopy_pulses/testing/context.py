@@ -13,7 +13,7 @@ from atom.api import Float, set_default
 from exopy_pulses.pulses.contexts.base_context import BaseContext
 
 
-class TestingContext(BaseContext):
+class DummyContext(BaseContext):
     """Context limited to testing purposes.
 
     """

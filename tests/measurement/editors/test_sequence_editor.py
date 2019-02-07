@@ -28,7 +28,7 @@ from exopy_pulses.pulses.pulse import Pulse
 from exopy_pulses.pulses.utils.sequences_io import save_sequence_prefs
 from exopy_pulses.pulses.sequences.base_sequences\
     import RootSequence
-from exopy_pulses.testing.context import TestingContext
+from exopy_pulses.testing.context import DummyContext
 from exopy_pulses.tasks.tasks.instrs.transfer_sequence_task\
     import TransferPulseSequenceTask
 
@@ -60,7 +60,7 @@ def sequence():
 
     """
     root = RootSequence()
-    context = TestingContext(sampling=0.5)
+    context = DummyContext(sampling=0.5)
     root.context = context
 
     root.external_vars = OrderedDict({'a': None})
