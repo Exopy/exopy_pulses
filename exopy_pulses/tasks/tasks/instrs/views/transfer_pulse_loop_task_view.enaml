@@ -26,7 +26,7 @@ from enaml.widgets.api import (GroupBox, Label, Field, ObjectCombo, CheckBox,
 from enaml.stdlib.message_box import information, question, warning
 
 from exopy.utils.widgets.qt_completers import QtLineCompleter
-from exopy.utils.widgets.dict_editor import (DictEditor, FieldFieldEditor)
+from exopy.utils.widgets.dict_editor import DictEditor
 from exopy.utils.widgets.dict_list_editor import DictListEditor
 from exopy.tasks.tasks.instr_view import InstrTaskView
 
