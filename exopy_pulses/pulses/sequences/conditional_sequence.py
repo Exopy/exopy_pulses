@@ -9,7 +9,7 @@
 """Sequence allowing conditional inclusion of its items.
 
 """
-from atom.api import Unicode, Bool, set_default
+from atom.api import Str, Bool, set_default
 
 from .base_sequences import BaseSequence
 from ..utils.validators import Feval
@@ -21,7 +21,7 @@ class ConditionalSequence(BaseSequence):
     """
     #: Condition to be evaluated. If this evaluates to true then sub-items will
     #: be executed
-    condition = Unicode().tag(pref=True, feval=Feval(store_global=True))
+    condition = Str().tag(pref=True, feval=Feval(store_global=True))
 
     #: Name of the variable which can be referenced in other items.
     #: Those should not contain the index of the item.

@@ -66,7 +66,7 @@ be passed as a tuple/list.
 
     from numbers import Real
 
-    from atom.api import Unicode, Int
+    from atom.api import Str, Int
     from exopy_pulses.pulses.api import Feval
 
     class MyContext(BaseContext):
@@ -79,7 +79,7 @@ be passed as a tuple/list.
         my_int = Int(1).tag(pref=True)  # Integer with a default value of 1
 
         #: my_formula description
-        my_formula = Unicode().tag(pref=True, feval=Feval(types=Real))
+        my_formula = Str().tag(pref=True, feval=Feval(types=Real))
 
 You will also need to implement two methods :
 

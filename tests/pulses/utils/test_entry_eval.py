@@ -13,7 +13,7 @@ from math import exp, pi as Pi
 import cmath as cm
 
 import numpy as np
-from atom.api import Unicode
+from atom.api import Str
 
 from exopy_pulses.pulses.utils.entry_eval import HasEvaluableFields
 from exopy_pulses.pulses.utils.validators import Feval, SkipEmpty
@@ -26,15 +26,15 @@ class EvalFmtTest(HasEvaluableFields):
     """Test class for HasEvaluableFields.
 
     """
-    fmt1 = Unicode('+{fmt1}').tag(fmt=True)
+    fmt1 = Str('+{fmt1}').tag(fmt=True)
 
-    fmt2 = Unicode('+{fmt2}').tag(fmt=False)
+    fmt2 = Str('+{fmt2}').tag(fmt=False)
 
-    feval1 = Unicode('2*{feval1}').tag(feval=Feval(store_global=True))
+    feval1 = Str('2*{feval1}').tag(feval=Feval(store_global=True))
 
-    feval2 = Unicode(FORMULA).tag(feval=Feval(types=(int, float)))
+    feval2 = Str(FORMULA).tag(feval=Feval(types=(int, float)))
 
-    feval3 = Unicode('').tag(feval=SkipEmpty(types=int))
+    feval3 = Str('').tag(feval=SkipEmpty(types=int))
 
     def format_error_id(self, member):
         return member

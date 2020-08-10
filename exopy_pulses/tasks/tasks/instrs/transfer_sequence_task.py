@@ -13,7 +13,7 @@ import os
 from pprint import pformat
 from collections import OrderedDict
 
-from atom.api import Value, Unicode, Float, Typed
+from atom.api import Value, Str, Float, Typed
 from exopy.tasks.api import InstrumentTask
 from exopy.utils.atom_util import ordered_dict_from_pref, ordered_dict_to_pref
 from exopy.utils.traceback import format_exc
@@ -24,7 +24,7 @@ class TransferPulseSequenceTask(InstrumentTask):
 
     """
     #: Sequence path for the case of sequence simply referenced.
-    sequence_path = Unicode().tag(pref=True)
+    sequence_path = Str().tag(pref=True)
 
     #: Time stamp of the last modification of the sequence file.
     sequence_timestamp = Float().tag(pref=True)

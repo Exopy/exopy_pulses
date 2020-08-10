@@ -13,7 +13,7 @@ from math import pi as Pi
 from numbers import Real
 
 import numpy as np
-from atom.api import Unicode, Enum, Bool, Constant, Int
+from atom.api import Str, Enum, Bool, Constant, Int
 
 from ..utils.validators import Feval
 from ..utils.entry_eval import HasEvaluableFields
@@ -38,7 +38,7 @@ class Modulation(HasEvaluableFields):
     dep_type = Constant(DEP_TYPE).tag(pref=True)
 
     #: Id of the modulation used to query it from the plugin.
-    modulation_id = Unicode().tag(pref=True)
+    modulation_id = Str().tag(pref=True)
 
     #: Flag indicating whether or not the modulation is activated.
     activated = Bool().tag(pref=True)
@@ -47,13 +47,13 @@ class Modulation(HasEvaluableFields):
     kind = Enum('sin', 'cos').tag(pref=True)
 
     #: Frequency of modulation to use.
-    frequency = Unicode().tag(pref=True, feval=Feval(types=Real))
+    frequency = Str().tag(pref=True, feval=Feval(types=Real))
 
     #: Unit of the frequency use for the modulation.
     frequency_unit = Enum('MHz', 'GHz', 'kHz', 'Hz').tag(pref=True)
 
     #: Phase to use in the modulation.
-    phase = Unicode('0.0').tag(pref=True, feval=Feval(types=Real))
+    phase = Str('0.0').tag(pref=True, feval=Feval(types=Real))
 
     #: Unit of the phase used in the modulation.
     phase_unit = Enum('rad', 'deg').tag(pref=True)

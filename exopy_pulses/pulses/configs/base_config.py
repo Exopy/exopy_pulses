@@ -10,7 +10,7 @@
 
 """
 from inspect import getdoc
-from atom.api import (Atom, Unicode, Bool, Subclass, ForwardTyped, Typed)
+from atom.api import (Atom, Str, Bool, Subclass, ForwardTyped, Typed)
 
 from ..item import Item
 
@@ -65,10 +65,10 @@ class SequenceConfig(AbstractConfig):
 
     """
     #: Name of the sequence used to make the sequence easier to read.
-    sequence_name = Unicode()
+    sequence_name = Str()
 
     #: Docstring of the sequence.
-    sequence_doc = Unicode()
+    sequence_doc = Str()
 
     def __init__(self, **kwargs):
         super(SequenceConfig, self).__init__(**kwargs)

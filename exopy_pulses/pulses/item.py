@@ -11,7 +11,7 @@
 """
 from numbers import Real
 
-from atom.api import (Int, Unicode, List, Bool, Float, Enum, ForwardTyped,
+from atom.api import (Int, Str, List, Bool, Float, Enum, ForwardTyped,
                       Constant, Value)
 
 from .utils.entry_eval import HasEvaluableFields
@@ -41,7 +41,7 @@ class Item(HasEvaluableFields):
     enabled = Bool(True).tag(pref=True)
 
     #: Class of the item to use when rebuilding a sequence.
-    item_id = Unicode().tag(pref=True)
+    item_id = Str().tag(pref=True)
 
     #: Name of the variable which can be referenced in other items.
     #: Those should not contain the index of the item.
@@ -67,12 +67,12 @@ class Item(HasEvaluableFields):
     #: String representing the item first element of definition : according
     #: to the selected mode it evaluated value will either be used for the
     #: start instant, or duration of the item.
-    def_1 = Unicode().tag(pref=True, feval=Feval(types=Real))
+    def_1 = Str().tag(pref=True, feval=Feval(types=Real))
 
     #: String representing the item second element of definition : according
     #: to the selected mode it evaluated value will either be used for the
     #: duration, or stop instant of the item.
-    def_2 = Unicode().tag(pref=True, feval=Feval(types=Real))
+    def_2 = Str().tag(pref=True, feval=Feval(types=Real))
 
     #: Actual start instant of the item with respect to the beginning of the
     #: root sequence. The unit of this time depends of the setting of the

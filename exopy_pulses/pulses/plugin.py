@@ -15,7 +15,7 @@ import logging
 import enaml
 
 from watchdog.observers import Observer
-from atom.api import (Dict, List, Unicode, Typed, ForwardTyped)
+from atom.api import (Dict, List, Str, Typed, ForwardTyped)
 from exopy.utils.plugin_tools import (HasPreferencesPlugin,
                                       ExtensionsCollector,
                                       DeclaratorsCollector)
@@ -62,13 +62,13 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
     templates_folders = List()  # .tag(pref=True)  # TODO harcoded currently
 
     #: List of all known sequences and template-sequences.
-    sequences = List(Unicode())
+    sequences = List(Str())
 
     #: List of all known contexts
-    contexts = List(Unicode())
+    contexts = List(Str())
 
     #: List of all known shape.
-    shapes = List(Unicode())
+    shapes = List(Str())
 
     #: List of all known filters:
     filters = List()
@@ -448,10 +448,10 @@ class PulsesManagerPlugin(HasPreferencesPlugin):
     _sequences = Typed(DeclaratorsCollector)
 
     #: Template sequences (store full path to .ini)
-    _template_sequences_data = Dict(Unicode(), Unicode())
+    _template_sequences_data = Dict(Str(), Str())
 
     #: Template sequences infos
-    _template_sequences_infos = Dict(Unicode(), SequenceInfos)
+    _template_sequences_infos = Dict(Str(), SequenceInfos)
 
     #: Info Object for Pulse
     _pulse_infos = Typed(PulseInfos)

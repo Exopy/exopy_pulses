@@ -9,7 +9,7 @@
 """ Module defining the basic filters.
 
 """
-from atom.api import Value, Subclass, Unicode, Property, set_default
+from atom.api import Value, Subclass, Str, Property, set_default
 from enaml.core.api import d_func, d_
 
 from exopy.utils.declarator import Declarator
@@ -24,7 +24,7 @@ class SequenceFilter(Declarator):
 
     """
 
-    id = d_(Unicode())
+    id = d_(Str())
 
     @d_func
     def filter_sequences(self, py_sequences, template_sequences):
@@ -96,7 +96,7 @@ class MetadataSequenceFilter(SequenceFilter):
 
     """
     #: Metadata key on which the filtering is performed.
-    meta_key = d_(Unicode())
+    meta_key = d_(Str())
 
     #: Metadata value on which the filtering is performed.
     meta_value = d_(Value())
@@ -122,7 +122,7 @@ class GroupSequenceFilter(MetadataSequenceFilter):
 
     """
     #: Group to which the task must belong.
-    group = d_(Unicode())
+    group = d_(Str())
 
     meta_key = set_default('group')
 
