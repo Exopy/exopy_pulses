@@ -9,7 +9,7 @@
 """Widget used to browse the available sequences.
 
 """
-from atom.api import Atom, List, Unicode
+from atom.api import Atom, List, Str
 from enaml.core.api import Conditional
 from enaml.widgets.api import (ObjectCombo, Container)
 

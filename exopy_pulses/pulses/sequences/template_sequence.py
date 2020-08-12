@@ -14,7 +14,7 @@
 from copy import deepcopy
 from ast import literal_eval
 
-from atom.api import (Dict, ForwardTyped, Unicode, List)
+from atom.api import (Dict, ForwardTyped, Str, List)
 
 from exopy.utils.atom_util import update_members_from_preferences
 from exopy.utils.traceback import format_exc
@@ -35,13 +35,13 @@ class TemplateSequence(AbstractSequence):
 
     """
     #: Id of the template on which this sequence relies.
-    template_id = Unicode().tag(pref=True)
+    template_id = Str().tag(pref=True)
 
     #: Dict of variables defined in the template scope.
     template_vars = Dict().tag(pref=True)
 
     #: Documentation of the template as provided by the user.
-    docs = Unicode()
+    docs = Str()
 
     #: Special context providing channel mapping.
     context = ForwardTyped(context).tag(pref=True)

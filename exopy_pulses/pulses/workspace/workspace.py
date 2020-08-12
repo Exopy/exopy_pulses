@@ -16,7 +16,7 @@ from inspect import cleandoc
 from textwrap import fill
 
 import enaml
-from atom.api import (Atom, Typed, Value, Enum, Unicode, Property,
+from atom.api import (Atom, Typed, Value, Enum, Str, Property,
                       set_default)
 from enaml.workbench.ui.api import Workspace
 from enaml.widgets.api import FileDialogEx
@@ -48,10 +48,10 @@ class SequenceEditionSpaceState(Atom):
     sequence_type = Enum('Unknown', 'Standard', 'Template')
 
     #: Path to the file in which the edited sequence should be saved.
-    sequence_path = Unicode()
+    sequence_path = Str()
 
     #: Description of the sequence (only apply to a template).
-    sequence_doc = Unicode()
+    sequence_doc = Str()
 
     # --- Private API ---------------------------------------------------------
 

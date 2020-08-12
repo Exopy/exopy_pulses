@@ -10,7 +10,7 @@
 
 """
 import numpy as np
-from atom.api import (Unicode, Enum, Typed, Property, set_default)
+from atom.api import (Str, Enum, Typed, Property, set_default)
 from exopy.utils.atom_util import (update_members_from_preferences)
 
 from .shapes.base_shape import AbstractShape
@@ -26,7 +26,7 @@ class Pulse(Item):
     kind = Enum('Logical', 'Analogical').tag(pref=True)
 
     #: Channel of the executioner which should perfom the pulse.
-    channel = Unicode().tag(pref=True)
+    channel = Str().tag(pref=True)
 
     #: Waveform
     waveform = Property()

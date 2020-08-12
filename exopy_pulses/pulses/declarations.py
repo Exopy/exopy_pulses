@@ -11,7 +11,7 @@
 """
 from inspect import cleandoc
 
-from atom.api import Unicode, Dict, Property, List
+from atom.api import Str, Dict, Property, List
 from enaml.core.api import d_, d_func
 
 from exopy.utils.traceback import format_exc
@@ -36,11 +36,11 @@ class Sequence(Declarator):
     #: path of the sequence object. Paths should be dot separed and the class
     #: name preceded by ':'.
     #: The path to any parent GroupDeclarator will be prepended to it.
-    sequence = d_(Unicode())
+    sequence = d_(Str())
 
     #: Path to the view object associated to the sequence.
     #: The path of any parent GroupDeclarator will be prepended.
-    view = d_(Unicode())
+    view = d_(Str())
 
     #: Metadata associated to the sequence.
     metadata = d_(Dict())
@@ -196,11 +196,11 @@ class SequenceConfig(Declarator):
     #: path of the config object. Paths should be dot separed and the class
     #: name preceded by ':'.
     #: The path to any parent GroupDeclarator will be prepended to it.
-    config = d_(Unicode())
+    config = d_(Str())
 
     #: Path to the view object associated to the sequence.
     #: The path of any parent GroupDeclarator will be prepended.
-    view = d_(Unicode())
+    view = d_(Str())
 
     #: Id of the sequence computed from the top-level package and the sequence
     #: name
@@ -343,11 +343,11 @@ class Context(Declarator):
     #: Path of the context object. Paths should be dot separed and the class
     #: name preceded by ':'.
     #: The path to any parent GroupDeclarator will be prepended to it.
-    context = d_(Unicode())
+    context = d_(Str())
 
     #: Path to the view object associated to the context.
     #: The path of any parent GroupDeclarator will be prepended.
-    view = d_(Unicode())
+    view = d_(Str())
 
     #: List of supported driver ids.
     instruments = d_(List())
@@ -511,11 +511,11 @@ class Shape(Declarator):
     #: path of the shape object. Paths should be dot separed and the class
     #: name preceded by ':'.
     #: The path to any parent GroupDeclarator will be prepended to it.
-    shape = d_(Unicode())
+    shape = d_(Str())
 
     #: Path to the view object associated to the shape.
     #: The path of any parent GroupDeclarator will be prepended.
-    view = d_(Unicode())
+    view = d_(Str())
 
     #: Metadata associated to the shape.
     metadata = d_(Dict())

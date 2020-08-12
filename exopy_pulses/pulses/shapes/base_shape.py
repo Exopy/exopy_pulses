@@ -9,7 +9,7 @@
 """Base class for all analogical pulses shapes.
 
 """
-from atom.api import Unicode, Constant, Int
+from atom.api import Str, Constant, Int
 
 from ..utils.entry_eval import HasEvaluableFields
 
@@ -35,7 +35,7 @@ class AbstractShape(HasEvaluableFields):
     dep_type = Constant(DEP_TYPE).tag(pref=True)
 
     #: Id of the shape used to query it from the plugin.
-    shape_id = Unicode().tag(pref=True)
+    shape_id = Str().tag(pref=True)
 
     #: Index of the parent pulse. This is set when evaluating the entries.
     index = Int()

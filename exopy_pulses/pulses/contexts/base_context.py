@@ -9,7 +9,7 @@
 """Definition of the interface for base pulse sequence context.
 
 """
-from atom.api import (Enum, Unicode, Bool, Float, Property, Tuple, List,
+from atom.api import (Enum, Str, Bool, Float, Property, Tuple, List,
                       Constant)
 
 from ..utils.entry_eval import HasEvaluableFields
@@ -64,7 +64,7 @@ class BaseContext(HasEvaluableFields):
     tolerance = Float(0.000000001).tag(pref=True)
 
     #: Name of the context class. Used for persistence purposes.
-    context_id = Unicode().tag(pref=True)
+    context_id = Str().tag(pref=True)
 
     def compile_and_transfer_sequence(self, sequence, driver=None):
         """Compile the pulse sequence and send it to the instruments.

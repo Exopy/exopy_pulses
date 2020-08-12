@@ -14,7 +14,7 @@ from collections import Mapping
 from numbers import Real
 from collections import OrderedDict
 
-from atom.api import (Int, Instance, Unicode, Bool, List,
+from atom.api import (Int, Instance, Str, Bool, List,
                       Signal, set_default, Typed)
 from exopy.utils.traceback import format_exc
 from exopy.utils.container_change import ContainerChange
@@ -41,7 +41,7 @@ class AbstractSequence(Item):
     """
 
     #: Name of the sequence (help make a sequence more readable)
-    name = Unicode().tag(pref=True)
+    name = Str().tag(pref=True)
 
     #: List of items this sequence consists of.
     items = List(Instance(Item)).tag(child=100)
@@ -58,12 +58,12 @@ class AbstractSequence(Item):
     #: String representing the item first element of definition : according
     #: to the selected mode it evaluated value will either be used for the
     #: start instant, or duration of the item.
-    def_1 = Unicode().tag(pref=True, feval=SkipEmpty(types=Real))
+    def_1 = Str().tag(pref=True, feval=SkipEmpty(types=Real))
 
     #: String representing the item second element of definition : according
     #: to the selected mode it evaluated value will either be used for the
     #: duration, or stop instant of the item.
-    def_2 = Unicode().tag(pref=True, feval=SkipEmpty(types=Real))
+    def_2 = Str().tag(pref=True, feval=SkipEmpty(types=Real))
 
     def clean_cached_values(self):
         """ Clear all internal caches.
@@ -625,7 +625,7 @@ class RootSequence(BaseSequence):
 
     #: Duration of the sequence when it is fixed. The unit of this time is
     # fixed by the context.
-    sequence_duration = Unicode().tag(pref=True)
+    sequence_duration = Str().tag(pref=True)
 
     #: Reference to the executioner context of the sequence.
     context = Typed(BaseContext).tag(pref=True)

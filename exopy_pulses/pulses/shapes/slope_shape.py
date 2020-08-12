@@ -12,7 +12,7 @@
 from numbers import Real
 
 import numpy as np
-from atom.api import Unicode, Enum
+from atom.api import Str, Enum
 
 from ..utils.validators import Feval
 
@@ -29,10 +29,10 @@ class SlopeShape(AbstractShape):
     mode = Enum('Start/Stop', 'Start/Slope', 'Slope/Stop').tag(pref=True)
 
     #: First input parameter, will be interpreted based on the selected mode.
-    def1 = Unicode('0.5').tag(pref=True, feval=Feval(types=Real))
+    def1 = Str('0.5').tag(pref=True, feval=Feval(types=Real))
 
     #: Second input parameter, will be interpreted based on the selected mode.
-    def2 = Unicode('1.0').tag(pref=True, feval=Feval(types=Real))
+    def2 = Str('1.0').tag(pref=True, feval=Feval(types=Real))
 
     def eval_entries(self, root_vars, sequence_locals, missing, errors):
         """ Evaluate the parameters of the pulse shape.

@@ -16,7 +16,7 @@ from copy import deepcopy
 from ast import literal_eval
 from pprint import pformat
 
-from atom.api import (Unicode, Value, Bool, Typed)
+from atom.api import (Str, Value, Bool, Typed)
 from exopy.utils.atom_util import update_members_from_preferences
 
 from .base_config import AbstractConfig
@@ -41,10 +41,10 @@ class TemplateConfig(AbstractConfig):
 
     """
     #: Name of the sequence used to make the sequence easier to read.
-    template_name = Unicode()
+    template_name = Str()
 
     #: Docstring of the sequence.
-    template_doc = Unicode()
+    template_doc = Str()
 
     #: Configobj object describing the template.
     template_config = Value()
