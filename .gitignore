@@ -69,3 +69,4 @@ new.enaml
 
 .spyderproject
 .spyproject
+.mypy_cache/
