@@ -1,0 +1,42 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
+#
+# Distributed under the terms of the BSD license.
+#
+# The full license is in the file LICENCE, distributed with this software.
+# -----------------------------------------------------------------------------
+"""View for the Gaussian Shape.
+
+"""
+from enaml.layout.api import hbox, vbox, align
+from enaml.widgets.api import (Label, GroupBox)
+
+from exopy.utils.widgets.qt_completers import QtLineCompleter
+from ...utils.entry_eval import EVALUATER_TOOLTIP
+
+from .base_shape_view import AbstractShapeView
+
+enamldef GaussianShapeView(AbstractShapeView): view:
+    """ View for a Gaussian pulse.
+
+    """
+    GroupBox:
+        title = 'Gaussian'
+        constraints = [hbox(amp_lab, amp_val, sigma_lab, sigma_val),
+                       align('v_center', amp_lab, amp_val, sigma_lab, sigma_val)]
+
+        Label: amp_lab:
+            text = 'Amplitude'
+        QtLineCompleter: amp_val:
+            text := shape.amplitude
+            entries_updater = item.parent.get_accessible_vars
+            tool_tip = ('Relative amplitude of the pulse (should be between '
+                        '-1.0 and 1.0)')
+
+        Label: sigma_lab:
+            text = 'Sigma'
+        QtLineCompleter: sigma_val:
+            text := shape.sigma
+            entries_updater = item.parent.get_accessible_vars
+            tool_tip = ('Sigma of gaussian pulse, units are AWG context units')

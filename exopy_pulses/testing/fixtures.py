@@ -76,8 +76,9 @@ def template_sequence(pulses_plugin):
     """
     from exopy_pulses.pulses.pulse import Pulse
     from exopy_pulses.pulses.sequences.base_sequences import (RootSequence,
-                                                              BaseSequence)
+                                                             BaseSequence)
     from exopy_pulses.pulses.shapes.square_shape import SquareShape
+    from exopy_pulses.pulses.shapes.gaussian_shape import GaussianShape
     from exopy_pulses.pulses.contexts.template_context import TemplateContext
 
     root = RootSequence()
