@@ -21,7 +21,6 @@ from exopy.utils.traceback import format_exc
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 class TransferPulseSequenceTask(InstrumentTask):
     """Build and transfer a pulse sequence to an instrument.
 
@@ -39,7 +38,6 @@ class TransferPulseSequenceTask(InstrumentTask):
     sequence_vars = Typed(OrderedDict, ()).tag(pref=(ordered_dict_to_pref,
                                                      ordered_dict_from_pref))
     
-
     def check(self, *args, **kwargs):
         """Check that the sequence can be compiled.
 
@@ -91,7 +89,6 @@ class TransferPulseSequenceTask(InstrumentTask):
         for k, v in self.sequence_vars.items():
             seq.external_vars[k] = self.format_and_eval_string(v)
 
-#        self.driver.run_mode = 'CONT'
         res, infos, errors = context.compile_and_transfer_sequence(seq,
                                                                    self.driver)
         if not res:
