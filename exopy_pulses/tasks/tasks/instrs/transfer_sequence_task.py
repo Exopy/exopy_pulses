@@ -18,6 +18,9 @@ from exopy.tasks.api import InstrumentTask
 from exopy.utils.atom_util import ordered_dict_from_pref, ordered_dict_to_pref
 from exopy.utils.traceback import format_exc
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 
 class TransferPulseSequenceTask(InstrumentTask):
     """Build and transfer a pulse sequence to an instrument.
@@ -35,6 +38,7 @@ class TransferPulseSequenceTask(InstrumentTask):
     #: Global variable to use for the sequence.
     sequence_vars = Typed(OrderedDict, ()).tag(pref=(ordered_dict_to_pref,
                                                      ordered_dict_from_pref))
+    
 
     def check(self, *args, **kwargs):
         """Check that the sequence can be compiled.
@@ -87,6 +91,7 @@ class TransferPulseSequenceTask(InstrumentTask):
         for k, v in self.sequence_vars.items():
             seq.external_vars[k] = self.format_and_eval_string(v)
 
+#        self.driver.run_mode = 'CONT'
         res, infos, errors = context.compile_and_transfer_sequence(seq,
                                                                    self.driver)
         if not res:
@@ -95,6 +100,50 @@ class TransferPulseSequenceTask(InstrumentTask):
 
         for k, v in infos.items():
             self.write_in_database(k, v)
+            
+    def compile_and_plot(self, variables):
+        """Compile the sequence and plot it.
+
+        """
+        
+        seq = self.sequence
+        context = seq.context
+        for k, v in variables.items():
+            seq.external_vars[k] = self.format_and_eval_string(v)
+
+        table, marker1, marker2, errors = context.compile_sequence(seq)
+        if not table:
+            raise Exception('Failed to compile sequence :\n' +
+                            pformat(errors))
+        freq = context.list_sequence_infos()['sampling_frequency'] 
+        
+        channel_num = len(table)
+        #fig, axs = plt.subplots(4,1, figsize=(15, 8))
+        fig, axs = plt.subplots(channel_num,1, figsize=(15, 2.5*channel_num),
+                                sharex=True)
+        fig.subplots_adjust(hspace = 0.5, wspace=.001)
+        
+        x = np.arange(len(table[list(table.keys())[0]]))/freq*10**6
+        
+        if len(list(table.keys())) == 1:
+            key = list(table.keys())[0]
+            axs.plot(x,table[key], label = 'wvfm')
+            axs.plot(x,marker1[key], label = 'M1')
+            axs.plot(x,marker2[key], label = 'M2')
+            axs.set_xlabel('time (us)')
+            axs.set_ylabel(key)
+            axs.axis(xmin = 0, xmax = x[-1],ymin = -1.2, ymax = 1.2)
+            axs.legend(loc=6)
+        else:
+            for i, key in enumerate(np.sort(list(table.keys()))):
+                axs[i].plot(x,table[key], label = 'wvfm')
+                axs[i].plot(x,marker1[key], label = 'M1')
+                axs[i].plot(x,marker2[key], label = 'M2')
+                axs[i].set_xlabel('time (us)')
+                axs[i].set_ylabel(key)
+                axs[i].axis(xmin = 0, xmax = x[-1],ymin = -1.2, ymax = 1.2)
+                axs[i].legend(loc=6)
+        return fig
 
     def register_preferences(self):
         """Register the task preferences into the preferences system.
