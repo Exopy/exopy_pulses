@@ -15,7 +15,7 @@ from pprint import pformat
 from collections import OrderedDict
 
 import numpy as np
-from atom.api import (Value, Unicode, Float, Typed, Bool, set_default, Enum)
+from atom.api import (Value, Str, Float, Typed, Bool, set_default, Enum)
 
 from exopy.tasks.api import (InstrumentTask)
 from exopy.utils.atom_util import ordered_dict_from_pref, ordered_dict_to_pref
@@ -27,7 +27,7 @@ class TransferPulseLoopTask(InstrumentTask):
     """
     
     #: Sequence path for the case of sequence simply referenced.
-    sequence_path = Unicode().tag(pref=True)
+    sequence_path = Str().tag(pref=True)
 
     #: Time stamp of the last modification of the sequence file.
     sequence_timestamp = Float().tag(pref=True)
@@ -45,17 +45,17 @@ class TransferPulseLoopTask(InstrumentTask):
     #: Loop variables: channels on which the loop will be done, loop parameters
     #: names, start value, stop value and number of points per loop
 
-    loop_start = Unicode('0').tag(pref=True)
+    loop_start = Str('0').tag(pref=True)
 
-    loop_stop = Unicode('0').tag(pref=True)
+    loop_stop = Str('0').tag(pref=True)
 
-    loop_points = Unicode('2').tag(pref=True)
+    loop_points = Str('2').tag(pref=True)
     
     #: run mode of the awg
     run_mode = Enum('Ext Trig', 'Int Trig', 'Continuous').tag(pref=True)
 
     #: Internal trigger period in mus
-    trigger_period = Unicode('20').tag(pref=True)
+    trigger_period = Str('20').tag(pref=True)
     
     parameters = Typed(OrderedDict, ()).tag(pref=[ordered_dict_to_pref,
                                                    ordered_dict_from_pref])
@@ -155,9 +155,7 @@ class TransferPulseLoopTask(InstrumentTask):
                     self.write_in_database(name_parameter, loop_value[ii])
                 for k, v in self.sequence_vars.items():
                     seq.external_vars[k] = self.format_and_eval_string(v)
-    #            context.sequence_name = '{}_{}'.format(seq_name_0, nn+1) #RL replaced, caused bug
                 context.sequence_name = '{}_{}'.format('', nn+first_index)
-#                print(context.sequence_name)
                 res, infos, errors = context.compile_and_transfer_sequence(
                                                                 seq,
                                                                 driver=self.driver)
@@ -208,7 +206,6 @@ class TransferPulseLoopTask(InstrumentTask):
                 self.driver.get_channel(current_ch).set_sequence_pos(current_wf,
                                                                      current_index)
                 self.driver.set_jump_pos(current_index, 1)
-#            print(channels_to_turn_on)
             self.driver.set_goto_pos(current_index, 1)
             self.write_in_database('num_loop', current_index)
             for cc in channels_to_turn_on:

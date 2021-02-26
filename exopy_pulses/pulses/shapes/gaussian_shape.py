@@ -12,7 +12,7 @@
 from numbers import Real
 
 import numpy as np
-from atom.api import Unicode
+from atom.api import Str
 
 from ..utils.validators import Feval
 
@@ -24,8 +24,8 @@ class GaussianShape(AbstractShape):
 
     """
     #: Amplitude of the pulse this should be a number between -1.0 and 1.0
-    amplitude = Unicode('1.0').tag(pref=True, feval=Feval(types=Real))
-    sigma = Unicode('10.0').tag(pref=True, feval=Feval(types=Real))
+    amplitude = Str('1.0').tag(pref=True, feval=Feval(types=Real))
+    sigma = Str('10.0').tag(pref=True, feval=Feval(types=Real))
 
     def eval_entries(self, root_vars, sequence_locals, missing, errors):
         """ Evaluate the amplitude of the pulse.
