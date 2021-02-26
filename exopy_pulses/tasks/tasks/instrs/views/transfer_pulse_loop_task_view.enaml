@@ -12,7 +12,9 @@ waveform generator.
 """
 import os
 import logging
+from traceback import format_exc
 from textwrap import fill
+from inspect import cleandoc
 from collections import OrderedDict
 
 from enaml.styling import StyleSheet, Style, Setter
@@ -20,13 +22,12 @@ from enaml.layout.api import factory, hbox, vbox, spacer, align
 from enaml.core.api import Conditional, Include
 from enaml.widgets.api import (GroupBox, Label, Field, ObjectCombo, CheckBox,
                                Notebook, Page, PushButton, Menu, Action,
-                               FileDialogEx, Container, MPLCanvas, Window,
-                               ScrollArea)
+                               FileDialogEx, Container)
 from enaml.stdlib.message_box import information, question, warning
 
-from exopy.utils.traceback import format_exc
 from exopy.utils.widgets.qt_completers import QtLineCompleter
 from exopy.utils.widgets.dict_editor import DictEditor
+from exopy.utils.widgets.dict_list_editor import DictListEditor
 from exopy.tasks.tasks.instr_view import InstrTaskView
 
 from exopy_pulses.pulses.utils.entry_eval import EVALUATER_TOOLTIP
@@ -34,9 +35,8 @@ from exopy_pulses.pulses.utils.sequences_io import save_sequence_prefs
 from exopy_pulses.pulses.sequences.views.base_sequences_views\
      import instantiate_context_view
 
-import matplotlib.pyplot as plt
-import numpy as np
-
+def fc(txt):
+    return fill(cleandoc(txt))
 
 enamldef RedButton(StyleSheet):
     """Style sheet allowing to use a large font for the save confirmation popup
@@ -53,7 +53,7 @@ enamldef VarEditor(Container):
     """ Fields allowing top edit the global variables of a sequence.
 
     """
-    #: Modle object describing the key/value pair.
+    #: Model object describing the key/value pair.
     attr model
 
     padding = 1
@@ -65,38 +65,83 @@ enamldef VarEditor(Container):
         text := model.value
         entries_updater << model.task.list_accessible_database_entries
         tool_tip = EVALUATER_TOOLTIP
+        
+enamldef LoopEditor(Container):
+    """ Fields allowing to edit the sweep of a sequence.
+
+    """
+    #: Model object describing the key/value pair.
+    attr model
+
+    padding = 1
+    constraints = [hbox(loop_name,
+                              param_start, param_start_val, param_stop,
+                              param_stop_val, param_points, param_points_val), align('v_center', loop_name, param_start)]
+#    Label: lab:
+#        hug_width = 'strong'
+#        text << model.key
+#    QtLineCompleter: val:
+#        text := model.value
+#        entries_updater << model.task.list_accessible_database_entries
+#        tool_tip = EVALUATER_TOOLTIP
+        
+    Field: loop_name:
+        text := model.key
+#        print(model)
+#        items << list(task.sequence_vars.keys())
+#        selected := task.loop_name
+#        tool_tip = ("Name a variable to loop")
+
+    Label: param_start:
+        text = 'Start value'
+    QtLineCompleter: param_start_val:
+        text := model.value0
+        entries_updater << model.task.list_accessible_database_entries
+        tool_tip = fc('''Start value of the loop parameter to be called in the
+                        variables. If several loops are needed, separate the
+                        values by a comma. Do not put a space
+                        after the commas.
+                        ''')
+
+    Label: param_stop:
+        text = 'Stop value'
+    QtLineCompleter: param_stop_val:
+        text := model.value1
+        entries_updater << model.task.list_accessible_database_entries
+        tool_tip = fc('''Stop value of the loop parameter to be called in the
+                        variables. If several loops are needed, separate the
+                        values by a comma. Do not put a space
+                        after the commas.
+                        ''')
+
+    Label: param_points:
+        text = 'Number of points'
+    QtLineCompleter: param_points_val:
+        text := model.value2
+        entries_updater << model.task.list_accessible_database_entries
+        tool_tip = fc('''Number of points of the loop. If several loops
+                        are needed, separate the values by a comma.
+                        Do not put a space after the commas.
+                        ''')
 
 
-enamldef SequenceWindow(Window): seqwin:
-    #attr task
-    
-    title = 'Sequences'
-     
-    initial_size = (1500,1000)
-    
-    Container:
-        ScrollArea:
-            Container:
-                constraints = [vbox(ed, update, check,  plot)]
-                
-                DictEditor(VarEditor): ed:
-                    ed.mapping = task.sequence_vars
-                    ed.attributes << {'task': task}
-                    
-                PushButton: update:
-                    text = 'Update Plot'
-                    clicked ::
-                        variables = ed.mapping
-                        #canvas.figure = plot_sequences(task,variables)
-                        canvas.figure = task.compile_and_plot(variables)
-                        
-                CheckBox: check:
-                    text = 'Toolbar Visible'
-                    checked := canvas.toolbar_visible 
-                Container: plot:
-                    MPLCanvas: canvas:
-                        #figure = plot_sequences(task,ed.mapping)
-                        figure = task.compile_and_plot(ed.mapping)
+enamldef ObjectComboFieldCompleterEditor(Container):
+    """ 
+
+    """
+    #: Reference to the object holding the completion information.
+    attr model
+    constraints = [hbox(k, v), 2*k.width <= v.width]
+    padding = 1
+
+    ObjectCombo: k:
+        items << list(model.task.sequence_vars.keys())
+        selected := model.task.loop_name
+        tool_tip = ("Select external sequence variable to add")
+    QtLineCompleter: v:
+        text := model.value
+        entries_updater << list(model.task.sequence_vars.keys())
+        tool_tip = EVALUATER_TOOLTIP
 
 def validate_context_driver_pair(core, context, task, parent=None):
     """Validate that the context can work in conjunction with the selected
@@ -157,12 +202,13 @@ def load_sequence(core, task, parent=None, path=''):
         task.sequence_timestamp = os.path.getmtime(path)
 
 
-enamldef TransferPulseSequenceView(InstrTaskView): view:
+enamldef TransferPulseLoopView(InstrTaskView): view:
     """View for the TransferPulseSequenceTask.
 
     """
-    constraints << [vbox(hbox(seq, seq_name, seq_re, seq_sav, seq_plot, spacer,
-                              instr_label, instr_selection),
+    constraints << [vbox(hbox(seq, seq_name, seq_re, seq_sav, spacer, operation_lab, operation_val,
+                              instr_label, instr_selection), parameter,
+                         hbox(run_mode_lab, run_mode_val, trig_period_lab, trig_period_val),
                          nb)]
 
     initialized ::
@@ -289,14 +335,35 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
                         tstmp = os.path.getmtime(path)
                         task.sequence_timestamp = tstmp
                         task.sequence_path = path
+                        
+    Label: operation_lab:
+        text = 'Operation :'
+    ObjectCombo: operation_val:
+        items << list(task.get_member('operation').items)
+        selected := task.operation
+        tool_tip = ("Clean: delete all previously loaded waveforms\n"
+                    "Load: load waveforms in the waveform list of the AWG \n"
+                    "Enqueue: build a sequence from loaded waveforms")
+        
+    DictListEditor(LoopEditor): parameter:
+        parameter.mapping := task.parameters
+        parameter.operations = ['add','remove']
+        parameter.attributes = {'task' : task}
 
-    PushButton: seq_plot:
-        enabled << bool(task.sequence)
-        text = 'Plot sequence'
-        clicked ::
-            win = SequenceWindow(self)
-            win.show()
-
+    Label: run_mode_lab:
+        text = 'Running mode'
+    ObjectCombo: run_mode_val:
+        items << list(task.get_member('run_mode').items)
+        selected := task.run_mode
+        
+    Label: trig_period_lab:
+        text = 'Int trigger period (us)'
+    QtLineCompleter: trig_period_val:
+        entries_updater << task.list_accessible_database_entries
+        text := task.trigger_period
+        tool_tip = EVALUATER_TOOLTIP
+        enabled << (task.run_mode=='Int Trig')
+        
     Notebook: nb:
         tabs_closable = False
         visible << bool(task.sequence)
@@ -329,9 +396,9 @@ enamldef TransferPulseSequenceView(InstrTaskView): view:
         if change['value']:
             sequence = change['value']
             sequence.observe('context', _check_context_driver_compatibility)
-            #if sequence.context:
-            #    validate_context_driver_pair(view.root.core,
-            #                                 task.sequence.context, task, view)
+            if sequence.context:
+                validate_context_driver_pair(view.root.core,
+                                             task.sequence.context, task, view)
 
     func _check_context_driver_compatibility(change):
         """Check whether the selected driver can be used with the selected
