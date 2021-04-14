@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2021 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -20,11 +20,13 @@ from .base_shape import AbstractShape
 
 
 class TanhShape(AbstractShape):
-    """ Atan pulse with a variable amplitude and sigma.
+    """ Tanh pulse with a variable amplitude and sigma.
 
     """
     #: Amplitude of the pulse this should be a number between -1.0 and 1.0
     amplitude = Str('1.0').tag(pref=True, feval=Feval(types=Real))
+
+    #: Sigma of tanh pulse, basically raising time, units are AWG context units
     sigma = Str('10.0').tag(pref=True, feval=Feval(types=Real))
 
     def eval_entries(self, root_vars, sequence_locals, missing, errors):

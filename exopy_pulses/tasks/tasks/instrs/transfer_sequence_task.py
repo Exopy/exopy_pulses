@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2018 by ExopyHqcLegacy Authors, see AUTHORS for more details.
+# Copyright 2015-2021 by ExopyHqcLegacy Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -37,7 +37,7 @@ class TransferPulseSequenceTask(InstrumentTask):
     #: Global variable to use for the sequence.
     sequence_vars = Typed(OrderedDict, ()).tag(pref=(ordered_dict_to_pref,
                                                      ordered_dict_from_pref))
-    
+
     def check(self, *args, **kwargs):
         """Check that the sequence can be compiled.
 
@@ -97,12 +97,11 @@ class TransferPulseSequenceTask(InstrumentTask):
 
         for k, v in infos.items():
             self.write_in_database(k, v)
-            
+
     def compile_and_plot(self, variables):
         """Compile the sequence and plot it.
 
         """
-        
         seq = self.sequence
         context = seq.context
         for k, v in variables.items():
@@ -112,16 +111,15 @@ class TransferPulseSequenceTask(InstrumentTask):
         if not table:
             raise Exception('Failed to compile sequence :\n' +
                             pformat(errors))
-        freq = context.list_sequence_infos()['sampling_frequency'] 
-        
+        freq = context.list_sequence_infos()['sampling_frequency']
+
         channel_num = len(table)
-        #fig, axs = plt.subplots(4,1, figsize=(15, 8))
-        fig, axs = plt.subplots(channel_num,1, figsize=(15, 2.5*channel_num),
+        fig, axs = plt.subplots(channel_num, 1, figsize=(15, 2.5*channel_num),
                                 sharex=True)
         fig.subplots_adjust(hspace = 0.5, wspace=.001)
-        
+
         x = np.arange(len(table[list(table.keys())[0]]))/freq*10**6
-        
+
         if len(list(table.keys())) == 1:
             key = list(table.keys())[0]
             axs.plot(x,table[key], label = 'wvfm')
