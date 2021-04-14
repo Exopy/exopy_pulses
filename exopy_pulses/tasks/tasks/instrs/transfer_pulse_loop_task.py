@@ -107,6 +107,18 @@ class TransferPulseLoopTask(InstrumentTask):
     def perform(self):
         """Compile the sequence.
 
+        Uses  the following properties and methods from the driver:
+          - internal_trigger
+          - internal_trigger_period
+          - clear_all_sequences()
+          - delete_all_waveforms()
+          - get_waveform_number()
+          - get_waveform_name()
+          - run_mode
+          - get_channel()
+          - set_jump_pos()
+          - set_goto_pos()
+
         """
         operation = self.operation
         seq = self.sequence
