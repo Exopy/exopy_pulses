@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2018 by ExopyPulses Authors, see AUTHORS for more details.
+# Copyright 2015-2021 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
@@ -65,7 +65,7 @@ enamldef VarEditor(Container):
         text := model.value
         entries_updater << model.task.list_accessible_database_entries
         tool_tip = EVALUATER_TOOLTIP
-        
+
 enamldef LoopEditor(Container):
     """ Fields allowing to edit the sweep of a sequence.
 
@@ -76,21 +76,11 @@ enamldef LoopEditor(Container):
     padding = 1
     constraints = [hbox(loop_name,
                               param_start, param_start_val, param_stop,
-                              param_stop_val, param_points, param_points_val), align('v_center', loop_name, param_start)]
-#    Label: lab:
-#        hug_width = 'strong'
-#        text << model.key
-#    QtLineCompleter: val:
-#        text := model.value
-#        entries_updater << model.task.list_accessible_database_entries
-#        tool_tip = EVALUATER_TOOLTIP
-        
+                              param_stop_val, param_points, param_points_val),
+                   align('v_center', loop_name, param_start)]
+
     Field: loop_name:
         text := model.key
-#        print(model)
-#        items << list(task.sequence_vars.keys())
-#        selected := task.loop_name
-#        tool_tip = ("Name a variable to loop")
 
     Label: param_start:
         text = 'Start value'
@@ -126,7 +116,7 @@ enamldef LoopEditor(Container):
 
 
 enamldef ObjectComboFieldCompleterEditor(Container):
-    """ 
+    """
 
     """
     #: Reference to the object holding the completion information.
@@ -335,7 +325,7 @@ enamldef TransferPulseLoopView(InstrTaskView): view:
                         tstmp = os.path.getmtime(path)
                         task.sequence_timestamp = tstmp
                         task.sequence_path = path
-                        
+
     Label: operation_lab:
         text = 'Operation :'
     ObjectCombo: operation_val:
@@ -344,7 +334,7 @@ enamldef TransferPulseLoopView(InstrTaskView): view:
         tool_tip = ("Clean: delete all previously loaded waveforms\n"
                     "Load: load waveforms in the waveform list of the AWG \n"
                     "Enqueue: build a sequence from loaded waveforms")
-        
+
     DictListEditor(LoopEditor): parameter:
         parameter.mapping := task.parameters
         parameter.operations = ['add','remove']
@@ -355,7 +345,7 @@ enamldef TransferPulseLoopView(InstrTaskView): view:
     ObjectCombo: run_mode_val:
         items << list(task.get_member('run_mode').items)
         selected := task.run_mode
-        
+
     Label: trig_period_lab:
         text = 'Int trigger period (us)'
     QtLineCompleter: trig_period_val:
@@ -363,7 +353,7 @@ enamldef TransferPulseLoopView(InstrTaskView): view:
         text := task.trigger_period
         tool_tip = EVALUATER_TOOLTIP
         enabled << (task.run_mode=='Int Trig')
-        
+
     Notebook: nb:
         tabs_closable = False
         visible << bool(task.sequence)

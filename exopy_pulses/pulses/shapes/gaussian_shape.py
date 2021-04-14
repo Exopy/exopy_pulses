@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
-# Copyright 2015-2021 by ExopyPulses Authors, see AUTHORS for more details.
+# Copyright 2021 by ExopyPulses Authors, see AUTHORS for more details.
 #
 # Distributed under the terms of the BSD license.
 #
