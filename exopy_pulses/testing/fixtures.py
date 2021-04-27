@@ -35,7 +35,7 @@ with enaml.imports():
 pytests_plugin = str('exopy.testing.fixtures'),
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def pulses_workbench(monkeypatch, app_dir):
     """Setup the workbench in such a way that the pulses manager can be tested.
 

@@ -21,7 +21,7 @@ with enaml.imports():
 pytests_plugin = str('exopy_pulses.testing.fixtures'),
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def pulses_workspace(pulses_workbench, exopy_qtbot):
     """Create a measure workspace.
 
