@@ -46,7 +46,7 @@ setup(
     packages=find_packages(exclude=['tests', 'tests.*']),
     package_data={'': ['*.enaml']},
     setup_requires=['setuptools'],
-    install_requires=['exopy', 'numpy'],
+    install_requires=['exopy', 'numpy', 'matplotlib'],
     entry_points={
         'exopy_package_extension':
         'exopy_pulses = %s:list_manifests' % PROJECT_NAME}
