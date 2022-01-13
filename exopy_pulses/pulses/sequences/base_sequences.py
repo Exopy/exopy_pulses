@@ -10,9 +10,9 @@
 
 """
 from copy import deepcopy
-from collections import Mapping
-from numbers import Real
 from collections import OrderedDict
+from collections.abc import Mapping
+from numbers import Real
 
 from atom.api import (Int, Instance, Str, Bool, List,
                       Signal, set_default, Typed)
